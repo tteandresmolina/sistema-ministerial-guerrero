@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "./supabaseClient";
 
 // ─── CONSTANTES ───────────────────────────────────────────────────────────────
@@ -7,23 +7,27 @@ const COMPLEXIONES = ["Delgada","Regular","Robusta","Obesa"];
 const TEZ = ["Blanca","Morena clara","Morena","Morena oscura","Negra"];
 const ESTADOS_CIVILES = ["Soltero(a)","Casado(a)","Unión libre","Divorciado(a)","Viudo(a)"];
 const IDENTIFICACIONES = ["INE","Pasaporte","Licencia","Cédula profesional","No proporcionó","Otro"];
+const TIPOS_DOCUMENTO = ["Oficio de investigación","IPH","Acta de detención","Cadena de custodia","Acta de levantamiento cadavérico","Dictamen pericial","Croquis del lugar","Entrevista","Acuerdo del MP","Otro"];
 const rolLabel = { agente: "Agente", coordinador: "Coordinador de Zona", regional: "Director Regional", mando: "Director General" };
 const rolColor = { agente: "#4a9eff", coordinador: "#f59e0b", regional: "#a78bfa", mando: "#ef4444" };
 
-// ─── COMPONENTES DE FORMULARIO ─────────────────────────────────────────────────
+const FOTO_SLOTS = [
+  { key: "foto_frente", label: "Frente", icono: "🙂", multiple: false },
+  { key: "foto_perfil_izq", label: "Perfil izquierdo", icono: "👤", multiple: false },
+  { key: "foto_perfil_der", label: "Perfil derecho", icono: "👤", multiple: false },
+  { key: "foto_tatuaje", label: "Tatuajes / señas", icono: "🔲", multiple: true },
+  { key: "foto_entrega_autoridades", label: "Entrega con autoridades", icono: "🤝", multiple: true },
+];
+
+// ─── COMPONENTES BASE ───────────────────────────────────────────────────────────
 function Input({ label, value, onChange, placeholder = "", type = "text", required = false }) {
   return (
     <div>
       <label style={{ color: "#5a7a9a", fontSize: 10, fontWeight: 700, letterSpacing: 1.2, textTransform: "uppercase", display: "block", marginBottom: 4 }}>
         {label} {required && <span style={{ color: "#ef4444" }}>*</span>}
       </label>
-      <input
-        type={type}
-        value={value}
-        placeholder={placeholder}
-        onChange={(e) => onChange(e.target.value)}
-        style={{ background: "#0c1a27", border: "1px solid #1e3a5f", borderRadius: 7, padding: "9px 12px", color: "#d0e4f4", fontSize: 13, width: "100%", outline: "none", boxSizing: "border-box" }}
-      />
+      <input type={type} value={value} placeholder={placeholder} onChange={(e) => onChange(e.target.value)}
+        style={{ background: "#0c1a27", border: "1px solid #1e3a5f", borderRadius: 7, padding: "9px 12px", color: "#d0e4f4", fontSize: 13, width: "100%", outline: "none", boxSizing: "border-box" }} />
     </div>
   );
 }
@@ -34,11 +38,8 @@ function Select({ label, value, onChange, options, required = false }) {
       <label style={{ color: "#5a7a9a", fontSize: 10, fontWeight: 700, letterSpacing: 1.2, textTransform: "uppercase", display: "block", marginBottom: 4 }}>
         {label} {required && <span style={{ color: "#ef4444" }}>*</span>}
       </label>
-      <select
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        style={{ background: "#0c1a27", border: "1px solid #1e3a5f", borderRadius: 7, padding: "9px 12px", color: "#d0e4f4", fontSize: 13, width: "100%", outline: "none", boxSizing: "border-box" }}
-      >
+      <select value={value} onChange={(e) => onChange(e.target.value)}
+        style={{ background: "#0c1a27", border: "1px solid #1e3a5f", borderRadius: 7, padding: "9px 12px", color: "#d0e4f4", fontSize: 13, width: "100%", outline: "none", boxSizing: "border-box" }}>
         <option value="">— Seleccionar —</option>
         {options.map((o) => <option key={o} value={o}>{o}</option>)}
       </select>
@@ -46,17 +47,12 @@ function Select({ label, value, onChange, options, required = false }) {
   );
 }
 
-function TextArea({ label, value, onChange, placeholder = "", rows = 3 }) {
+function TextArea({ label, value, onChange, rows = 3 }) {
   return (
     <div>
       <label style={{ color: "#5a7a9a", fontSize: 10, fontWeight: 700, letterSpacing: 1.2, textTransform: "uppercase", display: "block", marginBottom: 4 }}>{label}</label>
-      <textarea
-        value={value}
-        placeholder={placeholder}
-        onChange={(e) => onChange(e.target.value)}
-        rows={rows}
-        style={{ background: "#0c1a27", border: "1px solid #1e3a5f", borderRadius: 7, padding: "9px 12px", color: "#d0e4f4", fontSize: 13, width: "100%", outline: "none", boxSizing: "border-box", resize: "vertical", fontFamily: "inherit" }}
-      />
+      <textarea value={value} onChange={(e) => onChange(e.target.value)} rows={rows}
+        style={{ background: "#0c1a27", border: "1px solid #1e3a5f", borderRadius: 7, padding: "9px 12px", color: "#d0e4f4", fontSize: 13, width: "100%", outline: "none", boxSizing: "border-box", resize: "vertical", fontFamily: "inherit" }} />
     </div>
   );
 }
@@ -70,9 +66,9 @@ function Seccion({ titulo, color, children }) {
   );
 }
 
-// ─── PANTALLA DE LOGIN / REGISTRO ──────────────────────────────────────────────
-function Auth({ onLogin }) {
-  const [modo, setModo] = useState("login"); // login | registro
+// ─── AUTH ───────────────────────────────────────────────────────────────────────
+function Auth() {
+  const [modo, setModo] = useState("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [nombreCompleto, setNombreCompleto] = useState("");
@@ -83,48 +79,21 @@ function Auth({ onLogin }) {
   const [exito, setExito] = useState("");
 
   const iniciarSesion = async () => {
-    setCargando(true);
-    setError("");
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    setCargando(true); setError("");
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
     setCargando(false);
-    if (error) {
-      setError("Correo o contraseña incorrectos.");
-    } else {
-      onLogin(data.user);
-    }
+    if (error) setError("Correo o contraseña incorrectos.");
   };
 
   const registrarse = async () => {
-    if (!email || !password || !nombreCompleto) {
-      setError("Completa correo, contraseña y nombre.");
-      return;
-    }
-    setCargando(true);
-    setError("");
-    setExito("");
-
+    if (!email || !password || !nombreCompleto) { setError("Completa correo, contraseña y nombre."); return; }
+    setCargando(true); setError(""); setExito("");
     const { data, error } = await supabase.auth.signUp({ email, password });
-
-    if (error) {
-      setCargando(false);
-      setError("Error al registrar: " + error.message);
-      return;
-    }
-
-    // Crear el perfil asociado
+    if (error) { setCargando(false); setError("Error al registrar: " + error.message); return; }
     if (data.user) {
-      const { error: errorPerfil } = await supabase.from("perfiles").insert([{
-        id: data.user.id,
-        nombre_completo: nombreCompleto,
-        rol: "agente",
-        region,
-        zona,
-      }]);
-      if (errorPerfil) {
-        setError("Cuenta creada, pero hubo un error guardando el perfil: " + errorPerfil.message);
-      } else {
-        setExito("✅ Cuenta creada. Si tu proyecto requiere confirmación de correo, revísalo antes de iniciar sesión.");
-      }
+      const { error: errorPerfil } = await supabase.from("perfiles").insert([{ id: data.user.id, nombre_completo: nombreCompleto, rol: "agente", region, zona }]);
+      if (errorPerfil) setError("Cuenta creada, pero hubo un error guardando el perfil: " + errorPerfil.message);
+      else setExito("✅ Cuenta creada correctamente.");
     }
     setCargando(false);
   };
@@ -137,46 +106,180 @@ function Auth({ onLogin }) {
           <div style={{ color: "#e8f4ff", fontSize: 18, fontWeight: 700, letterSpacing: 1 }}>FISCALÍA GENERAL DEL ESTADO</div>
           <div style={{ color: "#4a9eff", fontSize: 11, letterSpacing: 3, marginTop: 4 }}>SISTEMA MINISTERIAL — GUERRERO</div>
         </div>
-
         <div style={{ background: "#0a1525", border: "1px solid #1e3a5f", borderRadius: 14, padding: 26 }}>
           <div style={{ display: "flex", gap: 6, marginBottom: 20, background: "#0c1a27", borderRadius: 8, padding: 4 }}>
             <button onClick={() => { setModo("login"); setError(""); setExito(""); }} style={{ flex: 1, background: modo === "login" ? "#1e3a5f" : "none", border: "none", borderRadius: 6, padding: "8px", color: modo === "login" ? "#e8f4ff" : "#5a7a9a", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>Iniciar sesión</button>
             <button onClick={() => { setModo("registro"); setError(""); setExito(""); }} style={{ flex: 1, background: modo === "registro" ? "#1e3a5f" : "none", border: "none", borderRadius: 6, padding: "8px", color: modo === "registro" ? "#e8f4ff" : "#5a7a9a", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>Crear cuenta</button>
           </div>
-
           <div style={{ display: "grid", gap: 14 }}>
-            {modo === "registro" && (
-              <>
-                <Input label="Nombre completo" value={nombreCompleto} onChange={setNombreCompleto} required />
-                <Select label="Región" value={region} onChange={setRegion} options={REGIONES} />
-                <Input label="Zona / Coordinación" value={zona} onChange={setZona} placeholder="Ej. Zona Centro" />
-              </>
-            )}
+            {modo === "registro" && (<>
+              <Input label="Nombre completo" value={nombreCompleto} onChange={setNombreCompleto} required />
+              <Select label="Región" value={region} onChange={setRegion} options={REGIONES} />
+              <Input label="Zona / Coordinación" value={zona} onChange={setZona} />
+            </>)}
             <Input label="Correo electrónico" value={email} onChange={setEmail} type="email" required />
             <Input label="Contraseña" value={password} onChange={setPassword} type="password" required />
           </div>
-
           {error && <div style={{ background: "#2a0f0f", border: "1px solid #ef444444", borderRadius: 8, padding: 10, marginTop: 14, color: "#f87171", fontSize: 12 }}>{error}</div>}
           {exito && <div style={{ background: "#0f2a1a", border: "1px solid #22c55e44", borderRadius: 8, padding: 10, marginTop: 14, color: "#4ade80", fontSize: 12 }}>{exito}</div>}
-
-          <button
-            onClick={modo === "login" ? iniciarSesion : registrarse}
-            disabled={cargando}
-            style={{ marginTop: 18, width: "100%", background: cargando ? "#1a3050" : "linear-gradient(135deg,#1a4fa0,#0d3070)", border: "none", borderRadius: 8, padding: 12, color: "#e8f4ff", fontSize: 14, fontWeight: 700, cursor: cargando ? "default" : "pointer", letterSpacing: 1 }}
-          >
+          <button onClick={modo === "login" ? iniciarSesion : registrarse} disabled={cargando}
+            style={{ marginTop: 18, width: "100%", background: cargando ? "#1a3050" : "linear-gradient(135deg,#1a4fa0,#0d3070)", border: "none", borderRadius: 8, padding: 12, color: "#e8f4ff", fontSize: 14, fontWeight: 700, cursor: cargando ? "default" : "pointer", letterSpacing: 1 }}>
             {cargando ? "PROCESANDO…" : modo === "login" ? "INGRESAR" : "CREAR CUENTA"}
           </button>
-        </div>
-
-        <div style={{ textAlign: "center", color: "#2a4a6a", fontSize: 10, letterSpacing: 2, marginTop: 20 }}>
-          CONFIDENCIAL · USO EXCLUSIVO PERSONAL AUTORIZADO
         </div>
       </div>
     </div>
   );
 }
 
-// ─── FORMULARIO DE DETENIDOS (el módulo que ya funcionaba) ─────────────────────
+// ─── SUBIDA DE UN SLOT DE FOTO ──────────────────────────────────────────────────
+function FotoSlot({ slot, detenidoId, perfil, archivos, onSubido }) {
+  const inputRef = useRef(null);
+  const [subiendo, setSubiendo] = useState(false);
+  const existentes = archivos.filter((a) => a.categoria === slot.key);
+
+  const subirArchivo = async (file) => {
+    setSubiendo(true);
+    const ext = file.name.split(".").pop();
+    const nombreUnico = `${detenidoId}/${slot.key}_${Date.now()}.${ext}`;
+
+    const { error: errorSubida } = await supabase.storage.from("expedientes").upload(nombreUnico, file);
+    if (errorSubida) { alert("Error al subir: " + errorSubida.message); setSubiendo(false); return; }
+
+    const { data: urlData } = supabase.storage.from("expedientes").getPublicUrl(nombreUnico);
+
+    const { error: errorInsert } = await supabase.from("documentos_expediente").insert([{
+      detenido_id: detenidoId,
+      categoria: slot.key,
+      url_archivo: urlData.publicUrl,
+      nombre_archivo: file.name,
+      subido_por: perfil?.nombre_completo || "",
+      subido_por_id: perfil?.id || null,
+    }]);
+    if (errorInsert) alert("Error al registrar archivo: " + errorInsert.message);
+
+    setSubiendo(false);
+    onSubido();
+  };
+
+  return (
+    <div style={{ background: "#0c1a27", border: "1px solid #1a3050", borderRadius: 10, padding: 12 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+        <div style={{ color: "#c8daea", fontSize: 12, fontWeight: 700 }}>{slot.icono} {slot.label}</div>
+        {existentes.length > 0 && <span style={{ color: "#22c55e", fontSize: 11 }}>✓ {existentes.length}</span>}
+      </div>
+
+      {existentes.length > 0 && (
+        <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 8 }}>
+          {existentes.map((a) => (
+            <img key={a.id} src={a.url_archivo} alt={slot.label} style={{ width: 56, height: 56, objectFit: "cover", borderRadius: 6, border: "1px solid #1e3a5f" }} />
+          ))}
+        </div>
+      )}
+
+      <input ref={inputRef} type="file" accept="image/*" capture="environment" multiple={slot.multiple} style={{ display: "none" }}
+        onChange={(e) => { Array.from(e.target.files).forEach(subirArchivo); e.target.value = ""; }} />
+      <button onClick={() => inputRef.current.click()} disabled={subiendo}
+        style={{ width: "100%", background: "#1a3050", border: "1px solid #2a5080", borderRadius: 7, padding: "8px", color: "#d0e4f4", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
+        {subiendo ? "Subiendo…" : (slot.multiple ? "+ Agregar foto" : existentes.length > 0 ? "Reemplazar" : "📷 Tomar / Subir foto")}
+      </button>
+    </div>
+  );
+}
+
+// ─── SUBIDA DE DOCUMENTOS DEL EXPEDIENTE ───────────────────────────────────────
+function DocumentosExpediente({ detenidoId, perfil, archivos, onSubido }) {
+  const inputRef = useRef(null);
+  const [tipoSeleccionado, setTipoSeleccionado] = useState("");
+  const [subiendo, setSubiendo] = useState(false);
+  const documentos = archivos.filter((a) => a.categoria === "documento");
+
+  const subirDocumento = async (file) => {
+    if (!tipoSeleccionado) { alert("Selecciona primero el tipo de documento."); return; }
+    setSubiendo(true);
+    const ext = file.name.split(".").pop();
+    const nombreUnico = `${detenidoId}/doc_${tipoSeleccionado.replace(/\s/g, "_")}_${Date.now()}.${ext}`;
+
+    const { error: errorSubida } = await supabase.storage.from("expedientes").upload(nombreUnico, file);
+    if (errorSubida) { alert("Error al subir: " + errorSubida.message); setSubiendo(false); return; }
+
+    const { data: urlData } = supabase.storage.from("expedientes").getPublicUrl(nombreUnico);
+
+    const { error: errorInsert } = await supabase.from("documentos_expediente").insert([{
+      detenido_id: detenidoId,
+      categoria: "documento",
+      tipo_documento: tipoSeleccionado,
+      url_archivo: urlData.publicUrl,
+      nombre_archivo: file.name,
+      subido_por: perfil?.nombre_completo || "",
+      subido_por_id: perfil?.id || null,
+    }]);
+    if (errorInsert) alert("Error al registrar archivo: " + errorInsert.message);
+
+    setSubiendo(false);
+    setTipoSeleccionado("");
+    onSubido();
+  };
+
+  return (
+    <div style={{ background: "#0c1a27", borderRadius: 10, padding: 18, marginBottom: 16, border: "1px solid #1a3050" }}>
+      <div style={{ color: "#22c55e", fontSize: 11, fontWeight: 800, letterSpacing: 2, marginBottom: 14, textTransform: "uppercase" }}>📄 Documentos del Expediente</div>
+      <div style={{ color: "#5a7a9a", fontSize: 11, marginBottom: 14 }}>Integra los documentos conforme se generen dentro del plazo constitucional de 48 horas.</div>
+
+      <div style={{ display: "flex", gap: 8, marginBottom: 12, flexWrap: "wrap" }}>
+        <div style={{ flex: "1 1 220px" }}>
+          <Select label="Tipo de documento" value={tipoSeleccionado} onChange={setTipoSeleccionado} options={TIPOS_DOCUMENTO} />
+        </div>
+        <div style={{ display: "flex", alignItems: "flex-end" }}>
+          <input ref={inputRef} type="file" accept="image/*,.pdf" style={{ display: "none" }}
+            onChange={(e) => { if (e.target.files[0]) subirDocumento(e.target.files[0]); e.target.value = ""; }} />
+          <button onClick={() => tipoSeleccionado ? inputRef.current.click() : alert("Selecciona primero el tipo de documento.")} disabled={subiendo}
+            style={{ background: "#14532d", border: "1px solid #22c55e44", borderRadius: 7, padding: "9px 16px", color: "#bbf7d0", fontSize: 12, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" }}>
+            {subiendo ? "Subiendo…" : "+ Subir documento"}
+          </button>
+        </div>
+      </div>
+
+      {documentos.length === 0 ? (
+        <div style={{ color: "#5a7a9a", fontSize: 12, textAlign: "center", padding: 16 }}>Aún no se han integrado documentos a este expediente.</div>
+      ) : (
+        documentos.map((d) => (
+          <a key={d.id} href={d.url_archivo} target="_blank" rel="noreferrer" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "#0a1525", borderRadius: 8, padding: "10px 12px", marginBottom: 6, textDecoration: "none" }}>
+            <div>
+              <div style={{ color: "#e8f4ff", fontSize: 12, fontWeight: 600 }}>{d.tipo_documento}</div>
+              <div style={{ color: "#5a7a9a", fontSize: 10 }}>{d.nombre_archivo}</div>
+            </div>
+            <span style={{ color: "#4a9eff", fontSize: 11 }}>Ver →</span>
+          </a>
+        ))
+      )}
+    </div>
+  );
+}
+
+// ─── BITÁCORA / LÍNEA DE TIEMPO ─────────────────────────────────────────────────
+function Bitacora({ archivos }) {
+  const ordenados = [...archivos].sort((a, b) => new Date(b.creado_en) - new Date(a.creado_en));
+  const etiqueta = { foto_frente: "Foto de frente", foto_perfil_izq: "Foto perfil izquierdo", foto_perfil_der: "Foto perfil derecho", foto_tatuaje: "Foto de tatuaje", foto_entrega_autoridades: "Foto entrega con autoridades" };
+
+  if (ordenados.length === 0) return null;
+
+  return (
+    <div style={{ background: "#0c1a27", borderRadius: 10, padding: 18, marginBottom: 16, border: "1px solid #1a3050" }}>
+      <div style={{ color: "#a78bfa", fontSize: 11, fontWeight: 800, letterSpacing: 2, marginBottom: 14, textTransform: "uppercase" }}>🕐 Bitácora del Expediente</div>
+      {ordenados.map((a) => (
+        <div key={a.id} style={{ display: "flex", gap: 10, padding: "8px 0", borderBottom: "1px solid #1a3050" }}>
+          <div style={{ color: "#5a7a9a", fontSize: 11, whiteSpace: "nowrap" }}>{new Date(a.creado_en).toLocaleString("es-MX", { dateStyle: "short", timeStyle: "short" })}</div>
+          <div style={{ color: "#c8daea", fontSize: 12 }}>
+            <strong style={{ color: "#e8f4ff" }}>{a.subido_por || "Agente"}</strong> subió {a.categoria === "documento" ? a.tipo_documento : etiqueta[a.categoria]}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ─── FORMULARIO DE DETENIDOS ────────────────────────────────────────────────────
 const initialForm = {
   region: "", zona: "", fecha_deteccion: "", delito: "", lugar_deteccion: "",
   carpeta_investigacion: "", carpeta_judicial: "", rnd: "",
@@ -195,25 +298,29 @@ function ModuloDetenidos({ perfil }) {
   const [detenidos, setDetenidos] = useState([]);
   const [cargando, setCargando] = useState(false);
   const [busqueda, setBusqueda] = useState("");
+  const [detenidoActivo, setDetenidoActivo] = useState(null);
+  const [archivos, setArchivos] = useState([]);
 
   const set = (k, v) => setForm((p) => ({ ...p, [k]: v }));
 
   const cargarDetenidos = async () => {
     setCargando(true);
-    const { data, error } = await supabase.from("detenidos").select("*").order("creado_en", { ascending: false });
-    if (!error) setDetenidos(data || []);
+    const { data } = await supabase.from("detenidos").select("*").order("creado_en", { ascending: false });
+    setDetenidos(data || []);
     setCargando(false);
   };
 
+  const cargarArchivos = async (detenidoId) => {
+    const { data } = await supabase.from("documentos_expediente").select("*").eq("detenido_id", detenidoId).order("creado_en", { ascending: false });
+    setArchivos(data || []);
+  };
+
   useEffect(() => { if (vista === "lista") cargarDetenidos(); }, [vista]);
+  useEffect(() => { if (detenidoActivo) cargarArchivos(detenidoActivo.id); }, [detenidoActivo]);
 
   const guardar = async () => {
-    if (!form.nombre || !form.delito) {
-      setMensaje({ tipo: "error", texto: "Nombre y delito son obligatorios." });
-      return;
-    }
-    setGuardando(true);
-    setMensaje(null);
+    if (!form.nombre || !form.delito) { setMensaje({ tipo: "error", texto: "Nombre y delito son obligatorios." }); return; }
+    setGuardando(true); setMensaje(null);
 
     const payload = {
       ...form,
@@ -225,26 +332,49 @@ function ModuloDetenidos({ perfil }) {
       registrado_por: perfil?.nombre_completo || "",
     };
 
-    const { error } = await supabase.from("detenidos").insert([payload]);
+    const { data, error } = await supabase.from("detenidos").insert([payload]).select().single();
     setGuardando(false);
     if (error) {
       setMensaje({ tipo: "error", texto: "Error al guardar: " + error.message });
     } else {
-      setMensaje({ tipo: "ok", texto: "✅ Detenido registrado correctamente en la base de datos." });
-      setForm(initialForm);
+      setMensaje({ tipo: "ok", texto: "✅ Detenido registrado. Ahora puedes agregar fotografías y documentos abajo." });
+      setDetenidoActivo(data);
+      setArchivos([]);
     }
   };
 
   const listaFiltrada = detenidos.filter((d) => {
     const q = busqueda.toLowerCase();
     if (!q) return true;
-    return (
-      (d.nombre || "").toLowerCase().includes(q) ||
-      (d.alias || "").toLowerCase().includes(q) ||
-      (d.delito || "").toLowerCase().includes(q) ||
-      (d.tatuajes || []).some((t) => t.toLowerCase().includes(q))
-    );
+    return (d.nombre || "").toLowerCase().includes(q) || (d.alias || "").toLowerCase().includes(q) || (d.delito || "").toLowerCase().includes(q);
   });
+
+  if (detenidoActivo) {
+    return (
+      <div>
+        <button onClick={() => { setDetenidoActivo(null); setForm(initialForm); setMensaje(null); }} style={{ background: "none", border: "none", color: "#4a9eff", fontSize: 13, cursor: "pointer", marginBottom: 14, padding: 0 }}>← Volver</button>
+
+        <div style={{ background: "#0c1a27", borderRadius: 10, padding: 16, marginBottom: 16, border: "1px solid #1a3050" }}>
+          <div style={{ color: "#ef4444", fontSize: 11, fontWeight: 700 }}>{detenidoActivo.id?.slice(0, 8)}</div>
+          <div style={{ color: "#e8f4ff", fontSize: 18, fontWeight: 700, marginTop: 2 }}>{detenidoActivo.nombre}</div>
+          <div style={{ color: "#f59e0b", fontSize: 13 }}>{detenidoActivo.alias}</div>
+          <div style={{ color: "#c8daea", fontSize: 12, marginTop: 4 }}>{detenidoActivo.delito} · {detenidoActivo.region}</div>
+        </div>
+
+        <Seccion titulo="📸 Fotografías del Detenido" color="#4a9eff">
+          <div style={{ gridColumn: "1 / -1", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+            {FOTO_SLOTS.map((slot) => (
+              <FotoSlot key={slot.key} slot={slot} detenidoId={detenidoActivo.id} perfil={perfil} archivos={archivos} onSubido={() => cargarArchivos(detenidoActivo.id)} />
+            ))}
+          </div>
+        </Seccion>
+
+        <DocumentosExpediente detenidoId={detenidoActivo.id} perfil={perfil} archivos={archivos} onSubido={() => cargarArchivos(detenidoActivo.id)} />
+
+        <Bitacora archivos={archivos} />
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -257,7 +387,7 @@ function ModuloDetenidos({ perfil }) {
         <>
           <Seccion titulo="📍 Datos de la Detención" color="#ef4444">
             <Select label="Región" value={form.region} onChange={(v) => set("region", v)} options={REGIONES} />
-            <Input label="Zona / Coordinación" value={form.zona} onChange={(v) => set("zona", v)} placeholder="Ej. Zona Centro" />
+            <Input label="Zona / Coordinación" value={form.zona} onChange={(v) => set("zona", v)} />
             <Input label="Fecha de detención" type="date" value={form.fecha_deteccion} onChange={(v) => set("fecha_deteccion", v)} />
             <Input label="Delito" value={form.delito} onChange={(v) => set("delito", v)} required />
             <div style={{ gridColumn: "1 / -1" }}><Input label="Lugar de la detención" value={form.lugar_deteccion} onChange={(v) => set("lugar_deteccion", v)} /></div>
@@ -305,14 +435,14 @@ function ModuloDetenidos({ perfil }) {
           )}
 
           <button onClick={guardar} disabled={guardando} style={{ width: "100%", background: guardando ? "#1a3050" : "linear-gradient(135deg,#1a4fa0,#0d3070)", border: "none", borderRadius: 9, padding: 14, color: "#e8f4ff", fontSize: 14, fontWeight: 700, cursor: guardando ? "default" : "pointer", letterSpacing: 1 }}>
-            {guardando ? "GUARDANDO…" : "GUARDAR DETENIDO EN BASE DE DATOS"}
+            {guardando ? "GUARDANDO…" : "GUARDAR DETENIDO Y CONTINUAR"}
           </button>
         </>
       )}
 
       {vista === "lista" && (
         <div>
-          <input value={busqueda} onChange={(e) => setBusqueda(e.target.value)} placeholder="Buscar por nombre, alias, delito, tatuaje…"
+          <input value={busqueda} onChange={(e) => setBusqueda(e.target.value)} placeholder="Buscar por nombre, alias, delito…"
             style={{ background: "#0c1a27", border: "1px solid #1e3a5f", borderRadius: 8, padding: "10px 14px", color: "#d0e4f4", fontSize: 13, width: "100%", outline: "none", boxSizing: "border-box", marginBottom: 14 }} />
           {cargando ? (
             <div style={{ textAlign: "center", padding: 40, color: "#5a7a9a" }}>Cargando desde Supabase…</div>
@@ -320,14 +450,13 @@ function ModuloDetenidos({ perfil }) {
             <div style={{ textAlign: "center", padding: 40, color: "#5a7a9a" }}>No hay detenidos registrados aún.</div>
           ) : (
             listaFiltrada.map((d) => (
-              <div key={d.id} style={{ background: "#0c1a27", border: "1px solid #1a3050", borderRadius: 10, padding: 14, marginBottom: 10 }}>
+              <div key={d.id} onClick={() => setDetenidoActivo(d)} style={{ background: "#0c1a27", border: "1px solid #1a3050", borderRadius: 10, padding: 14, marginBottom: 10, cursor: "pointer" }}>
                 <div style={{ display: "flex", justifyContent: "space-between" }}>
                   <div style={{ color: "#e8f4ff", fontSize: 15, fontWeight: 700 }}>{d.nombre}</div>
                   <div style={{ color: "#f59e0b", fontSize: 12 }}>{d.alias}</div>
                 </div>
                 <div style={{ color: "#c8daea", fontSize: 12, marginTop: 4 }}>{d.delito} · {d.region} · {d.fecha_deteccion}</div>
                 {d.registrado_por && <div style={{ color: "#5a7a9a", fontSize: 11, marginTop: 4 }}>Registrado por: {d.registrado_por}</div>}
-                {d.tatuajes && d.tatuajes.length > 0 && <div style={{ color: "#a78bfa", fontSize: 11, marginTop: 4 }}>Tatuajes: {d.tatuajes.join(", ")}</div>}
               </div>
             ))
           )}
@@ -344,38 +473,21 @@ export default function App() {
   const [cargandoSesion, setCargandoSesion] = useState(true);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSesion(session);
-      setCargandoSesion(false);
-    });
-
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSesion(session);
-    });
-
+    supabase.auth.getSession().then(({ data: { session } }) => { setSesion(session); setCargandoSesion(false); });
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => setSesion(session));
     return () => listener.subscription.unsubscribe();
   }, []);
 
   useEffect(() => {
     if (sesion?.user) {
-      supabase.from("perfiles").select("*").eq("id", sesion.user.id).single()
-        .then(({ data }) => setPerfil(data));
-    } else {
-      setPerfil(null);
-    }
+      supabase.from("perfiles").select("*").eq("id", sesion.user.id).single().then(({ data }) => setPerfil(data));
+    } else setPerfil(null);
   }, [sesion]);
 
-  const cerrarSesion = async () => {
-    await supabase.auth.signOut();
-  };
+  const cerrarSesion = async () => { await supabase.auth.signOut(); };
 
-  if (cargandoSesion) {
-    return <div style={{ minHeight: "100vh", background: "#070f1a", display: "flex", alignItems: "center", justifyContent: "center", color: "#5a7a9a" }}>Cargando…</div>;
-  }
-
-  if (!sesion) {
-    return <Auth onLogin={() => {}} />;
-  }
+  if (cargandoSesion) return <div style={{ minHeight: "100vh", background: "#070f1a", display: "flex", alignItems: "center", justifyContent: "center", color: "#5a7a9a" }}>Cargando…</div>;
+  if (!sesion) return <Auth />;
 
   return (
     <div style={{ minHeight: "100vh", background: "#070f1a", fontFamily: "'Trebuchet MS', sans-serif", color: "#c8daea" }}>
@@ -384,7 +496,7 @@ export default function App() {
           <div style={{ width: 38, height: 38, background: "linear-gradient(135deg,#7f1d1d,#1a4fa0)", borderRadius: 9, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>🛡️</div>
           <div>
             <div style={{ color: "#e8f4ff", fontSize: 14, fontWeight: 700 }}>FGE GUERRERO — SISTEMA MINISTERIAL</div>
-            <div style={{ color: "#4a9eff", fontSize: 9, letterSpacing: 2 }}>MÓDULO: INDIVIDUALIZACIÓN DE DETENIDOS</div>
+            <div style={{ color: "#4a9eff", fontSize: 9, letterSpacing: 2 }}>INDIVIDUALIZACIÓN DE DETENIDOS</div>
           </div>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -399,7 +511,6 @@ export default function App() {
           <button onClick={cerrarSesion} style={{ background: "#1a0a0a", border: "1px solid #ef444433", borderRadius: 7, padding: "6px 12px", color: "#ef4444", fontSize: 11, fontWeight: 700, cursor: "pointer" }}>SALIR</button>
         </div>
       </div>
-
       <div style={{ padding: 20, maxWidth: 800, margin: "0 auto" }}>
         <ModuloDetenidos perfil={perfil} />
       </div>
