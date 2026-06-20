@@ -358,7 +358,12 @@ function DocumentosExpediente({ detenidoId, perfil, archivos, onSubido }) {
     if (!tipoSeleccionado) { alert("Selecciona primero el tipo de documento."); return; }
     setSubiendo(true);
     const ext = file.name.split(".").pop();
-    const nombreUnico = `${detenidoId}/doc_${tipoSeleccionado.replace(/\s/g, "_")}_${Date.now()}.${ext}`;
+    const tipoLimpio = tipoSeleccionado
+      .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // quita acentos
+      .replace(/[^a-zA-Z0-9]+/g, "_") // cualquier cosa que no sea letra/número -> guion bajo
+      .replace(/_+/g, "_") // colapsa guiones bajos repetidos
+      .replace(/^_|_$/g, ""); // quita guion bajo al inicio/final
+    const nombreUnico = `${detenidoId}/doc_${tipoLimpio}_${Date.now()}.${ext}`;
 
     const { error: errorSubida } = await supabase.storage.from("expedientes").upload(nombreUnico, file);
     if (errorSubida) { alert("Error al subir: " + errorSubida.message); setSubiendo(false); return; }
