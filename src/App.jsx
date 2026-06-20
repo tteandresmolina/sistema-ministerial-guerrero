@@ -633,6 +633,96 @@ function IndiciosAsegurados({ detenidoId, perfil }) {
   );
 }
 
+// ─── CO-DETENIDOS DE LA MISMA CARPETA ───────────────────────────────────────────
+function CoDetenidos({ detenido, perfil, onActualizado }) {
+  const [vinculados, setVinculados] = useState([]);
+  const [cargando, setCargando] = useState(true);
+  const [busqueda, setBusqueda] = useState("");
+  const [resultados, setResultados] = useState([]);
+  const [buscando, setBuscando] = useState(false);
+
+  const cargarVinculados = async () => {
+    setCargando(true);
+    const { data } = await supabase.from("detenidos_vinculados").select("*, vinculado:vinculado_a_id(id, nombre, alias, delito)").eq("detenido_id", detenido.id);
+    setVinculados(data || []);
+    setCargando(false);
+  };
+
+  useEffect(() => { cargarVinculados(); }, [detenido.id]);
+
+  const buscar = async (texto) => {
+    setBusqueda(texto);
+    if (texto.length < 2) { setResultados([]); return; }
+    setBuscando(true);
+    const { data } = await supabase.from("detenidos").select("id, nombre, alias, delito").ilike("nombre", `%${texto}%`).neq("id", detenido.id).limit(8);
+    setResultados(data || []);
+    setBuscando(false);
+  };
+
+  const vincular = async (otroDetenido) => {
+    const { error } = await supabase.from("detenidos_vinculados").insert([
+      { detenido_id: detenido.id, vinculado_a_id: otroDetenido.id, registrado_por: perfil?.nombre_completo || "" },
+      { detenido_id: otroDetenido.id, vinculado_a_id: detenido.id, registrado_por: perfil?.nombre_completo || "" },
+    ]);
+    if (error && !error.message.includes("duplicate")) { alert("Error al vincular: " + error.message); return; }
+    setBusqueda(""); setResultados([]);
+    cargarVinculados();
+    if (onActualizado) onActualizado();
+  };
+
+  return (
+    <div style={{ background: "#0c1a27", borderRadius: 10, padding: 18, marginBottom: 16, border: "1px solid #1a3050" }}>
+      <div style={{ color: "#a78bfa", fontSize: 11, fontWeight: 800, letterSpacing: 2, marginBottom: 14, textTransform: "uppercase" }}>👥 Co-detenidos de la misma carpeta</div>
+
+      {detenido.codetenidos_nombres && (
+        <div style={{ background: "#0a1525", borderRadius: 8, padding: 12, marginBottom: 12 }}>
+          <div style={{ color: "#5a7a9a", fontSize: 10, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4 }}>Nombres anotados al registrar (sin vincular aún)</div>
+          {detenido.codetenidos_nombres.split("\n").filter(Boolean).map((n, i) => (
+            <div key={i} style={{ color: "#c8daea", fontSize: 13 }}>• {n}</div>
+          ))}
+        </div>
+      )}
+
+      {!cargando && vinculados.length > 0 && (
+        <div style={{ marginBottom: 12 }}>
+          {vinculados.map((v) => (
+            <div key={v.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "#0a1525", borderRadius: 8, padding: "10px 12px", marginBottom: 6 }}>
+              <div>
+                <div style={{ color: "#e8f4ff", fontSize: 13, fontWeight: 600 }}>{v.vinculado?.nombre}</div>
+                <div style={{ color: "#8a9ab0", fontSize: 11 }}>{v.vinculado?.alias} · {v.vinculado?.delito}</div>
+              </div>
+              <span style={{ color: "#a78bfa", fontSize: 16 }}>🔗</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <div style={{ position: "relative" }}>
+        <input value={busqueda} onChange={(e) => buscar(e.target.value)} placeholder="Buscar detenido ya registrado por nombre…"
+          style={{ background: "#0a1525", border: "1px solid #1e3a5f", borderRadius: 7, padding: "9px 12px", color: "#d0e4f4", fontSize: 13, width: "100%", outline: "none", boxSizing: "border-box" }} />
+        {busqueda.length >= 2 && (
+          <div style={{ background: "#0a1525", border: "1px solid #2a5080", borderRadius: 8, marginTop: 4, maxHeight: 200, overflowY: "auto" }}>
+            {buscando ? (
+              <div style={{ color: "#5a7a9a", fontSize: 12, padding: 10 }}>Buscando…</div>
+            ) : resultados.length === 0 ? (
+              <div style={{ color: "#5a7a9a", fontSize: 12, padding: 10 }}>Sin resultados.</div>
+            ) : (
+              resultados.map((r) => (
+                <div key={r.id} onClick={() => vincular(r)} style={{ padding: "8px 12px", cursor: "pointer", borderBottom: "1px solid #1a3050" }}
+                  onMouseEnter={(e) => e.currentTarget.style.background = "#1a3050"}
+                  onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}>
+                  <div style={{ color: "#e8f4ff", fontSize: 13 }}>{r.nombre}</div>
+                  <div style={{ color: "#8a9ab0", fontSize: 11 }}>{r.alias} · {r.delito}</div>
+                </div>
+              ))
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ─── BITÁCORA / LÍNEA DE TIEMPO ─────────────────────────────────────────────────
 function Bitacora({ archivos }) {
   const ordenados = [...archivos].sort((a, b) => new Date(b.creado_en) - new Date(a.creado_en));
@@ -658,6 +748,7 @@ function Bitacora({ archivos }) {
 // ─── FORMULARIO DE DETENIDOS ────────────────────────────────────────────────────
 const initialForm = {
   region: "", zona: "", fecha_deteccion: "", delito: "", lugar_deteccion: "", tipo_deteccion: "",
+  latitud: "", longitud: "", codetenidos_nombres: "",
   carpeta_investigacion: "", carpeta_judicial: "", rnd: "",
   nombre: "", alias: "", fecha_nacimiento: "", lugar_nacimiento: "", lugar_residencia: "",
   ocupacion: "", sexo: "Masculino", estatura: "", complexion: "", color_piel: "",
@@ -896,6 +987,8 @@ function ModuloDetenidos({ perfil }) {
       ...form,
       fecha_deteccion: form.fecha_deteccion || null,
       fecha_nacimiento: form.fecha_nacimiento || null,
+      latitud: form.latitud ? parseFloat(form.latitud) : null,
+      longitud: form.longitud ? parseFloat(form.longitud) : null,
       tatuajes: form.tatuajes.split("\n").map((s) => s.trim()).filter(Boolean),
       domicilios: form.domicilios.split("\n").map((s) => s.trim()).filter(Boolean),
       autoridad_detiene: "Policía Ministerial",
@@ -949,6 +1042,11 @@ function ModuloDetenidos({ perfil }) {
 
         <IndiciosAsegurados detenidoId={detenidoActivo.id} perfil={perfil} />
 
+        <CoDetenidos detenido={detenidoActivo} perfil={perfil} onActualizado={async () => {
+          const { data } = await supabase.from("detenidos").select("*").eq("id", detenidoActivo.id).single();
+          if (data) setDetenidoActivo(data);
+        }} />
+
         <Bitacora archivos={archivos} />
       </div>
     );
@@ -970,9 +1068,15 @@ function ModuloDetenidos({ perfil }) {
             <Input label="Delito" value={form.delito} onChange={(v) => set("delito", v)} required />
             <Select label="Tipo de detención" value={form.tipo_deteccion} onChange={(v) => set("tipo_deteccion", v)} options={TIPOS_DETENCION} required />
             <div style={{ gridColumn: "1 / -1" }}><Input label="Lugar de la detención" value={form.lugar_deteccion} onChange={(v) => set("lugar_deteccion", v)} /></div>
+            <Input label="Latitud" value={form.latitud} onChange={(v) => set("latitud", v)} placeholder="Ej. 16.8531200" />
+            <Input label="Longitud" value={form.longitud} onChange={(v) => set("longitud", v)} placeholder="Ej. -99.8236500" />
             <Input label="Carpeta de investigación" value={form.carpeta_investigacion} onChange={(v) => set("carpeta_investigacion", v)} placeholder="Pendiente por anexar" />
             <Input label="Carpeta judicial" value={form.carpeta_judicial} onChange={(v) => set("carpeta_judicial", v)} placeholder="Pendiente por anexar" />
             <Input label="R.N.D." value={form.rnd} onChange={(v) => set("rnd", v)} placeholder="Pendiente por anexar" />
+            <div style={{ gridColumn: "1 / -1" }}>
+              <TextArea label="¿Hubo más detenidos en esta misma carpeta? Escribe sus nombres (uno por línea)" value={form.codetenidos_nombres} onChange={(v) => set("codetenidos_nombres", v)} rows={2} />
+              <div style={{ color: "#5a7a9a", fontSize: 10, marginTop: 4 }}>A cada uno se le creará su propio expediente por separado. Si ya están registrados en el sistema, podrás vincularlos desde el expediente después de guardar.</div>
+            </div>
           </Seccion>
 
           <Seccion titulo="👤 Datos Generales del Detenido" color="#4a9eff">
