@@ -7,7 +7,7 @@ const COMPLEXIONES = ["Delgada","Regular","Robusta","Obesa"];
 const TEZ = ["Blanca","Morena clara","Morena","Morena oscura","Negra"];
 const ESTADOS_CIVILES = ["Soltero(a)","Casado(a)","Unión libre","Divorciado(a)","Viudo(a)"];
 const IDENTIFICACIONES = ["INE","Pasaporte","Licencia","Cédula profesional","No proporcionó","Otro"];
-const TIPOS_DOCUMENTO = ["Oficio de investigación","IPH","Acta de detención","Cadena de custodia","Acta de levantamiento cadavérico","Dictamen pericial","Croquis del lugar","Entrevista","Acuerdo del MP","Otro"];
+const TIPOS_DOCUMENTO = ["Boleta de Internamiento","Oficio de Investigación","Pase de Visitas","Oficio de Solicitud a Plataforma México","Oficio de Solicitud a Otras Dependencias","Oficio de Solicitud de Cámaras C2, C4 y C5","Boleta de Libertad Bajo Reservas de Ley","Solicitud de Audiencia (Fecha y Hora Programada)","Otros"];
 const rolLabel = { agente: "Agente", coordinador: "Coordinador de Zona", regional: "Director Regional", mando: "Director General" };
 const rolColor = { agente: "#4a9eff", coordinador: "#f59e0b", regional: "#a78bfa", mando: "#ef4444" };
 
