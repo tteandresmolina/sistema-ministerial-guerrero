@@ -8,6 +8,9 @@ const TEZ = ["Blanca","Morena clara","Morena","Morena oscura","Negra"];
 const ESTADOS_CIVILES = ["Soltero(a)","Casado(a)","Unión libre","Divorciado(a)","Viudo(a)"];
 const IDENTIFICACIONES = ["INE","Pasaporte","Licencia","Cédula profesional","No proporcionó","Otro"];
 const TIPOS_DOCUMENTO = ["Boleta de Internamiento","Oficio de Investigación","Pase de Visitas","Oficio de Solicitud a Plataforma México","Oficio de Solicitud a Otras Dependencias","Oficio de Solicitud de Cámaras C2, C4 y C5","Boleta de Libertad Bajo Reservas de Ley","Solicitud de Audiencia (Fecha y Hora Programada)","Otros"];
+const TIPOLOGIAS_INDICIO = ["Balístico","Narcóticos","Tecnológico","Vehículo","Bien Inmueble","Arma","Dinero","Otro"];
+const tipologiaIcono = { "Balístico": "🎯", "Narcóticos": "💊", "Tecnológico": "💻", "Vehículo": "🚗", "Bien Inmueble": "🏠", "Arma": "🔫", "Dinero": "💵", "Otro": "📦" };
+const tipologiaColor = { "Balístico": "#ef4444", "Narcóticos": "#a78bfa", "Tecnológico": "#4a9eff", "Vehículo": "#f59e0b", "Bien Inmueble": "#14b8a6", "Arma": "#7f1d1d", "Dinero": "#22c55e", "Otro": "#5a7a9a" };
 const rolLabel = { agente: "Agente", coordinador: "Coordinador de Zona", regional: "Director Regional", mando: "Director General" };
 const rolColor = { agente: "#4a9eff", coordinador: "#f59e0b", regional: "#a78bfa", mando: "#ef4444" };
 
@@ -422,6 +425,164 @@ function DocumentosExpediente({ detenidoId, perfil, archivos, onSubido }) {
   );
 }
 
+// ─── INDICIOS ASEGURADOS ────────────────────────────────────────────────────────
+function IndicioCard({ indicio, perfil, detenidoId, onActualizado }) {
+  const inputRef = useRef(null);
+  const [subiendo, setSubiendo] = useState(false);
+  const [archivos, setArchivos] = useState(indicio._archivos || []);
+  const [expandido, setExpandido] = useState(false);
+
+  const subirArchivo = async (file) => {
+    setSubiendo(true);
+    const esVideo = file.type.startsWith("video/");
+    const ext = file.name.split(".").pop();
+    const nombreUnico = `${detenidoId}/indicio_${indicio.id}_${Date.now()}.${ext}`;
+
+    const { error: errorSubida } = await supabase.storage.from("expedientes").upload(nombreUnico, file);
+    if (errorSubida) { alert("Error al subir: " + errorSubida.message); setSubiendo(false); return; }
+
+    const { data: urlData } = supabase.storage.from("expedientes").getPublicUrl(nombreUnico);
+
+    const { data: nuevoArchivo, error: errorInsert } = await supabase.from("indicios_archivos").insert([{
+      indicio_id: indicio.id,
+      tipo_archivo: esVideo ? "video" : "foto",
+      url_archivo: urlData.publicUrl,
+      nombre_archivo: file.name,
+      subido_por: perfil?.nombre_completo || "",
+      subido_por_id: perfil?.id || null,
+    }]).select().single();
+
+    if (errorInsert) alert("Error al registrar archivo: " + errorInsert.message);
+    else setArchivos((prev) => [...prev, nuevoArchivo]);
+
+    setSubiendo(false);
+    if (onActualizado) onActualizado();
+  };
+
+  const color = tipologiaColor[indicio.tipologia] || "#5a7a9a";
+
+  return (
+    <div style={{ background: "#0a1525", border: `1px solid ${color}44`, borderRadius: 10, padding: 14, marginBottom: 10 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", cursor: "pointer" }} onClick={() => setExpandido((v) => !v)}>
+        <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+          <span style={{ fontSize: 22 }}>{tipologiaIcono[indicio.tipologia] || "📦"}</span>
+          <div>
+            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+              <span style={{ background: color + "22", color, border: `1px solid ${color}55`, borderRadius: 4, padding: "2px 8px", fontSize: 10, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase" }}>{indicio.tipologia}</span>
+              {indicio.cantidad && <span style={{ color: "#8a9ab0", fontSize: 11 }}>Cant: {indicio.cantidad}</span>}
+            </div>
+            <div style={{ color: "#e8f4ff", fontSize: 13, marginTop: 4 }}>{indicio.descripcion}</div>
+            {indicio.folio_cadena_custodia && <div style={{ color: "#5a7a9a", fontSize: 11, marginTop: 2 }}>Folio cadena de custodia: {indicio.folio_cadena_custodia}</div>}
+          </div>
+        </div>
+        <span style={{ color: "#5a7a9a", fontSize: 14 }}>{expandido ? "▲" : "▼"}</span>
+      </div>
+
+      {expandido && (
+        <div style={{ marginTop: 12, paddingTop: 12, borderTop: "1px solid #1a3050" }}>
+          {archivos.length > 0 && (
+            <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 10 }}>
+              {archivos.map((a) => (
+                a.tipo_archivo === "video" ? (
+                  <video key={a.id} src={a.url_archivo} controls style={{ width: 100, height: 70, borderRadius: 6, border: "1px solid #1e3a5f" }} />
+                ) : (
+                  <img key={a.id} src={a.url_archivo} alt="indicio" style={{ width: 70, height: 70, objectFit: "cover", borderRadius: 6, border: "1px solid #1e3a5f" }} />
+                )
+              ))}
+            </div>
+          )}
+          <input ref={inputRef} type="file" accept="image/*,video/*" style={{ display: "none" }}
+            onChange={(e) => { if (e.target.files[0]) subirArchivo(e.target.files[0]); e.target.value = ""; }} />
+          <button onClick={() => inputRef.current.click()} disabled={subiendo}
+            style={{ background: "#1a3050", border: "1px solid #2a5080", borderRadius: 7, padding: "7px 14px", color: "#d0e4f4", fontSize: 11, fontWeight: 700, cursor: "pointer" }}>
+            {subiendo ? "Subiendo…" : "📷🎥 Agregar foto o video"}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function IndiciosAsegurados({ detenidoId, perfil }) {
+  const [indicios, setIndicios] = useState([]);
+  const [cargando, setCargando] = useState(true);
+  const [mostrarForm, setMostrarForm] = useState(false);
+  const [tipologia, setTipologia] = useState("");
+  const [cantidad, setCantidad] = useState("");
+  const [descripcion, setDescripcion] = useState("");
+  const [folio, setFolio] = useState("");
+  const [guardando, setGuardando] = useState(false);
+
+  const cargarIndicios = async () => {
+    setCargando(true);
+    const { data: indiciosData } = await supabase.from("indicios_asegurados").select("*").eq("detenido_id", detenidoId).order("creado_en", { ascending: false });
+    if (indiciosData && indiciosData.length > 0) {
+      const ids = indiciosData.map((i) => i.id);
+      const { data: archivosData } = await supabase.from("indicios_archivos").select("*").in("indicio_id", ids);
+      const conArchivos = indiciosData.map((i) => ({ ...i, _archivos: (archivosData || []).filter((a) => a.indicio_id === i.id) }));
+      setIndicios(conArchivos);
+    } else {
+      setIndicios([]);
+    }
+    setCargando(false);
+  };
+
+  useEffect(() => { cargarIndicios(); }, [detenidoId]);
+
+  const guardarIndicio = async () => {
+    if (!tipologia || !descripcion) { alert("Tipología y descripción son obligatorias."); return; }
+    setGuardando(true);
+    const { error } = await supabase.from("indicios_asegurados").insert([{
+      detenido_id: detenidoId,
+      tipologia, cantidad, descripcion,
+      folio_cadena_custodia: folio,
+      registrado_por: perfil?.nombre_completo || "",
+      registrado_por_id: perfil?.id || null,
+    }]);
+    setGuardando(false);
+    if (error) { alert("Error al guardar: " + error.message); return; }
+    setTipologia(""); setCantidad(""); setDescripcion(""); setFolio(""); setMostrarForm(false);
+    cargarIndicios();
+  };
+
+  return (
+    <div style={{ background: "#0c1a27", borderRadius: 10, padding: 18, marginBottom: 16, border: "1px solid #1a3050" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+        <div style={{ color: "#f59e0b", fontSize: 11, fontWeight: 800, letterSpacing: 2, textTransform: "uppercase" }}>📦 Indicios Asegurados</div>
+        <button onClick={() => setMostrarForm((v) => !v)} style={{ background: "#3a2a0a", border: "1px solid #f59e0b44", borderRadius: 7, padding: "6px 12px", color: "#fde68a", fontSize: 11, fontWeight: 700, cursor: "pointer" }}>
+          {mostrarForm ? "✕ Cancelar" : "+ Agregar indicio"}
+        </button>
+      </div>
+
+      {mostrarForm && (
+        <div style={{ background: "#0a1525", borderRadius: 8, padding: 14, marginBottom: 14 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 10 }}>
+            <Select label="Tipología" value={tipologia} onChange={setTipologia} options={TIPOLOGIAS_INDICIO} required />
+            <Input label="Cantidad" value={cantidad} onChange={setCantidad} placeholder="Ej. 1 pieza, 50 gramos" />
+          </div>
+          <div style={{ marginBottom: 10 }}>
+            <TextArea label="Descripción del indicio" value={descripcion} onChange={setDescripcion} rows={2} />
+          </div>
+          <div style={{ marginBottom: 12 }}>
+            <Input label="Folio de cadena de custodia" value={folio} onChange={setFolio} placeholder="Opcional" />
+          </div>
+          <button onClick={guardarIndicio} disabled={guardando} style={{ width: "100%", background: guardando ? "#3a2a0a" : "linear-gradient(135deg,#92400e,#713f12)", border: "none", borderRadius: 7, padding: 10, color: "#fde68a", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
+            {guardando ? "GUARDANDO…" : "GUARDAR INDICIO"}
+          </button>
+        </div>
+      )}
+
+      {cargando ? (
+        <div style={{ color: "#5a7a9a", fontSize: 12, textAlign: "center", padding: 16 }}>Cargando…</div>
+      ) : indicios.length === 0 ? (
+        <div style={{ color: "#5a7a9a", fontSize: 12, textAlign: "center", padding: 16 }}>Aún no se han registrado indicios para este expediente.</div>
+      ) : (
+        indicios.map((ind) => <IndicioCard key={ind.id} indicio={ind} perfil={perfil} detenidoId={detenidoId} onActualizado={cargarIndicios} />)
+      )}
+    </div>
+  );
+}
+
 // ─── BITÁCORA / LÍNEA DE TIEMPO ─────────────────────────────────────────────────
 function Bitacora({ archivos }) {
   const ordenados = [...archivos].sort((a, b) => new Date(b.creado_en) - new Date(a.creado_en));
@@ -535,6 +696,8 @@ function ModuloDetenidos({ perfil }) {
         </Seccion>
 
         <DocumentosExpediente detenidoId={detenidoActivo.id} perfil={perfil} archivos={archivos} onSubido={() => cargarArchivos(detenidoActivo.id)} />
+
+        <IndiciosAsegurados detenidoId={detenidoActivo.id} perfil={perfil} />
 
         <Bitacora archivos={archivos} />
       </div>
