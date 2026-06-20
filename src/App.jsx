@@ -346,6 +346,144 @@ function Auth() {
 }
 
 // ─── SUBIDA DE UN SLOT DE FOTO ──────────────────────────────────────────────────
+// ─── RECONOCIMIENTO FACIAL BÁSICO (alerta orientativa, no oficial) ─────────────
+let faceApiCargada = false;
+let faceApiCargando = null;
+
+async function cargarFaceApi() {
+  if (faceApiCargada) return true;
+  if (faceApiCargando) return faceApiCargando;
+
+  faceApiCargando = new Promise((resolve, reject) => {
+    const script = document.createElement("script");
+    script.src = "https://cdn.jsdelivr.net/npm/@vladmandic/face-api/dist/face-api.js";
+    script.onload = async () => {
+      try {
+        const MODEL_URL = "https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model";
+        await Promise.all([
+          window.faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
+          window.faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
+          window.faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL),
+        ]);
+        faceApiCargada = true;
+        resolve(true);
+      } catch (e) {
+        reject(e);
+      }
+    };
+    script.onerror = () => reject(new Error("No se pudo cargar la librería de reconocimiento facial."));
+    document.head.appendChild(script);
+  });
+
+  return faceApiCargando;
+}
+
+async function calcularDescriptorDeImagen(url) {
+  const img = await window.faceapi.fetchImage(url);
+  const deteccion = await window.faceapi.detectSingleFace(img, new window.faceapi.TinyFaceDetectorOptions())
+    .withFaceLandmarks().withFaceDescriptor();
+  if (!deteccion) return null;
+  return Array.from(deteccion.descriptor);
+}
+
+function distanciaEuclidiana(a, b) {
+  let suma = 0;
+  for (let i = 0; i < a.length; i++) suma += (a[i] - b[i]) ** 2;
+  return Math.sqrt(suma);
+}
+
+function VerificarRostro({ detenido, archivos, perfil }) {
+  const [estado, setEstado] = useState("inicial"); // inicial | cargando | sin_foto | resultados | error
+  const [resultados, setResultados] = useState([]);
+  const [errorMsg, setErrorMsg] = useState("");
+
+  const fotoFrente = archivos.find((a) => a.categoria === "foto_frente");
+
+  const verificar = async () => {
+    if (!fotoFrente) { setEstado("sin_foto"); return; }
+    setEstado("cargando");
+    setErrorMsg("");
+    try {
+      await cargarFaceApi();
+
+      const descriptorActual = await calcularDescriptorDeImagen(fotoFrente.url_archivo);
+      if (!descriptorActual) {
+        setEstado("error");
+        setErrorMsg("No se detectó un rostro claro en la fotografía de frente. Intenta con otra foto más nítida.");
+        return;
+      }
+
+      if (!detenido.huella_facial) {
+        await supabase.from("detenidos").update({ huella_facial: JSON.stringify(descriptorActual) }).eq("id", detenido.id);
+      }
+
+      const { data: otrosDetenidos } = await supabase.from("detenidos")
+        .select("id, nombre, alias, delito, region, fecha_deteccion, huella_facial")
+        .not("huella_facial", "is", null)
+        .neq("id", detenido.id);
+
+      const comparaciones = (otrosDetenidos || []).map((d) => {
+        const huellaOtro = JSON.parse(d.huella_facial);
+        const distancia = distanciaEuclidiana(descriptorActual, huellaOtro);
+        const porcentajeParecido = Math.max(0, Math.round((1 - distancia / 1.0) * 100));
+        return { ...d, distancia, porcentajeParecido };
+      }).filter((d) => d.distancia < 0.6).sort((a, b) => a.distancia - b.distancia).slice(0, 5);
+
+      setResultados(comparaciones);
+      setEstado("resultados");
+    } catch (e) {
+      setEstado("error");
+      setErrorMsg(e.message || "Ocurrió un error al procesar el reconocimiento facial.");
+    }
+  };
+
+  return (
+    <div style={{ background: "#0c1a27", border: "1px solid #1a3050", borderRadius: 10, padding: 14, marginTop: 10 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div>
+          <div style={{ color: "#a78bfa", fontSize: 11, fontWeight: 800, letterSpacing: 1.5, textTransform: "uppercase" }}>🔍 Reconocimiento Facial Básico</div>
+          <div style={{ color: "#5a7a9a", fontSize: 10, marginTop: 2 }}>Alerta orientativa, no es identificación oficial</div>
+        </div>
+        <button onClick={verificar} disabled={estado === "cargando"} style={{ background: "#2e1065", border: "1px solid #a78bfa44", borderRadius: 7, padding: "8px 14px", color: "#ddd6fe", fontSize: 11, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" }}>
+          {estado === "cargando" ? "Analizando…" : "Verificar si ya existe"}
+        </button>
+      </div>
+
+      {estado === "sin_foto" && (
+        <div style={{ marginTop: 10, color: "#f59e0b", fontSize: 12 }}>⚠ Primero sube la fotografía de frente del detenido.</div>
+      )}
+
+      {estado === "error" && (
+        <div style={{ marginTop: 10, color: "#f87171", fontSize: 12 }}>⚠ {errorMsg}</div>
+      )}
+
+      {estado === "resultados" && (
+        <div style={{ marginTop: 12 }}>
+          {resultados.length === 0 ? (
+            <div style={{ color: "#22c55e", fontSize: 12 }}>✓ No se encontraron coincidencias con otros detenidos registrados.</div>
+          ) : (
+            <>
+              <div style={{ color: "#fbbf24", fontSize: 12, fontWeight: 700, marginBottom: 8 }}>⚠ Posibles coincidencias encontradas:</div>
+              {resultados.map((r) => (
+                <div key={r.id} style={{ background: "#0a1525", borderRadius: 8, padding: 10, marginBottom: 6 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between" }}>
+                    <div style={{ color: "#e8f4ff", fontSize: 13, fontWeight: 600 }}>{r.nombre}</div>
+                    <span style={{ color: "#f59e0b", fontSize: 12, fontWeight: 700 }}>{r.porcentajeParecido}% parecido</span>
+                  </div>
+                  <div style={{ color: "#8a9ab0", fontSize: 11, marginTop: 2 }}>{r.alias} · {r.delito}</div>
+                  <div style={{ color: "#5a7a9a", fontSize: 11 }}>{r.region} · {r.fecha_deteccion}</div>
+                </div>
+              ))}
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+
+// ─── SUBIDA DE UN SLOT DE FOTO ──────────────────────────────────────────────────
 function FotoSlot({ slot, detenidoId, perfil, archivos, onSubido }) {
   const inputRef = useRef(null);
   const [subiendo, setSubiendo] = useState(false);
@@ -1035,6 +1173,9 @@ function ModuloDetenidos({ perfil }) {
             {FOTO_SLOTS.map((slot) => (
               <FotoSlot key={slot.key} slot={slot} detenidoId={detenidoActivo.id} perfil={perfil} archivos={archivos} onSubido={() => cargarArchivos(detenidoActivo.id)} />
             ))}
+          </div>
+          <div style={{ gridColumn: "1 / -1" }}>
+            <VerificarRostro detenido={detenidoActivo} archivos={archivos} perfil={perfil} />
           </div>
         </Seccion>
 
