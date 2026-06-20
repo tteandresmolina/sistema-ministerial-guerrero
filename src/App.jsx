@@ -9,6 +9,7 @@ const ESTADOS_CIVILES = ["Soltero(a)","Casado(a)","Unión libre","Divorciado(a)"
 const IDENTIFICACIONES = ["INE","Pasaporte","Licencia","Cédula profesional","No proporcionó","Otro"];
 const TIPOS_DOCUMENTO = ["Boleta de Internamiento","Oficio de Investigación","Pase de Visitas","Oficio de Solicitud a Plataforma México","Oficio de Solicitud a Otras Dependencias","Oficio de Solicitud de Cámaras C2, C4 y C5","Boleta de Libertad Bajo Reservas de Ley","Solicitud de Audiencia (Fecha y Hora Programada)","Otros"];
 const TIPOLOGIAS_INDICIO = ["Balístico","Narcóticos","Tecnológico","Vehículo","Bien Inmueble","Arma","Dinero","Otro"];
+const TIPOS_DETENCION = ["Flagrancia","Mandamiento Judicial / Orden de Aprehensión","Caso Urgente","Mandamiento Ministerial"];
 const tipologiaIcono = { "Balístico": "🎯", "Narcóticos": "💊", "Tecnológico": "💻", "Vehículo": "🚗", "Bien Inmueble": "🏠", "Arma": "🔫", "Dinero": "💵", "Otro": "📦" };
 const tipologiaColor = { "Balístico": "#ef4444", "Narcóticos": "#a78bfa", "Tecnológico": "#4a9eff", "Vehículo": "#f59e0b", "Bien Inmueble": "#14b8a6", "Arma": "#7f1d1d", "Dinero": "#22c55e", "Otro": "#5a7a9a" };
 const rolLabel = { agente: "Agente", coordinador: "Coordinador de Zona", regional: "Director Regional", mando: "Director General" };
@@ -214,6 +215,55 @@ function DatePicker({ label, value, onChange, required = false }) {
             style={{ marginTop: 10, width: "100%", background: "none", border: "1px solid #ef444444", borderRadius: 6, padding: "6px", color: "#ef4444", fontSize: 11, cursor: "pointer" }}>
             Limpiar fecha
           </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── SELECTOR DE FECHA + HORA EN FORMATO 24 HORAS (00-23) ──────────────────────
+function DateTimePicker24({ label, value, onChange, required = false }) {
+  // value esperado en formato "YYYY-MM-DDTHH:mm"
+  const [fechaParte, horaParteRaw] = value ? value.split("T") : ["", ""];
+  const horaParte = horaParteRaw || "";
+  const [hh, mm] = horaParte ? horaParte.split(":") : ["", ""];
+
+  const actualizar = (nuevaFecha, nuevaHH, nuevaMM) => {
+    const f = nuevaFecha !== undefined ? nuevaFecha : fechaParte;
+    const h = nuevaHH !== undefined ? nuevaHH : (hh || "00");
+    const m = nuevaMM !== undefined ? nuevaMM : (mm || "00");
+    if (!f) { onChange(""); return; }
+    onChange(`${f}T${h}:${m}`);
+  };
+
+  const horas = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, "0"));
+  const minutos = ["00", "15", "30", "45"];
+
+  return (
+    <div>
+      <label style={{ color: "#5a7a9a", fontSize: 10, fontWeight: 700, letterSpacing: 1.2, textTransform: "uppercase", display: "block", marginBottom: 4 }}>
+        {label} {required && <span style={{ color: "#ef4444" }}>*</span>}
+      </label>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr auto auto", gap: 8, alignItems: "end" }}>
+        <DatePicker label="" value={fechaParte} onChange={(v) => actualizar(v, undefined, undefined)} />
+        <div>
+          <select value={hh} onChange={(e) => actualizar(undefined, e.target.value, undefined)}
+            style={{ background: "#0c1a27", border: "1px solid #1e3a5f", borderRadius: 7, padding: "9px 8px", color: "#d0e4f4", fontSize: 13, outline: "none" }}>
+            <option value="">HH</option>
+            {horas.map((h) => <option key={h} value={h}>{h}</option>)}
+          </select>
+        </div>
+        <div>
+          <select value={mm} onChange={(e) => actualizar(undefined, undefined, e.target.value)}
+            style={{ background: "#0c1a27", border: "1px solid #1e3a5f", borderRadius: 7, padding: "9px 8px", color: "#d0e4f4", fontSize: 13, outline: "none" }}>
+            <option value="">MM</option>
+            {minutos.map((m) => <option key={m} value={m}>{m}</option>)}
+          </select>
+        </div>
+      </div>
+      {hh && (
+        <div style={{ color: "#5a7a9a", fontSize: 10, marginTop: 4 }}>
+          Formato 24 horas — {hh}:{mm || "00"} {parseInt(hh) < 12 ? "(antes del mediodía)" : parseInt(hh) === 12 ? "(mediodía)" : "(después del mediodía)"}
         </div>
       )}
     </div>
@@ -607,7 +657,7 @@ function Bitacora({ archivos }) {
 
 // ─── FORMULARIO DE DETENIDOS ────────────────────────────────────────────────────
 const initialForm = {
-  region: "", zona: "", fecha_deteccion: "", delito: "", lugar_deteccion: "",
+  region: "", zona: "", fecha_deteccion: "", delito: "", lugar_deteccion: "", tipo_deteccion: "",
   carpeta_investigacion: "", carpeta_judicial: "", rnd: "",
   nombre: "", alias: "", fecha_nacimiento: "", lugar_nacimiento: "", lugar_residencia: "",
   ocupacion: "", sexo: "Masculino", estatura: "", complexion: "", color_piel: "",
@@ -636,6 +686,10 @@ function InterfazAvanzada({ detenido, perfil, onActualizado }) {
     clave_mp_receptor: detenido.clave_mp_receptor || "",
     fecha_puesta_disposicion: detenido.fecha_puesta_disposicion ? detenido.fecha_puesta_disposicion.slice(0, 16) : "",
     aprehensor_id: detenido.aprehensor_id || "",
+    aprehensorTipo: detenido.aprehensor_externo_nombre ? "externo" : "rh",
+    aprehensor_externo_nombre: detenido.aprehensor_externo_nombre || "",
+    aprehensor_externo_corporacion: detenido.aprehensor_externo_corporacion || "",
+    tipo_deteccion: detenido.tipo_deteccion || "",
   });
   const [agentes, setAgentes] = useState([]);
   const [guardando, setGuardando] = useState(false);
@@ -652,13 +706,16 @@ function InterfazAvanzada({ detenido, perfil, onActualizado }) {
     datos: !!(form.curp && form.nacionalidad),
     contacto: !!(form.nombre_padre || form.nombre_madre || form.telefono_contacto),
     disposicion: !!(form.agencia_mp_receptora && form.fecha_puesta_disposicion),
-    aprehensor: !!form.aprehensor_id,
+    aprehensor: form.aprehensorTipo === "externo"
+      ? !!(form.aprehensor_externo_nombre && form.aprehensor_externo_corporacion)
+      : !!form.aprehensor_id,
   });
   const estado = completitud();
   const todasCompletas = Object.values(estado).every(Boolean);
 
   const guardar = async (mostrarMensaje = true) => {
     setGuardando(true);
+    const esExterno = form.aprehensorTipo === "externo";
     const payload = {
       curp: form.curp, nacionalidad: form.nacionalidad, situacion_migratoria: form.situacion_migratoria,
       lengua_nativa: form.lengua_nativa, alerta_delincuencia_organizada: form.alerta_delincuencia_organizada,
@@ -667,7 +724,10 @@ function InterfazAvanzada({ detenido, perfil, onActualizado }) {
       pareja_sentimental: form.pareja_sentimental, telefono_contacto: form.telefono_contacto,
       agencia_mp_receptora: form.agencia_mp_receptora, clave_mp_receptor: form.clave_mp_receptor,
       fecha_puesta_disposicion: form.fecha_puesta_disposicion || null,
-      aprehensor_id: form.aprehensor_id || null,
+      aprehensor_id: esExterno ? null : (form.aprehensor_id || null),
+      aprehensor_externo_nombre: esExterno ? form.aprehensor_externo_nombre : null,
+      aprehensor_externo_corporacion: esExterno ? form.aprehensor_externo_corporacion : null,
+      tipo_deteccion: form.tipo_deteccion || null,
     };
     const { error } = await supabase.from("detenidos").update(payload).eq("id", detenido.id);
     setGuardando(false);
@@ -745,22 +805,39 @@ function InterfazAvanzada({ detenido, perfil, onActualizado }) {
           <Input label="Agencia del MP receptora" value={form.agencia_mp_receptora} onChange={(v) => set("agencia_mp_receptora", v)} required />
           <Input label="Clave del MP receptor" value={form.clave_mp_receptor} onChange={(v) => set("clave_mp_receptor", v)} />
           <div style={{ gridColumn: "1 / -1" }}>
-            <label style={{ color: "#5a7a9a", fontSize: 10, fontWeight: 700, letterSpacing: 1.2, textTransform: "uppercase", display: "block", marginBottom: 4 }}>Fecha y hora de puesta a disposición <span style={{ color: "#ef4444" }}>*</span></label>
-            <input type="datetime-local" value={form.fecha_puesta_disposicion} onChange={(e) => set("fecha_puesta_disposicion", e.target.value)}
-              style={{ background: "#0a1525", border: "1px solid #1e3a5f", borderRadius: 7, padding: "9px 12px", color: "#d0e4f4", fontSize: 13, width: "100%", outline: "none", boxSizing: "border-box" }} />
+            <DateTimePicker24 label="Fecha y hora de puesta a disposición" value={form.fecha_puesta_disposicion} onChange={(v) => set("fecha_puesta_disposicion", v)} required />
           </div>
         </div>
       )}
 
       {tab === "aprehensor" && (
         <div>
-          <label style={{ color: "#5a7a9a", fontSize: 10, fontWeight: 700, letterSpacing: 1.2, textTransform: "uppercase", display: "block", marginBottom: 4 }}>Agente aprehensor (verificado contra RH) <span style={{ color: "#ef4444" }}>*</span></label>
-          <select value={form.aprehensor_id} onChange={(e) => set("aprehensor_id", e.target.value)}
-            style={{ background: "#0a1525", border: "1px solid #1e3a5f", borderRadius: 7, padding: "9px 12px", color: "#d0e4f4", fontSize: 13, width: "100%", outline: "none", boxSizing: "border-box" }}>
-            <option value="">— Seleccionar agente —</option>
-            {agentes.map((a) => <option key={a.id} value={a.id}>{a.nombre_completo} {a.grado ? `— ${a.grado}` : ""}</option>)}
-          </select>
-          {agentes.length === 0 && <div style={{ color: "#5a7a9a", fontSize: 11, marginTop: 8 }}>No hay agentes registrados aún en el sistema.</div>}
+          <div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
+            <button type="button" onClick={() => set("aprehensorTipo", "rh")} style={{ flex: 1, background: (form.aprehensorTipo || "rh") === "rh" ? "#1e3a5f" : "#0a1525", border: "1px solid #2a5080", borderRadius: 7, padding: "8px", color: (form.aprehensorTipo || "rh") === "rh" ? "#e8f4ff" : "#8a9ab0", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
+              👮 Personal FGE (buscar en RH)
+            </button>
+            <button type="button" onClick={() => set("aprehensorTipo", "externo")} style={{ flex: 1, background: form.aprehensorTipo === "externo" ? "#1e3a5f" : "#0a1525", border: "1px solid #2a5080", borderRadius: 7, padding: "8px", color: form.aprehensorTipo === "externo" ? "#e8f4ff" : "#8a9ab0", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
+              🏛️ Otra corporación
+            </button>
+          </div>
+
+          {(form.aprehensorTipo || "rh") === "rh" ? (
+            <>
+              <label style={{ color: "#5a7a9a", fontSize: 10, fontWeight: 700, letterSpacing: 1.2, textTransform: "uppercase", display: "block", marginBottom: 4 }}>Agente aprehensor (verificado contra RH) <span style={{ color: "#ef4444" }}>*</span></label>
+              <select value={form.aprehensor_id} onChange={(e) => set("aprehensor_id", e.target.value)}
+                style={{ background: "#0a1525", border: "1px solid #1e3a5f", borderRadius: 7, padding: "9px 12px", color: "#d0e4f4", fontSize: 13, width: "100%", outline: "none", boxSizing: "border-box" }}>
+                <option value="">— Seleccionar agente —</option>
+                {agentes.map((a) => <option key={a.id} value={a.id}>{a.nombre_completo} {a.grado ? `— ${a.grado}` : ""}</option>)}
+              </select>
+              {agentes.length === 0 && <div style={{ color: "#5a7a9a", fontSize: 11, marginTop: 8 }}>No hay agentes registrados aún en el sistema.</div>}
+            </>
+          ) : (
+            <div style={{ display: "grid", gap: 10 }}>
+              <Input label="Nombre del aprehensor" value={form.aprehensor_externo_nombre} onChange={(v) => set("aprehensor_externo_nombre", v)} required />
+              <Select label="Corporación" value={form.aprehensor_externo_corporacion} onChange={(v) => set("aprehensor_externo_corporacion", v)}
+                options={["Secretaría de Seguridad Pública del Estado", "Secretaría de Seguridad Pública Municipal", "SSPC Federal", "Guardia Nacional", "Otra"]} required />
+            </div>
+          )}
         </div>
       )}
 
@@ -891,6 +968,7 @@ function ModuloDetenidos({ perfil }) {
             <Input label="Zona / Coordinación" value={form.zona} onChange={(v) => set("zona", v)} />
             <DatePicker label="Fecha de detención" value={form.fecha_deteccion} onChange={(v) => set("fecha_deteccion", v)} />
             <Input label="Delito" value={form.delito} onChange={(v) => set("delito", v)} required />
+            <Select label="Tipo de detención" value={form.tipo_deteccion} onChange={(v) => set("tipo_deteccion", v)} options={TIPOS_DETENCION} required />
             <div style={{ gridColumn: "1 / -1" }}><Input label="Lugar de la detención" value={form.lugar_deteccion} onChange={(v) => set("lugar_deteccion", v)} /></div>
             <Input label="Carpeta de investigación" value={form.carpeta_investigacion} onChange={(v) => set("carpeta_investigacion", v)} placeholder="Pendiente por anexar" />
             <Input label="Carpeta judicial" value={form.carpeta_judicial} onChange={(v) => set("carpeta_judicial", v)} placeholder="Pendiente por anexar" />
