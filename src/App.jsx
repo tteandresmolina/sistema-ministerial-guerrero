@@ -616,6 +616,173 @@ const initialForm = {
   vestimenta: "", senas_particulares: "", tatuajes: "", domicilios: "",
 };
 
+const SITUACIONES_MIGRATORIAS = ["No aplica", "Regular", "Irregular", "En trámite"];
+
+// ─── INTERFAZ AVANZADA DE ROBUSTECIMIENTO (4 pestañas) ─────────────────────────
+function InterfazAvanzada({ detenido, perfil, onActualizado }) {
+  const [tab, setTab] = useState("datos");
+  const [form, setForm] = useState({
+    curp: detenido.curp || "",
+    nacionalidad: detenido.nacionalidad || "Mexicana",
+    situacion_migratoria: detenido.situacion_migratoria || "",
+    lengua_nativa: detenido.lengua_nativa || "",
+    alerta_delincuencia_organizada: detenido.alerta_delincuencia_organizada || false,
+    historial_salud: detenido.historial_salud || "",
+    nombre_padre: detenido.nombre_padre || "",
+    nombre_madre: detenido.nombre_madre || "",
+    pareja_sentimental: detenido.pareja_sentimental || "",
+    telefono_contacto: detenido.telefono_contacto || "",
+    agencia_mp_receptora: detenido.agencia_mp_receptora || "",
+    clave_mp_receptor: detenido.clave_mp_receptor || "",
+    fecha_puesta_disposicion: detenido.fecha_puesta_disposicion ? detenido.fecha_puesta_disposicion.slice(0, 16) : "",
+    aprehensor_id: detenido.aprehensor_id || "",
+  });
+  const [agentes, setAgentes] = useState([]);
+  const [guardando, setGuardando] = useState(false);
+  const [mensaje, setMensaje] = useState(null);
+
+  const set = (k, v) => setForm((p) => ({ ...p, [k]: v }));
+
+  useEffect(() => {
+    supabase.from("perfiles").select("id, nombre_completo, grado, region, zona").eq("activo", true)
+      .then(({ data }) => setAgentes(data || []));
+  }, []);
+
+  const completitud = () => ({
+    datos: !!(form.curp && form.nacionalidad),
+    contacto: !!(form.nombre_padre || form.nombre_madre || form.telefono_contacto),
+    disposicion: !!(form.agencia_mp_receptora && form.fecha_puesta_disposicion),
+    aprehensor: !!form.aprehensor_id,
+  });
+  const estado = completitud();
+  const todasCompletas = Object.values(estado).every(Boolean);
+
+  const guardar = async (mostrarMensaje = true) => {
+    setGuardando(true);
+    const payload = {
+      curp: form.curp, nacionalidad: form.nacionalidad, situacion_migratoria: form.situacion_migratoria,
+      lengua_nativa: form.lengua_nativa, alerta_delincuencia_organizada: form.alerta_delincuencia_organizada,
+      historial_salud: form.historial_salud,
+      nombre_padre: form.nombre_padre, nombre_madre: form.nombre_madre,
+      pareja_sentimental: form.pareja_sentimental, telefono_contacto: form.telefono_contacto,
+      agencia_mp_receptora: form.agencia_mp_receptora, clave_mp_receptor: form.clave_mp_receptor,
+      fecha_puesta_disposicion: form.fecha_puesta_disposicion || null,
+      aprehensor_id: form.aprehensor_id || null,
+    };
+    const { error } = await supabase.from("detenidos").update(payload).eq("id", detenido.id);
+    setGuardando(false);
+    if (error) { setMensaje({ tipo: "error", texto: "Error al guardar: " + error.message }); return false; }
+    if (mostrarMensaje) setMensaje({ tipo: "ok", texto: "✅ Información actualizada." });
+    if (onActualizado) onActualizado();
+    return true;
+  };
+
+  const finalizarEvento = async () => {
+    if (!todasCompletas) {
+      setMensaje({ tipo: "error", texto: "⚠ Debes completar las 4 pestañas antes de Finalizar el evento." });
+      return;
+    }
+    const ok = await guardar(false);
+    if (!ok) return;
+    const { error } = await supabase.from("detenidos").update({ estatus_clave: "finalizado" }).eq("id", detenido.id);
+    if (error) { setMensaje({ tipo: "error", texto: "Error al finalizar: " + error.message }); return; }
+    setMensaje({ tipo: "ok", texto: "✅ Evento finalizado correctamente." });
+    if (onActualizado) onActualizado();
+  };
+
+  const tabs = [
+    { key: "datos", label: "1. Datos", icono: "🪪", ok: estado.datos },
+    { key: "contacto", label: "2. Contacto", icono: "📞", ok: estado.contacto },
+    { key: "disposicion", label: "3. Disposición", icono: "📋", ok: estado.disposicion },
+    { key: "aprehensor", label: "4. Aprehensor", icono: "👮", ok: estado.aprehensor },
+  ];
+
+  return (
+    <div style={{ background: "#0c1a27", borderRadius: 10, padding: 18, marginBottom: 16, border: "1px solid #1a3050" }}>
+      <div style={{ color: "#4a9eff", fontSize: 11, fontWeight: 800, letterSpacing: 2, marginBottom: 14, textTransform: "uppercase" }}>🗂️ Interfaz Avanzada de Robustecimiento</div>
+
+      <div style={{ display: "flex", gap: 6, marginBottom: 16, flexWrap: "wrap" }}>
+        {tabs.map((t) => (
+          <button key={t.key} onClick={() => setTab(t.key)} style={{
+            background: tab === t.key ? "#1e3a5f" : "#0a1525",
+            border: `1px solid ${t.ok ? "#22c55e55" : "#2a5080"}`,
+            borderRadius: 8, padding: "8px 12px", color: tab === t.key ? "#e8f4ff" : "#8a9ab0",
+            fontSize: 11, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: 5,
+          }}>
+            <span>{t.icono}</span><span>{t.label}</span>
+            {t.ok && <span style={{ color: "#22c55e" }}>✓</span>}
+          </button>
+        ))}
+      </div>
+
+      {tab === "datos" && (
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+          <Input label="CURP" value={form.curp} onChange={(v) => set("curp", v)} required />
+          <Input label="Nacionalidad" value={form.nacionalidad} onChange={(v) => set("nacionalidad", v)} required />
+          <Select label="Situación migratoria" value={form.situacion_migratoria} onChange={(v) => set("situacion_migratoria", v)} options={SITUACIONES_MIGRATORIAS} />
+          <Input label="Lengua nativa" value={form.lengua_nativa} onChange={(v) => set("lengua_nativa", v)} placeholder="Español" />
+          <div style={{ gridColumn: "1 / -1" }}>
+            <TextArea label="Historial de salud relevante" value={form.historial_salud} onChange={(v) => set("historial_salud", v)} rows={2} />
+          </div>
+          <div style={{ gridColumn: "1 / -1", display: "flex", alignItems: "center", gap: 8 }}>
+            <input type="checkbox" checked={form.alerta_delincuencia_organizada} onChange={(e) => set("alerta_delincuencia_organizada", e.target.checked)} style={{ width: 16, height: 16 }} />
+            <label style={{ color: "#ef4444", fontSize: 12, fontWeight: 700 }}>⚠ Alerta de delincuencia organizada</label>
+          </div>
+        </div>
+      )}
+
+      {tab === "contacto" && (
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+          <Input label="Nombre del padre" value={form.nombre_padre} onChange={(v) => set("nombre_padre", v)} />
+          <Input label="Nombre de la madre" value={form.nombre_madre} onChange={(v) => set("nombre_madre", v)} />
+          <Input label="Pareja sentimental / Cónyuge" value={form.pareja_sentimental} onChange={(v) => set("pareja_sentimental", v)} placeholder="Ej. Alejandra Serrano López" />
+          <Input label="Teléfono de contacto directo" value={form.telefono_contacto} onChange={(v) => set("telefono_contacto", v)} />
+        </div>
+      )}
+
+      {tab === "disposicion" && (
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+          <Input label="Agencia del MP receptora" value={form.agencia_mp_receptora} onChange={(v) => set("agencia_mp_receptora", v)} required />
+          <Input label="Clave del MP receptor" value={form.clave_mp_receptor} onChange={(v) => set("clave_mp_receptor", v)} />
+          <div style={{ gridColumn: "1 / -1" }}>
+            <label style={{ color: "#5a7a9a", fontSize: 10, fontWeight: 700, letterSpacing: 1.2, textTransform: "uppercase", display: "block", marginBottom: 4 }}>Fecha y hora de puesta a disposición <span style={{ color: "#ef4444" }}>*</span></label>
+            <input type="datetime-local" value={form.fecha_puesta_disposicion} onChange={(e) => set("fecha_puesta_disposicion", e.target.value)}
+              style={{ background: "#0a1525", border: "1px solid #1e3a5f", borderRadius: 7, padding: "9px 12px", color: "#d0e4f4", fontSize: 13, width: "100%", outline: "none", boxSizing: "border-box" }} />
+          </div>
+        </div>
+      )}
+
+      {tab === "aprehensor" && (
+        <div>
+          <label style={{ color: "#5a7a9a", fontSize: 10, fontWeight: 700, letterSpacing: 1.2, textTransform: "uppercase", display: "block", marginBottom: 4 }}>Agente aprehensor (verificado contra RH) <span style={{ color: "#ef4444" }}>*</span></label>
+          <select value={form.aprehensor_id} onChange={(e) => set("aprehensor_id", e.target.value)}
+            style={{ background: "#0a1525", border: "1px solid #1e3a5f", borderRadius: 7, padding: "9px 12px", color: "#d0e4f4", fontSize: 13, width: "100%", outline: "none", boxSizing: "border-box" }}>
+            <option value="">— Seleccionar agente —</option>
+            {agentes.map((a) => <option key={a.id} value={a.id}>{a.nombre_completo} {a.grado ? `— ${a.grado}` : ""}</option>)}
+          </select>
+          {agentes.length === 0 && <div style={{ color: "#5a7a9a", fontSize: 11, marginTop: 8 }}>No hay agentes registrados aún en el sistema.</div>}
+        </div>
+      )}
+
+      {mensaje && (
+        <div style={{ background: mensaje.tipo === "ok" ? "#0f2a1a" : "#2a0f0f", border: `1px solid ${mensaje.tipo === "ok" ? "#22c55e44" : "#ef444444"}`, borderRadius: 8, padding: 10, marginTop: 14, color: mensaje.tipo === "ok" ? "#4ade80" : "#f87171", fontSize: 12 }}>
+          {mensaje.texto}
+        </div>
+      )}
+
+      <div style={{ display: "flex", gap: 8, marginTop: 14 }}>
+        <button onClick={() => guardar(true)} disabled={guardando} style={{ flex: 1, background: "#1a3050", border: "1px solid #2a5080", borderRadius: 8, padding: 11, color: "#d0e4f4", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
+          {guardando ? "Guardando…" : "Guardar avance"}
+        </button>
+        <button onClick={finalizarEvento} disabled={guardando} style={{ flex: 1, background: todasCompletas ? "linear-gradient(135deg,#14532d,#166534)" : "#1a1a1a", border: `1px solid ${todasCompletas ? "#22c55e" : "#3a3a3a"}`, borderRadius: 8, padding: 11, color: todasCompletas ? "#bbf7d0" : "#6b7280", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
+          {todasCompletas ? "✓ FINALIZAR EVENTO" : "Finalizar (faltan pestañas)"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+
 function ModuloDetenidos({ perfil }) {
   const [form, setForm] = useState(initialForm);
   const [guardando, setGuardando] = useState(false);
@@ -685,7 +852,13 @@ function ModuloDetenidos({ perfil }) {
           <div style={{ color: "#e8f4ff", fontSize: 18, fontWeight: 700, marginTop: 2 }}>{detenidoActivo.nombre}</div>
           <div style={{ color: "#f59e0b", fontSize: 13 }}>{detenidoActivo.alias}</div>
           <div style={{ color: "#c8daea", fontSize: 12, marginTop: 4 }}>{detenidoActivo.delito} · {detenidoActivo.region}</div>
+          <div style={{ marginTop: 8 }}><SemaforoBadge detenido={detenidoActivo} /></div>
         </div>
+
+        <InterfazAvanzada detenido={detenidoActivo} perfil={perfil} onActualizado={async () => {
+          const { data } = await supabase.from("detenidos").select("*").eq("id", detenidoActivo.id).single();
+          if (data) setDetenidoActivo(data);
+        }} />
 
         <Seccion titulo="📸 Fotografías del Detenido" color="#4a9eff">
           <div style={{ gridColumn: "1 / -1", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
