@@ -237,7 +237,7 @@ function DateTimePicker24({ label, value, onChange, required = false }) {
   };
 
   const horas = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, "0"));
-  const minutos = ["00", "15", "30", "45"];
+  const minutos = Array.from({ length: 60 }, (_, i) => String(i).padStart(2, "0"));
 
   return (
     <div>
