@@ -1,6 +1,13 @@
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "./supabaseClient";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
+import {
+  Shield, MapPin, Camera, FileText, Package, Users, User, FolderKanban,
+  Search, Siren, BarChart3, ClipboardList, IdCard, Phone, Crosshair,
+  Pill, Laptop, Car, Home, Lock as LockIcon, Banknote, ShieldAlert,
+  CircleCheck, X, Check, Lock, Link2, Building2, UserCheck,
+  Calendar, ImagePlus, Clock, FilePenLine, Camera as CameraIcon, HelpCircle,
+} from "lucide-react";
 
 // ─── CONSTANTES ───────────────────────────────────────────────────────────────
 const REGIONES = ["Región Centro","Región Montaña","Región Costa Grande","Región Costa Chica","Región Tierra Caliente","Región Acapulco","Región Norte"];
@@ -12,7 +19,7 @@ const TIPOS_DOCUMENTO = ["Boleta de Internamiento","Oficio de Investigación","P
 const TIPOLOGIAS_INDICIO = ["Balístico","Narcóticos","Tecnológico","Vehículo","Bien Inmueble","Arma","Dinero","Otro"];
 const DESTINOS_MOVIMIENTO = ["Laboratorio","Bodega de Indicios","Perito","Ministerio Público","Juzgado","Otra autoridad","Devolución al lugar de origen","Otro"];
 const TIPOS_DETENCION = ["Flagrancia","Mandamiento Judicial / Orden de Aprehensión","Caso Urgente","Mandamiento Ministerial"];
-const tipologiaIcono = { "Balístico": "🎯", "Narcóticos": "💊", "Tecnológico": "💻", "Vehículo": "🚗", "Bien Inmueble": "🏠", "Arma": "🔫", "Dinero": "💵", "Otro": "📦" };
+const tipologiaIcono = { "Balístico": Crosshair, "Narcóticos": Pill, "Tecnológico": Laptop, "Vehículo": Car, "Bien Inmueble": Home, "Arma": ShieldAlert, "Dinero": Banknote, "Otro": Package };
 const tipologiaColor = { "Balístico": "#ef4444", "Narcóticos": "#a78bfa", "Tecnológico": "#001a4d", "Vehículo": "#f59e0b", "Bien Inmueble": "#14b8a6", "Arma": "#7f1d1d", "Dinero": "#22c55e", "Otro": "#6b7280" };
 const rolLabel = { agente: "Agente", coordinador: "Coordinador de Zona", regional: "Director Regional", mando: "Director General" };
 const rolColor = { agente: "#001a4d", coordinador: "#f59e0b", regional: "#a78bfa", mando: "#ef4444" };
@@ -72,11 +79,11 @@ function SemaforoBadge({ detenido }) {
 }
 
 const FOTO_SLOTS = [
-  { key: "foto_frente", label: "Frente", icono: "🙂", multiple: false },
-  { key: "foto_perfil_izq", label: "Perfil izquierdo", icono: "👤", multiple: false },
-  { key: "foto_perfil_der", label: "Perfil derecho", icono: "👤", multiple: false },
-  { key: "foto_tatuaje", label: "Tatuajes / señas", icono: "🔲", multiple: true },
-  { key: "foto_entrega_autoridades", label: "Entrega con autoridades", icono: "🤝", multiple: true },
+  { key: "foto_frente", label: "Frente", icono: User, multiple: false },
+  { key: "foto_perfil_izq", label: "Perfil izquierdo", icono: User, multiple: false },
+  { key: "foto_perfil_der", label: "Perfil derecho", icono: User, multiple: false },
+  { key: "foto_tatuaje", label: "Tatuajes / señas", icono: Search, multiple: true },
+  { key: "foto_entrega_autoridades", label: "Entrega con autoridades", icono: UserCheck, multiple: true },
 ];
 
 // ─── COMPONENTES BASE ───────────────────────────────────────────────────────────
@@ -175,7 +182,7 @@ function DatePicker({ label, value, onChange, required = false }) {
       <button type="button" onClick={() => setAbierto((v) => !v)}
         style={{ background: "#ffffff", border: "1px solid #c3cbd6", borderRadius: 7, padding: "9px 12px", color: value ? "#33394d" : "#6b7280", fontSize: 13, width: "100%", textAlign: "left", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center", boxSizing: "border-box" }}>
         <span>{value ? formatearFechaLegible(value) : "Seleccionar fecha"}</span>
-        <span style={{ color: "#001a4d" }}>📅</span>
+        <Calendar size={15} style={{ color: "#001a4d" }} />
       </button>
 
       {abierto && (
@@ -300,14 +307,14 @@ function BotonMapa({ latitud, longitud, compacto }) {
     return (
       <a href={url} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()}
         style={{ display: "inline-flex", alignItems: "center", gap: 4, background: "#e1f5ee", border: "1px solid #5dcaa599", borderRadius: 6, padding: "3px 9px", color: "#085041", fontSize: 10, fontWeight: 700, textDecoration: "none" }}>
-        📍 Mapa
+        <MapPin size={11} style={{ marginRight: 3, verticalAlign: -2 }} />Mapa
       </a>
     );
   }
   return (
     <a href={url} target="_blank" rel="noopener noreferrer"
       style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "#e1f5ee", border: "1px solid #22c55e55", borderRadius: 7, padding: "8px 14px", color: "#085041", fontSize: 12, fontWeight: 700, textDecoration: "none" }}>
-      📍 Ver en Google Maps
+      <MapPin size={14} style={{ marginRight: 4, verticalAlign: -2 }} />Ver en Google Maps
     </a>
   );
 }
@@ -316,17 +323,50 @@ function Badge({ text, color }) {
   return <span style={{ background: color + "22", color, border: `1px solid ${color}55`, borderRadius: 4, padding: "2px 9px", fontSize: 11, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", whiteSpace: "nowrap" }}>{text}</span>;
 }
 
-function Seccion({ titulo, color, children }) {
+function Seccion({ titulo, color, icon: Icon, children }) {
   return (
     <div style={{ background: "#ffffff", borderRadius: 10, padding: 18, marginBottom: 16, border: "1px solid #d9dee5" }}>
-      <div style={{ color, fontSize: 13, fontWeight: 800, letterSpacing: 1.5, marginBottom: 14, paddingBottom: 10, borderBottom: "2px solid #b69054", textTransform: "uppercase" }}>{titulo}</div>
+      <div style={{ color, fontSize: 13, fontWeight: 800, letterSpacing: 1.5, marginBottom: 14, paddingBottom: 10, borderBottom: "2px solid #b69054", textTransform: "uppercase", display: "flex", alignItems: "center", gap: 8 }}>
+        {Icon && <Icon size={16} strokeWidth={2} />}
+        {titulo}
+      </div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>{children}</div>
+    </div>
+  );
+}
+
+// ─── PANTALLA DE BIENVENIDA ──────────────────────────────────────────────────────
+function Bienvenida({ onContinuar }) {
+  return (
+    <div style={{ minHeight: "100vh", background: "#001a4d", backgroundImage: "repeating-linear-gradient(45deg, rgba(182,144,84,0.05) 0px, rgba(182,144,84,0.05) 2px, transparent 2px, transparent 44px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20, fontFamily: "'Trebuchet MS', sans-serif" }}>
+      <div style={{ width: "100%", maxWidth: 440, textAlign: "center" }}>
+        <img src="/logo-fge.png" alt="FGE Guerrero" style={{ width: 150, height: 150, borderRadius: "50%", border: "3px solid #b69054", marginBottom: 26 }} />
+        <div style={{ color: "#ffffff", fontSize: 22, fontWeight: 700, letterSpacing: 1, lineHeight: 1.4 }}>FISCALÍA GENERAL DEL ESTADO</div>
+        <div style={{ color: "#b69054", fontSize: 22, fontWeight: 700, letterSpacing: 1, marginBottom: 14 }}>DE GUERRERO</div>
+        <div style={{ width: 60, height: 2, background: "#b69054", margin: "0 auto 14px" }} />
+        <div style={{ color: "#dce6f5", fontSize: 13, letterSpacing: 2, marginBottom: 6 }}>SISTEMA DE INFORMACIÓN CRIMINAL</div>
+        <div style={{ color: "#7c8db8", fontSize: 12, letterSpacing: 1, marginBottom: 36 }}>Policía de Investigación Ministerial</div>
+
+        <div style={{ display: "flex", justifyContent: "center", gap: 28, marginBottom: 40, flexWrap: "wrap" }}>
+          {[["LEALTAD", Shield], ["HONOR", IdCard], ["INTEGRIDAD", CircleCheck]].map(([texto, Icon]) => (
+            <div key={texto} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
+              <Icon size={20} style={{ color: "#b69054" }} />
+              <span style={{ color: "#dce6f5", fontSize: 10, letterSpacing: 1.5 }}>{texto}</span>
+            </div>
+          ))}
+        </div>
+
+        <button onClick={onContinuar} style={{ background: "#b69054", border: "none", borderRadius: 9, padding: "14px 36px", color: "#001a4d", fontSize: 14, fontWeight: 700, letterSpacing: 1, cursor: "pointer" }}>
+          ACCEDER AL SISTEMA
+        </button>
+      </div>
     </div>
   );
 }
 
 // ─── AUTH ───────────────────────────────────────────────────────────────────────
 function Auth() {
+  const [mostrarBienvenida, setMostrarBienvenida] = useState(true);
   const [modo, setModo] = useState("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -356,6 +396,10 @@ function Auth() {
     }
     setCargando(false);
   };
+
+  if (mostrarBienvenida) {
+    return <Bienvenida onContinuar={() => setMostrarBienvenida(false)} />;
+  }
 
   return (
     <div style={{ minHeight: "100vh", background: "#f4f6f9", display: "flex", alignItems: "center", justifyContent: "center", padding: 20, fontFamily: "'Trebuchet MS', sans-serif" }}>
@@ -443,11 +487,11 @@ function VerificarRostro({ detenido, archivos, perfil }) {
     <div style={{ background: "#ffffff", border: "1px solid #d9dee5", borderRadius: 10, padding: 14, marginTop: 10, position: "relative", overflow: "hidden" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div>
-          <div style={{ color: "#6b7280", fontSize: 11, fontWeight: 800, letterSpacing: 1.5, textTransform: "uppercase" }}>🔍 Reconocimiento Facial con IA</div>
+          <div style={{ color: "#6b7280", fontSize: 11, fontWeight: 800, letterSpacing: 1.5, textTransform: "uppercase" }}><Search size={13} style={{ marginRight: 6, verticalAlign: -2 }} />Reconocimiento Facial con IA</div>
           <div style={{ color: "#6b7280", fontSize: 10, marginTop: 2 }}>Identifica coincidencias con detenidos ya registrados</div>
         </div>
         <button disabled style={{ background: "#f1efe8", border: "1px solid #d3d1c7", borderRadius: 7, padding: "8px 14px", color: "#6b7280", fontSize: 11, fontWeight: 700, cursor: "not-allowed", whiteSpace: "nowrap", display: "flex", alignItems: "center", gap: 6 }}>
-          🔒 Disponible en versión PRO
+          <Lock size={12} style={{ marginRight: 4, verticalAlign: -2 }} />Disponible en versión PRO
         </button>
       </div>
     </div>
@@ -488,7 +532,7 @@ function FotoSlot({ slot, detenidoId, perfil, archivos, onSubido }) {
   return (
     <div style={{ background: "#ffffff", border: "1px solid #d9dee5", borderRadius: 10, padding: 12 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-        <div style={{ color: "#4a5268", fontSize: 12, fontWeight: 700 }}>{slot.icono} {slot.label}</div>
+        <div style={{ color: "#4a5268", fontSize: 12, fontWeight: 700, display: "flex", alignItems: "center", gap: 5 }}><slot.icono size={14} />{slot.label}</div>
         {existentes.length > 0 && <span style={{ color: "#22c55e", fontSize: 11 }}>✓ {existentes.length}</span>}
       </div>
 
@@ -504,7 +548,7 @@ function FotoSlot({ slot, detenidoId, perfil, archivos, onSubido }) {
         onChange={(e) => { Array.from(e.target.files).forEach(subirArchivo); e.target.value = ""; }} />
       <button onClick={() => inputRef.current.click()} disabled={subiendo}
         style={{ width: "100%", background: "#d9dee5", border: "1px solid #a8b3c2", borderRadius: 7, padding: "8px", color: "#33394d", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
-        {subiendo ? "Subiendo…" : (slot.multiple ? "+ Agregar foto" : existentes.length > 0 ? "Reemplazar" : "📷 Tomar / Subir foto")}
+        {subiendo ? "Subiendo…" : (slot.multiple ? "+ Agregar foto" : existentes.length > 0 ? "Reemplazar" : "Tomar / Subir foto")}
       </button>
     </div>
   );
@@ -551,7 +595,7 @@ function DocumentosExpediente({ detenidoId, perfil, archivos, onSubido }) {
 
   return (
     <div style={{ background: "#ffffff", borderRadius: 10, padding: 18, marginBottom: 16, border: "1px solid #d9dee5" }}>
-      <div style={{ color: "#22c55e", fontSize: 13, fontWeight: 800, letterSpacing: 1, marginBottom: 14, paddingBottom: 8, borderBottom: "2px solid #b69054", textTransform: "uppercase" }}>📄 Documentos del Expediente</div>
+      <div style={{ color: "#22c55e", fontSize: 13, fontWeight: 800, letterSpacing: 1, marginBottom: 14, paddingBottom: 8, borderBottom: "2px solid #b69054", textTransform: "uppercase" }}><FileText size={15} style={{ marginRight: 6, verticalAlign: -3 }} />Documentos del Expediente</div>
       <div style={{ color: "#6b7280", fontSize: 11, marginBottom: 14 }}>Integra los documentos conforme se generen dentro del plazo constitucional de 48 horas.</div>
 
       <div style={{ display: "flex", gap: 8, marginBottom: 12, flexWrap: "wrap" }}>
@@ -652,7 +696,7 @@ function IndicioCard({ indicio, perfil, detenidoId, onActualizado }) {
     <div style={{ background: "#eef1f6", border: `1px solid ${color}44`, borderRadius: 10, padding: 14, marginBottom: 10 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", cursor: "pointer" }} onClick={() => setExpandido((v) => !v)}>
         <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
-          <span style={{ fontSize: 22 }}>{tipologiaIcono[indicio.tipologia] || "📦"}</span>
+          {(() => { const TipIcon = tipologiaIcono[indicio.tipologia] || Package; return <TipIcon size={22} style={{ color: tipologiaColor[indicio.tipologia] || "#6b7280" }} />; })()}
           <div>
             <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
               <span style={{ background: color + "22", color, border: `1px solid ${color}55`, borderRadius: 4, padding: "2px 8px", fontSize: 10, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase" }}>{indicio.tipologia}</span>
@@ -682,12 +726,12 @@ function IndicioCard({ indicio, perfil, detenidoId, onActualizado }) {
             onChange={(e) => { if (e.target.files[0]) subirArchivo(e.target.files[0]); e.target.value = ""; }} />
           <button onClick={() => inputRef.current.click()} disabled={subiendo}
             style={{ background: "#d9dee5", border: "1px solid #a8b3c2", borderRadius: 7, padding: "7px 14px", color: "#33394d", fontSize: 11, fontWeight: 700, cursor: "pointer" }}>
-            {subiendo ? "Subiendo…" : "📷🎥 Agregar foto o video"}
+            {subiendo ? "Subiendo…" : "Agregar foto o video"}
           </button>
 
           <div style={{ marginTop: 14, paddingTop: 12, borderTop: "1px solid #d9dee5" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-              <div style={{ color: "#6b7280", fontSize: 10, fontWeight: 800, letterSpacing: 1.5, textTransform: "uppercase" }}>🔗 Cadena de Custodia</div>
+              <div style={{ color: "#6b7280", fontSize: 10, fontWeight: 800, letterSpacing: 1.5, textTransform: "uppercase" }}><Link2 size={12} style={{ marginRight: 6, verticalAlign: -2 }} />Cadena de Custodia</div>
               <button onClick={() => setMostrarFormMov((v) => !v)} style={{ background: "#d9dee5", border: "1px solid #a8b3c2", borderRadius: 6, padding: "5px 10px", color: "#33394d", fontSize: 10, fontWeight: 700, cursor: "pointer" }}>
                 {mostrarFormMov ? "✕ Cancelar" : "+ Registrar movimiento"}
               </button>
@@ -769,7 +813,7 @@ function IndiciosAsegurados({ detenidoId, perfil }) {
   return (
     <div style={{ background: "#ffffff", borderRadius: 10, padding: 18, marginBottom: 16, border: "1px solid #d9dee5" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
-        <div style={{ color: "#f59e0b", fontSize: 13, fontWeight: 800, letterSpacing: 1, textTransform: "uppercase" }}>📦 Indicios Asegurados</div>
+        <div style={{ color: "#f59e0b", fontSize: 13, fontWeight: 800, letterSpacing: 1, textTransform: "uppercase" }}><Package size={15} style={{ marginRight: 6, verticalAlign: -3 }} />Indicios Asegurados</div>
         <button onClick={() => setMostrarForm((v) => !v)} style={{ background: "#faeeda", border: "1px solid #f59e0b44", borderRadius: 7, padding: "6px 12px", color: "#854f0b", fontSize: 11, fontWeight: 700, cursor: "pointer" }}>
           {mostrarForm ? "✕ Cancelar" : "+ Agregar indicio"}
         </button>
@@ -843,7 +887,7 @@ function CoDetenidos({ detenido, perfil, onActualizado }) {
 
   return (
     <div style={{ background: "#ffffff", borderRadius: 10, padding: 18, marginBottom: 16, border: "1px solid #d9dee5" }}>
-      <div style={{ color: "#a78bfa", fontSize: 13, fontWeight: 800, letterSpacing: 1, marginBottom: 14, paddingBottom: 8, borderBottom: "2px solid #b69054", textTransform: "uppercase" }}>👥 Co-detenidos de la misma carpeta</div>
+      <div style={{ color: "#a78bfa", fontSize: 13, fontWeight: 800, letterSpacing: 1, marginBottom: 14, paddingBottom: 8, borderBottom: "2px solid #b69054", textTransform: "uppercase" }}><Users size={15} style={{ marginRight: 6, verticalAlign: -3 }} />Co-detenidos de la misma carpeta</div>
 
       {detenido.codetenidos_nombres && (
         <div style={{ background: "#eef1f6", borderRadius: 8, padding: 12, marginBottom: 12 }}>
@@ -862,7 +906,7 @@ function CoDetenidos({ detenido, perfil, onActualizado }) {
                 <div style={{ color: "#1a1a2e", fontSize: 13, fontWeight: 600 }}>{v.vinculado?.nombre}</div>
                 <div style={{ color: "#7c8494", fontSize: 11 }}>{v.vinculado?.alias} · {v.vinculado?.delito}</div>
               </div>
-              <span style={{ color: "#a78bfa", fontSize: 16 }}>🔗</span>
+              <Link2 size={16} style={{ color: "#a78bfa" }} />
             </div>
           ))}
         </div>
@@ -896,9 +940,9 @@ function CoDetenidos({ detenido, perfil, onActualizado }) {
 
 // ─── VÍCTIMAS — en quién recae el delito ────────────────────────────────────────
 const TIPOS_AGRAVIO = [
-  { value: "identificada", label: "Persona identificada", icono: "🧍" },
-  { value: "sociedad", label: "La sociedad (sin víctima individual)", icono: "🏛️" },
-  { value: "quien_resulte", label: "Quien resulte (víctima desconocida)", icono: "❓" },
+  { value: "identificada", label: "Persona identificada", icono: User },
+  { value: "sociedad", label: "La sociedad (sin víctima individual)", icono: Building2 },
+  { value: "quien_resulte", label: "Quien resulte (víctima desconocida)", icono: HelpCircle },
 ];
 
 function Victimas({ detenido, perfil }) {
@@ -942,12 +986,12 @@ function Victimas({ detenido, perfil }) {
     if (v.tipo_agravio === "quien_resulte") return "En agravio de quien resulte";
     return v.nombre;
   };
-  const iconoAgravio = (v) => TIPOS_AGRAVIO.find((t) => t.value === v.tipo_agravio)?.icono || "🧍";
+  const iconoAgravio = (v) => TIPOS_AGRAVIO.find((t) => t.value === v.tipo_agravio)?.icono || User;
 
   return (
     <div style={{ background: "#ffffff", borderRadius: 10, padding: 18, marginBottom: 16, border: "1px solid #d9dee5" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
-        <div style={{ color: "#ec4899", fontSize: 13, fontWeight: 800, letterSpacing: 1, textTransform: "uppercase" }}>🧍 Víctima(s) — en quién recae el delito</div>
+        <div style={{ color: "#ec4899", fontSize: 13, fontWeight: 800, letterSpacing: 1, textTransform: "uppercase" }}><User size={15} style={{ marginRight: 6, verticalAlign: -3 }} />Víctima(s) — en quién recae el delito</div>
         <button onClick={() => setMostrarForm((v) => !v)} style={{ background: "#fbeaf0", border: "1px solid #ec489944", borderRadius: 7, padding: "6px 12px", color: "#72243e", fontSize: 11, fontWeight: 700, cursor: "pointer" }}>
           {mostrarForm ? "✕ Cancelar" : "+ Agregar víctima"}
         </button>
@@ -960,7 +1004,7 @@ function Victimas({ detenido, perfil }) {
             {TIPOS_AGRAVIO.map((t) => (
               <button key={t.value} type="button" onClick={() => setTipoAgravio(t.value)}
                 style={{ textAlign: "left", background: tipoAgravio === t.value ? "#fbeaf0" : "#ffffff", border: `1px solid ${tipoAgravio === t.value ? "#ec489988" : "#c3cbd6"}`, borderRadius: 7, padding: "9px 12px", color: tipoAgravio === t.value ? "#72243e" : "#7c8494", fontSize: 12, cursor: "pointer" }}>
-                {t.icono} {t.label}
+                <t.icono size={14} style={{ marginRight: 6, verticalAlign: -3 }} />{t.label}
               </button>
             ))}
           </div>
@@ -991,7 +1035,7 @@ function Victimas({ detenido, perfil }) {
         victimas.map((v) => (
           <div key={v.id} style={{ background: "#eef1f6", borderRadius: 8, padding: "10px 12px", marginBottom: 6, border: v.es_menor_edad ? "1px solid #ec489944" : "1px solid transparent" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <div style={{ color: "#1a1a2e", fontSize: 13, fontWeight: 600 }}>{iconoAgravio(v)} {etiquetaAgravio(v)}</div>
+              <div style={{ color: "#1a1a2e", fontSize: 13, fontWeight: 600, display: "flex", alignItems: "center", gap: 6 }}>{(() => { const AgravioIcon = iconoAgravio(v); return <AgravioIcon size={14} />; })()}{etiquetaAgravio(v)}</div>
               {v.es_menor_edad && <span style={{ background: "#ec489922", color: "#72243e", border: "1px solid #ec489955", borderRadius: 4, padding: "2px 8px", fontSize: 9, fontWeight: 700 }}>MENOR DE EDAD</span>}
             </div>
             {v.telefono_contacto && <div style={{ color: "#7c8494", fontSize: 11, marginTop: 2 }}>Tel: {v.telefono_contacto}</div>}
@@ -1011,7 +1055,7 @@ function Bitacora({ archivos }) {
 
   return (
     <div style={{ background: "#ffffff", borderRadius: 10, padding: 18, marginBottom: 16, border: "1px solid #d9dee5" }}>
-      <div style={{ color: "#a78bfa", fontSize: 13, fontWeight: 800, letterSpacing: 1, marginBottom: 14, paddingBottom: 8, borderBottom: "2px solid #b69054", textTransform: "uppercase" }}>🕐 Bitácora del Expediente</div>
+      <div style={{ color: "#a78bfa", fontSize: 13, fontWeight: 800, letterSpacing: 1, marginBottom: 14, paddingBottom: 8, borderBottom: "2px solid #b69054", textTransform: "uppercase" }}><Clock size={15} style={{ marginRight: 6, verticalAlign: -3 }} />Bitácora del Expediente</div>
       {ordenados.map((a) => (
         <div key={a.id} style={{ display: "flex", gap: 10, padding: "8px 0", borderBottom: "1px solid #d9dee5" }}>
           <div style={{ color: "#6b7280", fontSize: 11, whiteSpace: "nowrap" }}>{new Date(a.creado_en).toLocaleString("es-MX", { dateStyle: "short", timeStyle: "short" })}</div>
@@ -1122,15 +1166,15 @@ function InterfazAvanzada({ detenido, perfil, onActualizado }) {
   };
 
   const tabs = [
-    { key: "datos", label: "1. Datos", icono: "🪪", ok: estado.datos },
-    { key: "contacto", label: "2. Contacto", icono: "📞", ok: estado.contacto },
-    { key: "disposicion", label: "3. Disposición", icono: "📋", ok: estado.disposicion },
-    { key: "aprehensor", label: "4. Aprehensor", icono: "👮", ok: estado.aprehensor },
+    { key: "datos", label: "1. Datos", icono: IdCard, ok: estado.datos },
+    { key: "contacto", label: "2. Contacto", icono: Phone, ok: estado.contacto },
+    { key: "disposicion", label: "3. Disposición", icono: ClipboardList, ok: estado.disposicion },
+    { key: "aprehensor", label: "4. Aprehensor", icono: UserCheck, ok: estado.aprehensor },
   ];
 
   return (
     <div style={{ background: "#ffffff", borderRadius: 10, padding: 18, marginBottom: 16, border: "1px solid #d9dee5" }}>
-      <div style={{ color: "#001a4d", fontSize: 13, fontWeight: 800, letterSpacing: 1, marginBottom: 14, paddingBottom: 8, borderBottom: "2px solid #b69054", textTransform: "uppercase" }}>🗂️ Interfaz Avanzada de Robustecimiento</div>
+      <div style={{ color: "#001a4d", fontSize: 13, fontWeight: 800, letterSpacing: 1, marginBottom: 14, paddingBottom: 8, borderBottom: "2px solid #b69054", textTransform: "uppercase" }}><FolderKanban size={15} style={{ marginRight: 6, verticalAlign: -3 }} />Interfaz Avanzada de Robustecimiento</div>
 
       <div style={{ display: "flex", gap: 6, marginBottom: 16, flexWrap: "wrap" }}>
         {tabs.map((t) => (
@@ -1140,8 +1184,8 @@ function InterfazAvanzada({ detenido, perfil, onActualizado }) {
             borderRadius: 8, padding: "8px 12px", color: tab === t.key ? "#1a1a2e" : "#7c8494",
             fontSize: 11, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: 5,
           }}>
-            <span>{t.icono}</span><span>{t.label}</span>
-            {t.ok && <span style={{ color: "#22c55e" }}>✓</span>}
+            <t.icono size={14} /><span>{t.label}</span>
+            {t.ok && <CircleCheck size={13} style={{ color: "#22c55e" }} />}
           </button>
         ))}
       </div>
@@ -1185,10 +1229,10 @@ function InterfazAvanzada({ detenido, perfil, onActualizado }) {
         <div>
           <div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
             <button type="button" onClick={() => set("aprehensorTipo", "rh")} style={{ flex: 1, background: (form.aprehensorTipo || "rh") === "rh" ? "#c3cbd6" : "#eef1f6", border: "1px solid #a8b3c2", borderRadius: 7, padding: "8px", color: (form.aprehensorTipo || "rh") === "rh" ? "#1a1a2e" : "#7c8494", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
-              👮 Personal FGE (buscar en RH)
+              <UserCheck size={14} style={{ marginRight: 5, verticalAlign: -3 }} />Personal FGE (buscar en RH)
             </button>
             <button type="button" onClick={() => set("aprehensorTipo", "externo")} style={{ flex: 1, background: form.aprehensorTipo === "externo" ? "#c3cbd6" : "#eef1f6", border: "1px solid #a8b3c2", borderRadius: 7, padding: "8px", color: form.aprehensorTipo === "externo" ? "#1a1a2e" : "#7c8494", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
-              🏛️ Otra corporación
+              <Building2 size={14} style={{ marginRight: 5, verticalAlign: -3 }} />Otra corporación
             </button>
           </div>
 
@@ -1270,7 +1314,7 @@ function RevisionSolicitudes({ perfil }) {
 
   return (
     <div style={{ background: "#faeeda", border: "1px solid #f59e0b44", borderRadius: 10, padding: 18, marginBottom: 20 }}>
-      <div style={{ color: "#854f0b", fontSize: 13, fontWeight: 800, letterSpacing: 1, marginBottom: 14, paddingBottom: 8, borderBottom: "2px solid #b69054", textTransform: "uppercase" }}>⏳ Solicitudes de Edición Pendientes ({solicitudes.length})</div>
+      <div style={{ color: "#854f0b", fontSize: 13, fontWeight: 800, letterSpacing: 1, marginBottom: 14, paddingBottom: 8, borderBottom: "2px solid #b69054", textTransform: "uppercase" }}><FilePenLine size={15} style={{ marginRight: 6, verticalAlign: -3 }} />Solicitudes de Edición Pendientes ({solicitudes.length})</div>
       {solicitudes.map((s) => (
         <div key={s.id} style={{ background: "#ffffff", borderRadius: 8, padding: 12, marginBottom: 8 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 8 }}>
@@ -1395,14 +1439,14 @@ function DashboardMandos({ perfil }) {
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(140px,1fr))", gap: 12, marginBottom: 22 }}>
         {[
-          { label: "Total expedientes", value: detenidosFiltrados.length, color: "#001a4d", icon: "📁" },
-          { label: "En Proceso", value: porSemaforo.verde + porSemaforo.amarillo, color: "#22c55e", icon: "🟢" },
-          { label: "Alerta por Vencer", value: porSemaforo.naranja, color: "#f97316", icon: "🟠" },
-          { label: "Omisión de Plazo", value: porSemaforo.negro, color: "#ef4444", icon: "⚫" },
-          { label: "Finalizados", value: porSemaforo.finalizado, color: "#6b7280", icon: "✅" },
+          { label: "Total expedientes", value: detenidosFiltrados.length, color: "#001a4d", icon: FolderKanban },
+          { label: "En Proceso", value: porSemaforo.verde + porSemaforo.amarillo, color: "#22c55e", icon: CircleCheck },
+          { label: "Alerta por Vencer", value: porSemaforo.naranja, color: "#f97316", icon: ShieldAlert },
+          { label: "Omisión de Plazo", value: porSemaforo.negro, color: "#ef4444", icon: Lock },
+          { label: "Finalizados", value: porSemaforo.finalizado, color: "#6b7280", icon: CircleCheck },
         ].map((c) => (
           <div key={c.label} style={{ background: "#ffffff", border: `1px solid ${c.color}33`, borderRadius: 10, padding: "14px 16px", position: "relative", overflow: "hidden" }}>
-            <div style={{ position: "absolute", right: 10, top: 10, fontSize: 22, opacity: 0.15 }}>{c.icon}</div>
+            <div style={{ position: "absolute", right: 10, top: 10, opacity: 0.18, color: c.color }}><c.icon size={26} /></div>
             <div style={{ color: "#6b7280", fontSize: 9, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase" }}>{c.label}</div>
             <div style={{ color: c.color, fontSize: 26, fontWeight: 900, fontFamily: "monospace", marginTop: 4 }}>{c.value}</div>
           </div>
@@ -1487,7 +1531,7 @@ function BusquedaOperativa({ perfil, onAbrirDetenido }) {
 
   return (
     <div>
-      <div style={{ color: "#6b7280", fontSize: 11, letterSpacing: 2, marginBottom: 16, textTransform: "uppercase" }}>🔍 Búsqueda Operativa Rápida</div>
+      <div style={{ color: "#6b7280", fontSize: 11, letterSpacing: 2, marginBottom: 16, textTransform: "uppercase" }}><Search size={14} style={{ marginRight: 6, verticalAlign: -2 }} />Búsqueda Operativa Rápida</div>
 
       <div style={{ background: "#ffffff", border: "1px solid #d9dee5", borderRadius: 10, padding: 16, marginBottom: 16 }}>
         <div style={{ marginBottom: 12 }}>
@@ -1513,7 +1557,7 @@ function BusquedaOperativa({ perfil, onAbrirDetenido }) {
 
       {!hayFiltros ? (
         <div style={{ textAlign: "center", padding: 50, color: "#6b7280" }}>
-          <div style={{ fontSize: 36, marginBottom: 10, opacity: 0.4 }}>🔍</div>
+          <Search size={36} style={{ marginBottom: 10, opacity: 0.4 }} />
           <div style={{ fontSize: 13 }}>Escribe un nombre, alias, delito o filtra por región para buscar.</div>
         </div>
       ) : cargando ? (
@@ -1603,7 +1647,7 @@ function FichaBasicaRestringida({ detenido, perfil, onVolver }) {
       <button onClick={onVolver} style={{ background: "none", border: "none", color: "#001a4d", fontSize: 13, cursor: "pointer", marginBottom: 14, padding: 0 }}>← Volver</button>
 
       <div style={{ background: "#faeeda", border: "1px solid #f59e0b44", borderRadius: 8, padding: "10px 14px", marginBottom: 16, display: "flex", alignItems: "center", gap: 8 }}>
-        <span style={{ fontSize: 16 }}>🔒</span>
+        <Lock size={16} />
         <span style={{ color: "#854f0b", fontSize: 12 }}>Expediente finalizado — vista de consulta histórica básica. Esta consulta ha quedado registrada.</span>
       </div>
 
@@ -1612,7 +1656,7 @@ function FichaBasicaRestringida({ detenido, perfil, onVolver }) {
           {detenido._fotoFrente ? (
             <img src={detenido._fotoFrente} alt="frente" style={{ width: 80, height: 80, objectFit: "cover", borderRadius: 8, border: "1px solid #c3cbd6" }} />
           ) : (
-            <div style={{ width: 80, height: 80, borderRadius: 8, background: "#eef1f6", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 28, color: "#6b7280" }}>👤</div>
+            <div style={{ width: 80, height: 80, borderRadius: 8, background: "#eef1f6", display: "flex", alignItems: "center", justifyContent: "center", color: "#6b7280" }}><User size={32} /></div>
           )}
           <div>
             <div style={{ color: "#ef4444", fontSize: 11, fontWeight: 700 }}>{detenido.id?.slice(0, 8)}</div>
@@ -1650,7 +1694,7 @@ function FichaBasicaRestringida({ detenido, perfil, onVolver }) {
 
       <div style={{ background: "#ffffff", borderRadius: 10, padding: 18, border: "1px solid #d9dee5" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-          <div style={{ color: "#a78bfa", fontSize: 13, fontWeight: 800, letterSpacing: 1, textTransform: "uppercase" }}>📝 Solicitud de Edición Justificada</div>
+          <div style={{ color: "#a78bfa", fontSize: 13, fontWeight: 800, letterSpacing: 1, textTransform: "uppercase" }}><FilePenLine size={15} style={{ marginRight: 6, verticalAlign: -3 }} />Solicitud de Edición Justificada</div>
           {!hayPendiente && !hayAutorizada && (
             <button onClick={() => setMostrarForm((v) => !v)} style={{ background: "#534AB7", border: "none", borderRadius: 7, padding: "6px 12px", color: "#ffffff", fontSize: 11, fontWeight: 700, cursor: "pointer" }}>
               {mostrarForm ? "✕ Cancelar" : "+ Solicitar edición"}
@@ -1843,7 +1887,7 @@ function ModuloDetenidos({ perfil, detenidoInicial, onDetenidoInicialUsado }) {
           if (data) setDetenidoActivo(data);
         }} />
 
-        <Seccion titulo="📸 Fotografías del Detenido" color="#001a4d">
+        <Seccion titulo="Fotografías del Detenido" color="#001a4d" icon={Camera}>
           <div style={{ gridColumn: "1 / -1", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
             {FOTO_SLOTS.map((slot) => (
               <FotoSlot key={slot.key} slot={slot} detenidoId={detenidoActivo.id} perfil={perfil} archivos={archivos} onSubido={() => cargarArchivos(detenidoActivo.id)} />
@@ -1873,13 +1917,13 @@ function ModuloDetenidos({ perfil, detenidoInicial, onDetenidoInicialUsado }) {
   return (
     <div>
       <div style={{ display: "flex", gap: 6, marginBottom: 18, background: "#eef1f6", borderRadius: 10, padding: 6, width: "fit-content" }}>
-        <button onClick={() => setVista("nuevo")} style={{ background: vista === "nuevo" ? "#c3cbd6" : "none", border: "none", borderRadius: 8, padding: "8px 16px", color: vista === "nuevo" ? "#1a1a2e" : "#6b7280", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>+ Nuevo Detenido</button>
-        <button onClick={() => setVista("lista")} style={{ background: vista === "lista" ? "#c3cbd6" : "none", border: "none", borderRadius: 8, padding: "8px 16px", color: vista === "lista" ? "#1a1a2e" : "#6b7280", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>📋 Consultar Base</button>
+        <button onClick={() => setVista("nuevo")} style={{ background: vista === "nuevo" ? "#c3cbd6" : "none", border: "none", borderRadius: 8, padding: "8px 16px", color: vista === "nuevo" ? "#1a1a2e" : "#6b7280", fontSize: 12, fontWeight: 700, cursor: "pointer" }}><span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}><User size={14} />Nuevo Detenido</span></button>
+        <button onClick={() => setVista("lista")} style={{ background: vista === "lista" ? "#c3cbd6" : "none", border: "none", borderRadius: 8, padding: "8px 16px", color: vista === "lista" ? "#1a1a2e" : "#6b7280", fontSize: 12, fontWeight: 700, cursor: "pointer" }}><span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}><ClipboardList size={14} />Consultar Base</span></button>
       </div>
 
       {vista === "nuevo" && (
         <>
-          <Seccion titulo="📍 Datos de la Detención" color="#ef4444">
+          <Seccion titulo="Datos de la Detención" color="#ef4444" icon={MapPin}>
             <Select label="Región" value={form.region} onChange={(v) => set("region", v)} options={REGIONES} />
             <Input label="Zona / Coordinación" value={form.zona} onChange={(v) => set("zona", v)} />
             <DatePicker label="Fecha de detención" value={form.fecha_deteccion} onChange={(v) => set("fecha_deteccion", v)} />
@@ -1903,7 +1947,7 @@ function ModuloDetenidos({ perfil, detenidoInicial, onDetenidoInicialUsado }) {
             </div>
           </Seccion>
 
-          <Seccion titulo="👤 Datos Generales del Detenido" color="#001a4d">
+          <Seccion titulo="Datos Generales del Detenido" color="#001a4d" icon={User}>
             <div style={{ gridColumn: "1 / -1" }}><Input label="Nombre completo" value={form.nombre} onChange={(v) => set("nombre", v)} required /></div>
             <Input label="Alias / Apodo" value={form.alias} onChange={(v) => set("alias", v)} />
             <DatePicker label="Fecha de nacimiento" value={form.fecha_nacimiento} onChange={(v) => set("fecha_nacimiento", v)} />
@@ -1921,14 +1965,14 @@ function ModuloDetenidos({ perfil, detenidoInicial, onDetenidoInicialUsado }) {
             <Select label="Identificación" value={form.identificacion} onChange={(v) => set("identificacion", v)} options={IDENTIFICACIONES} />
           </Seccion>
 
-          <Seccion titulo="👨‍👩‍👧 Datos Familiares y Contacto" color="#f59e0b">
+          <Seccion titulo="Datos Familiares y Contacto" color="#f59e0b" icon={Users}>
             <Input label="Nombre del padre" value={form.nombre_padre} onChange={(v) => set("nombre_padre", v)} />
             <Input label="Nombre de la madre" value={form.nombre_madre} onChange={(v) => set("nombre_madre", v)} />
             <Input label="Pareja sentimental" value={form.pareja_sentimental} onChange={(v) => set("pareja_sentimental", v)} />
             <Input label="Teléfono de contacto" value={form.telefono_contacto} onChange={(v) => set("telefono_contacto", v)} placeholder="No proporcionó" />
           </Seccion>
 
-          <Seccion titulo="🔍 Descripción Física" color="#a78bfa">
+          <Seccion titulo="Descripción Física" color="#a78bfa" icon={Search}>
             <div style={{ gridColumn: "1 / -1" }}><TextArea label="Vestimenta al momento de la detención" value={form.vestimenta} onChange={(v) => set("vestimenta", v)} rows={2} /></div>
             <div style={{ gridColumn: "1 / -1" }}><TextArea label="Señas particulares" value={form.senas_particulares} onChange={(v) => set("senas_particulares", v)} rows={2} /></div>
             <div style={{ gridColumn: "1 / -1" }}><TextArea label="Tatuajes (uno por línea)" value={form.tatuajes} onChange={(v) => set("tatuajes", v)} rows={3} /></div>
@@ -2057,10 +2101,10 @@ export default function App() {
       </div>
 
       <div style={{ background: "#eef1f6", borderBottom: "1px solid #d9dee5", padding: "0 20px", display: "flex", gap: 4 }}>
-        <button onClick={() => setTabApp("busqueda")} style={{ background: "none", border: "none", borderBottom: tabApp === "busqueda" ? "2px solid #001a4d" : "2px solid transparent", padding: "12px 14px", color: tabApp === "busqueda" ? "#1a1a2e" : "#6b7280", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>🔍 Búsqueda</button>
-        <button onClick={() => setTabApp("detenidos")} style={{ background: "none", border: "none", borderBottom: tabApp === "detenidos" ? "2px solid #001a4d" : "2px solid transparent", padding: "12px 14px", color: tabApp === "detenidos" ? "#1a1a2e" : "#6b7280", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>🚔 Detenidos</button>
+        <button onClick={() => setTabApp("busqueda")} style={{ background: "none", border: "none", borderBottom: tabApp === "busqueda" ? "2px solid #001a4d" : "2px solid transparent", padding: "12px 14px", color: tabApp === "busqueda" ? "#1a1a2e" : "#6b7280", fontSize: 12, fontWeight: 700, cursor: "pointer" }}><span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}><Search size={14} />Búsqueda</span></button>
+        <button onClick={() => setTabApp("detenidos")} style={{ background: "none", border: "none", borderBottom: tabApp === "detenidos" ? "2px solid #001a4d" : "2px solid transparent", padding: "12px 14px", color: tabApp === "detenidos" ? "#1a1a2e" : "#6b7280", fontSize: 12, fontWeight: 700, cursor: "pointer" }}><span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}><Siren size={14} />Detenidos</span></button>
         {puedeVerDashboard && (
-          <button onClick={() => setTabApp("dashboard")} style={{ background: "none", border: "none", borderBottom: tabApp === "dashboard" ? "2px solid #001a4d" : "2px solid transparent", padding: "12px 14px", color: tabApp === "dashboard" ? "#1a1a2e" : "#6b7280", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>📊 Dashboard</button>
+          <button onClick={() => setTabApp("dashboard")} style={{ background: "none", border: "none", borderBottom: tabApp === "dashboard" ? "2px solid #001a4d" : "2px solid transparent", padding: "12px 14px", color: tabApp === "dashboard" ? "#1a1a2e" : "#6b7280", fontSize: 12, fontWeight: 700, cursor: "pointer" }}><span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}><BarChart3 size={14} />Dashboard</span></button>
         )}
       </div>
 
