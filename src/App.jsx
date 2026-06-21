@@ -1237,6 +1237,70 @@ function InterfazAvanzada({ detenido, perfil, onActualizado }) {
 // ─── DASHBOARD DE MANDOS ─────────────────────────────────────────────────────
 const COLORES_CHART = ["#4a9eff", "#22c55e", "#f59e0b", "#ef4444", "#a78bfa", "#ec4899", "#14b8a6"];
 
+// ─── REVISIÓN DE SOLICITUDES DE EDICIÓN (Regional / Mando) ─────────────────────
+function RevisionSolicitudes({ perfil }) {
+  const [solicitudes, setSolicitudes] = useState([]);
+  const [cargando, setCargando] = useState(true);
+  const [procesando, setProcesando] = useState(null);
+
+  const cargarPendientes = async () => {
+    setCargando(true);
+    const { data } = await supabase.from("solicitudes_edicion")
+      .select("*, detenido:detenido_id(id, nombre, alias, delito, region)")
+      .eq("estado", "pendiente")
+      .order("creado_en", { ascending: true });
+    setSolicitudes(data || []);
+    setCargando(false);
+  };
+
+  useEffect(() => { cargarPendientes(); }, []);
+
+  const resolver = async (solicitudId, nuevoEstado) => {
+    setProcesando(solicitudId);
+    const { error } = await supabase.from("solicitudes_edicion").update({
+      estado: nuevoEstado,
+      revisado_por: perfil?.nombre_completo || "",
+      revisado_por_id: perfil?.id || null,
+      revisado_en: new Date().toISOString(),
+    }).eq("id", solicitudId);
+    setProcesando(null);
+    if (error) { alert("Error: " + error.message); return; }
+    cargarPendientes();
+  };
+
+  if (cargando) return null;
+  if (solicitudes.length === 0) return null;
+
+  return (
+    <div style={{ background: "#1a1410", border: "1px solid #f59e0b44", borderRadius: 10, padding: 18, marginBottom: 20 }}>
+      <div style={{ color: "#fde68a", fontSize: 11, fontWeight: 800, letterSpacing: 2, marginBottom: 14, textTransform: "uppercase" }}>⏳ Solicitudes de Edición Pendientes ({solicitudes.length})</div>
+      {solicitudes.map((s) => (
+        <div key={s.id} style={{ background: "#0c1a27", borderRadius: 8, padding: 12, marginBottom: 8 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 8 }}>
+            <div style={{ flex: 1, minWidth: 200 }}>
+              <div style={{ color: "#e8f4ff", fontSize: 13, fontWeight: 700 }}>{s.detenido?.nombre} <span style={{ color: "#f59e0b", fontWeight: 400 }}>({s.detenido?.alias})</span></div>
+              <div style={{ color: "#8a9ab0", fontSize: 11, marginTop: 2 }}>{s.detenido?.delito} · {s.detenido?.region}</div>
+              <div style={{ color: "#c8daea", fontSize: 12, marginTop: 6 }}>Solicita: <strong>{s.solicitado_por}</strong></div>
+              <div style={{ color: "#a78bfa", fontSize: 12, marginTop: 2, fontStyle: "italic" }}>"{s.justificacion}"</div>
+              <div style={{ color: "#5a7a9a", fontSize: 10, marginTop: 4 }}>{new Date(s.creado_en).toLocaleString("es-MX", { dateStyle: "short", timeStyle: "short" })}</div>
+            </div>
+            <div style={{ display: "flex", gap: 6 }}>
+              <button onClick={() => resolver(s.id, "autorizada")} disabled={procesando === s.id}
+                style={{ background: "#14532d", border: "1px solid #22c55e55", borderRadius: 6, padding: "6px 12px", color: "#bbf7d0", fontSize: 11, fontWeight: 700, cursor: "pointer" }}>
+                ✓ Autorizar
+              </button>
+              <button onClick={() => resolver(s.id, "rechazada")} disabled={procesando === s.id}
+                style={{ background: "#7f1d1d", border: "1px solid #ef444455", borderRadius: 6, padding: "6px 12px", color: "#fecaca", fontSize: 11, fontWeight: 700, cursor: "pointer" }}>
+                ✕ Rechazar
+              </button>
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function DashboardMandos({ perfil }) {
   const [detenidos, setDetenidos] = useState([]);
   const [cargando, setCargando] = useState(true);
@@ -1312,8 +1376,12 @@ function DashboardMandos({ perfil }) {
 
   if (cargando) return <div style={{ textAlign: "center", padding: 40, color: "#5a7a9a" }}>Cargando dashboard…</div>;
 
+  const puedeRevisarSolicitudes = perfil && ["regional", "mando"].includes(perfil.rol);
+
   return (
     <div>
+      {puedeRevisarSolicitudes && <RevisionSolicitudes perfil={perfil} />}
+
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 18, flexWrap: "wrap", gap: 10 }}>
         <div style={{ color: "#5a7a9a", fontSize: 11, letterSpacing: 2, textTransform: "uppercase" }}>Detenidos Activos en Custodia</div>
         <div style={{ display: "flex", gap: 8 }}>
