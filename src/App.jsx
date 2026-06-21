@@ -319,7 +319,7 @@ function Badge({ text, color }) {
 function Seccion({ titulo, color, children }) {
   return (
     <div style={{ background: "#ffffff", borderRadius: 10, padding: 18, marginBottom: 16, border: "1px solid #d9dee5" }}>
-      <div style={{ color, fontSize: 11, fontWeight: 800, letterSpacing: 2, marginBottom: 14, textTransform: "uppercase" }}>{titulo}</div>
+      <div style={{ color, fontSize: 13, fontWeight: 800, letterSpacing: 1.5, marginBottom: 14, paddingBottom: 10, borderBottom: "2px solid #b69054", textTransform: "uppercase" }}>{titulo}</div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>{children}</div>
     </div>
   );
@@ -361,7 +361,7 @@ function Auth() {
     <div style={{ minHeight: "100vh", background: "#f4f6f9", display: "flex", alignItems: "center", justifyContent: "center", padding: 20, fontFamily: "'Trebuchet MS', sans-serif" }}>
       <div style={{ width: "100%", maxWidth: 400 }}>
         <div style={{ textAlign: "center", marginBottom: 28 }}>
-          <div style={{ fontSize: 46, marginBottom: 10 }}>🛡️</div>
+          <img src="/logo-fge.png" alt="FGE Guerrero" style={{ width: 72, height: 72, marginBottom: 10, borderRadius: "50%" }} />
           <div style={{ color: "#1a1a2e", fontSize: 18, fontWeight: 700, letterSpacing: 1 }}>FISCALÍA GENERAL DEL ESTADO</div>
           <div style={{ color: "#001a4d", fontSize: 11, letterSpacing: 3, marginTop: 4 }}>SISTEMA MINISTERIAL — GUERRERO</div>
         </div>
@@ -551,7 +551,7 @@ function DocumentosExpediente({ detenidoId, perfil, archivos, onSubido }) {
 
   return (
     <div style={{ background: "#ffffff", borderRadius: 10, padding: 18, marginBottom: 16, border: "1px solid #d9dee5" }}>
-      <div style={{ color: "#22c55e", fontSize: 11, fontWeight: 800, letterSpacing: 2, marginBottom: 14, textTransform: "uppercase" }}>📄 Documentos del Expediente</div>
+      <div style={{ color: "#22c55e", fontSize: 13, fontWeight: 800, letterSpacing: 1, marginBottom: 14, paddingBottom: 8, borderBottom: "2px solid #b69054", textTransform: "uppercase" }}>📄 Documentos del Expediente</div>
       <div style={{ color: "#6b7280", fontSize: 11, marginBottom: 14 }}>Integra los documentos conforme se generen dentro del plazo constitucional de 48 horas.</div>
 
       <div style={{ display: "flex", gap: 8, marginBottom: 12, flexWrap: "wrap" }}>
@@ -769,7 +769,7 @@ function IndiciosAsegurados({ detenidoId, perfil }) {
   return (
     <div style={{ background: "#ffffff", borderRadius: 10, padding: 18, marginBottom: 16, border: "1px solid #d9dee5" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
-        <div style={{ color: "#f59e0b", fontSize: 11, fontWeight: 800, letterSpacing: 2, textTransform: "uppercase" }}>📦 Indicios Asegurados</div>
+        <div style={{ color: "#f59e0b", fontSize: 13, fontWeight: 800, letterSpacing: 1, textTransform: "uppercase" }}>📦 Indicios Asegurados</div>
         <button onClick={() => setMostrarForm((v) => !v)} style={{ background: "#faeeda", border: "1px solid #f59e0b44", borderRadius: 7, padding: "6px 12px", color: "#854f0b", fontSize: 11, fontWeight: 700, cursor: "pointer" }}>
           {mostrarForm ? "✕ Cancelar" : "+ Agregar indicio"}
         </button>
@@ -787,7 +787,7 @@ function IndiciosAsegurados({ detenidoId, perfil }) {
           <div style={{ marginBottom: 12 }}>
             <Input label="Folio de cadena de custodia" value={folio} onChange={setFolio} placeholder="Opcional" />
           </div>
-          <button onClick={guardarIndicio} disabled={guardando} style={{ width: "100%", background: guardando ? "#faeeda" : "linear-gradient(135deg,#92400e,#713f12)", border: "none", borderRadius: 7, padding: 10, color: "#854f0b", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
+          <button onClick={guardarIndicio} disabled={guardando} style={{ width: "100%", background: guardando ? "#faeeda" : "linear-gradient(135deg,#92400e,#713f12)", border: "none", borderRadius: 7, padding: 10, color: guardando ? "#854f0b" : "#ffffff", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
             {guardando ? "GUARDANDO…" : "GUARDAR INDICIO"}
           </button>
         </div>
@@ -843,7 +843,7 @@ function CoDetenidos({ detenido, perfil, onActualizado }) {
 
   return (
     <div style={{ background: "#ffffff", borderRadius: 10, padding: 18, marginBottom: 16, border: "1px solid #d9dee5" }}>
-      <div style={{ color: "#a78bfa", fontSize: 11, fontWeight: 800, letterSpacing: 2, marginBottom: 14, textTransform: "uppercase" }}>👥 Co-detenidos de la misma carpeta</div>
+      <div style={{ color: "#a78bfa", fontSize: 13, fontWeight: 800, letterSpacing: 1, marginBottom: 14, paddingBottom: 8, borderBottom: "2px solid #b69054", textTransform: "uppercase" }}>👥 Co-detenidos de la misma carpeta</div>
 
       {detenido.codetenidos_nombres && (
         <div style={{ background: "#eef1f6", borderRadius: 8, padding: 12, marginBottom: 12 }}>
@@ -947,7 +947,7 @@ function Victimas({ detenido, perfil }) {
   return (
     <div style={{ background: "#ffffff", borderRadius: 10, padding: 18, marginBottom: 16, border: "1px solid #d9dee5" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
-        <div style={{ color: "#ec4899", fontSize: 11, fontWeight: 800, letterSpacing: 2, textTransform: "uppercase" }}>🧍 Víctima(s) — en quién recae el delito</div>
+        <div style={{ color: "#ec4899", fontSize: 13, fontWeight: 800, letterSpacing: 1, textTransform: "uppercase" }}>🧍 Víctima(s) — en quién recae el delito</div>
         <button onClick={() => setMostrarForm((v) => !v)} style={{ background: "#fbeaf0", border: "1px solid #ec489944", borderRadius: 7, padding: "6px 12px", color: "#72243e", fontSize: 11, fontWeight: 700, cursor: "pointer" }}>
           {mostrarForm ? "✕ Cancelar" : "+ Agregar víctima"}
         </button>
@@ -1011,7 +1011,7 @@ function Bitacora({ archivos }) {
 
   return (
     <div style={{ background: "#ffffff", borderRadius: 10, padding: 18, marginBottom: 16, border: "1px solid #d9dee5" }}>
-      <div style={{ color: "#a78bfa", fontSize: 11, fontWeight: 800, letterSpacing: 2, marginBottom: 14, textTransform: "uppercase" }}>🕐 Bitácora del Expediente</div>
+      <div style={{ color: "#a78bfa", fontSize: 13, fontWeight: 800, letterSpacing: 1, marginBottom: 14, paddingBottom: 8, borderBottom: "2px solid #b69054", textTransform: "uppercase" }}>🕐 Bitácora del Expediente</div>
       {ordenados.map((a) => (
         <div key={a.id} style={{ display: "flex", gap: 10, padding: "8px 0", borderBottom: "1px solid #d9dee5" }}>
           <div style={{ color: "#6b7280", fontSize: 11, whiteSpace: "nowrap" }}>{new Date(a.creado_en).toLocaleString("es-MX", { dateStyle: "short", timeStyle: "short" })}</div>
@@ -1130,7 +1130,7 @@ function InterfazAvanzada({ detenido, perfil, onActualizado }) {
 
   return (
     <div style={{ background: "#ffffff", borderRadius: 10, padding: 18, marginBottom: 16, border: "1px solid #d9dee5" }}>
-      <div style={{ color: "#001a4d", fontSize: 11, fontWeight: 800, letterSpacing: 2, marginBottom: 14, textTransform: "uppercase" }}>🗂️ Interfaz Avanzada de Robustecimiento</div>
+      <div style={{ color: "#001a4d", fontSize: 13, fontWeight: 800, letterSpacing: 1, marginBottom: 14, paddingBottom: 8, borderBottom: "2px solid #b69054", textTransform: "uppercase" }}>🗂️ Interfaz Avanzada de Robustecimiento</div>
 
       <div style={{ display: "flex", gap: 6, marginBottom: 16, flexWrap: "wrap" }}>
         {tabs.map((t) => (
@@ -1270,7 +1270,7 @@ function RevisionSolicitudes({ perfil }) {
 
   return (
     <div style={{ background: "#faeeda", border: "1px solid #f59e0b44", borderRadius: 10, padding: 18, marginBottom: 20 }}>
-      <div style={{ color: "#854f0b", fontSize: 11, fontWeight: 800, letterSpacing: 2, marginBottom: 14, textTransform: "uppercase" }}>⏳ Solicitudes de Edición Pendientes ({solicitudes.length})</div>
+      <div style={{ color: "#854f0b", fontSize: 13, fontWeight: 800, letterSpacing: 1, marginBottom: 14, paddingBottom: 8, borderBottom: "2px solid #b69054", textTransform: "uppercase" }}>⏳ Solicitudes de Edición Pendientes ({solicitudes.length})</div>
       {solicitudes.map((s) => (
         <div key={s.id} style={{ background: "#ffffff", borderRadius: 8, padding: 12, marginBottom: 8 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 8 }}>
@@ -1380,7 +1380,7 @@ function DashboardMandos({ perfil }) {
       {puedeRevisarSolicitudes && <RevisionSolicitudes perfil={perfil} />}
 
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 18, flexWrap: "wrap", gap: 10 }}>
-        <div style={{ color: "#6b7280", fontSize: 11, letterSpacing: 2, textTransform: "uppercase" }}>Detenidos Activos en Custodia</div>
+        <div style={{ color: "#001a4d", fontSize: 16, fontWeight: 800, letterSpacing: 1, textTransform: "uppercase" }}>Detenidos Activos en Custodia</div>
         <div style={{ display: "flex", gap: 8 }}>
           {!esRegional && (
             <select value={filtroRegion} onChange={(e) => setFiltroRegion(e.target.value)}
@@ -1389,7 +1389,7 @@ function DashboardMandos({ perfil }) {
               {REGIONES.map((r) => <option key={r} value={r}>{r}</option>)}
             </select>
           )}
-          <button onClick={exportarReporte} style={{ background: "linear-gradient(135deg,#713f12,#92400e)", border: "none", borderRadius: 8, padding: "8px 16px", color: "#854f0b", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>⬇ Descargar reporte</button>
+          <button onClick={exportarReporte} style={{ background: "#b69054", border: "none", borderRadius: 8, padding: "8px 16px", color: "#ffffff", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>⬇ Descargar reporte</button>
         </div>
       </div>
 
@@ -1411,7 +1411,7 @@ function DashboardMandos({ perfil }) {
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 16 }}>
         <div style={{ background: "#ffffff", border: "1px solid #d9dee5", borderRadius: 10, padding: 16 }}>
-          <div style={{ color: "#001a4d", fontSize: 10, fontWeight: 700, letterSpacing: 2, marginBottom: 12, textTransform: "uppercase" }}>Estatus de Expedientes</div>
+          <div style={{ color: "#001a4d", fontSize: 12, fontWeight: 700, letterSpacing: 1, marginBottom: 12, textTransform: "uppercase" }}>Estatus de Expedientes</div>
           {datosSemaforo.length === 0 ? <div style={{ color: "#6b7280", fontSize: 12 }}>Sin datos aún</div> : (
             <ResponsiveContainer width="100%" height={180}>
               <PieChart>
@@ -1426,7 +1426,7 @@ function DashboardMandos({ perfil }) {
         </div>
 
         <div style={{ background: "#ffffff", border: "1px solid #d9dee5", borderRadius: 10, padding: 16 }}>
-          <div style={{ color: "#f59e0b", fontSize: 10, fontWeight: 700, letterSpacing: 2, marginBottom: 12, textTransform: "uppercase" }}>{esRegional ? "Detenidos en mi Región" : "Detenidos por Región"}</div>
+          <div style={{ color: "#f59e0b", fontSize: 12, fontWeight: 700, letterSpacing: 1, marginBottom: 12, textTransform: "uppercase" }}>{esRegional ? "Detenidos en mi Región" : "Detenidos por Región"}</div>
           <ResponsiveContainer width="100%" height={180}>
             <BarChart data={detPorRegion} margin={{ top: 0, right: 10, left: -20, bottom: 30 }}>
               <XAxis dataKey="name" tick={{ fill: "#6b7280", fontSize: 9 }} angle={-30} textAnchor="end" />
@@ -1439,7 +1439,7 @@ function DashboardMandos({ perfil }) {
       </div>
 
       <div style={{ background: "#ffffff", border: "1px solid #d9dee5", borderRadius: 10, padding: 16 }}>
-        <div style={{ color: "#a78bfa", fontSize: 10, fontWeight: 700, letterSpacing: 2, marginBottom: 12, textTransform: "uppercase" }}>Delitos más frecuentes</div>
+        <div style={{ color: "#a78bfa", fontSize: 12, fontWeight: 700, letterSpacing: 1, marginBottom: 12, textTransform: "uppercase" }}>Delitos más frecuentes</div>
         {delitosData.length === 0 ? <div style={{ color: "#6b7280", fontSize: 12 }}>Sin datos aún</div> : (
           <ResponsiveContainer width="100%" height={Math.max(140, delitosData.length * 36)}>
             <BarChart data={delitosData} layout="vertical" margin={{ top: 0, right: 20, left: 10, bottom: 0 }}>
@@ -1650,7 +1650,7 @@ function FichaBasicaRestringida({ detenido, perfil, onVolver }) {
 
       <div style={{ background: "#ffffff", borderRadius: 10, padding: 18, border: "1px solid #d9dee5" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-          <div style={{ color: "#a78bfa", fontSize: 11, fontWeight: 800, letterSpacing: 2, textTransform: "uppercase" }}>📝 Solicitud de Edición Justificada</div>
+          <div style={{ color: "#a78bfa", fontSize: 13, fontWeight: 800, letterSpacing: 1, textTransform: "uppercase" }}>📝 Solicitud de Edición Justificada</div>
           {!hayPendiente && !hayAutorizada && (
             <button onClick={() => setMostrarForm((v) => !v)} style={{ background: "#534AB7", border: "none", borderRadius: 7, padding: "6px 12px", color: "#ffffff", fontSize: 11, fontWeight: 700, cursor: "pointer" }}>
               {mostrarForm ? "✕ Cancelar" : "+ Solicitar edición"}
@@ -2037,7 +2037,7 @@ export default function App() {
     <div style={{ minHeight: "100vh", background: "#f4f6f9", fontFamily: "'Trebuchet MS', sans-serif", color: "#4a5268" }}>
       <div style={{ background: "#001a4d", borderBottom: "3px solid #b69054", padding: "12px 20px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <div style={{ width: 38, height: 38, background: "#ffffff", border: "2px solid #b69054", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>🛡️</div>
+          <img src="/logo-fge.png" alt="FGE Guerrero" style={{ width: 42, height: 42, borderRadius: "50%", border: "2px solid #b69054" }} />
           <div>
             <div style={{ color: "#ffffff", fontSize: 14, fontWeight: 700 }}>FGE GUERRERO — SISTEMA MINISTERIAL</div>
             <div style={{ color: "#b69054", fontSize: 9, letterSpacing: 2 }}>INDIVIDUALIZACIÓN DE DETENIDOS</div>
