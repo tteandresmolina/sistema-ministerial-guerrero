@@ -1813,7 +1813,22 @@ function ModuloDetenidos({ perfil, detenidoInicial, onDetenidoInicialUsado }) {
         )}
 
         <div style={{ background: "#0c1a27", borderRadius: 10, padding: 16, marginBottom: 16, border: "1px solid #1a3050" }}>
-          <div style={{ color: "#ef4444", fontSize: 11, fontWeight: 700 }}>{detenidoActivo.id?.slice(0, 8)}</div>
+          {(detenidoActivo.carpeta_investigacion || detenidoActivo.rnd) && (
+            <div style={{ display: "flex", gap: 14, flexWrap: "wrap", marginBottom: 8 }}>
+              {detenidoActivo.carpeta_investigacion && (
+                <div>
+                  <div style={{ color: "#5a7a9a", fontSize: 9, letterSpacing: 1, textTransform: "uppercase" }}>Carpeta de Investigación</div>
+                  <div style={{ color: "#ef4444", fontSize: 12, fontWeight: 700, fontFamily: "monospace", letterSpacing: 0.5 }}>{detenidoActivo.carpeta_investigacion}*</div>
+                </div>
+              )}
+              {detenidoActivo.rnd && (
+                <div>
+                  <div style={{ color: "#5a7a9a", fontSize: 9, letterSpacing: 1, textTransform: "uppercase" }}>R.N.D.</div>
+                  <div style={{ color: "#ef4444", fontSize: 12, fontWeight: 700, fontFamily: "monospace" }}>{detenidoActivo.rnd}</div>
+                </div>
+              )}
+            </div>
+          )}
           <div style={{ color: "#e8f4ff", fontSize: 18, fontWeight: 700, marginTop: 2 }}>{detenidoActivo.nombre}</div>
           <div style={{ color: "#f59e0b", fontSize: 13 }}>{detenidoActivo.alias}</div>
           <div style={{ color: "#c8daea", fontSize: 12, marginTop: 4 }}>{detenidoActivo.delito} · {detenidoActivo.region}</div>
@@ -1876,7 +1891,7 @@ function ModuloDetenidos({ perfil, detenidoInicial, onDetenidoInicialUsado }) {
             <div style={{ gridColumn: "1 / -1" }}><InputCarpeta20 value={form.carpeta_investigacion} onChange={(v) => set("carpeta_investigacion", v)} /></div>
             <Input label="Oficio número" value={form.oficio_numero} onChange={(v) => set("oficio_numero", v)} placeholder="Ej. 2187" />
             <Input label="Carpeta judicial" value={form.carpeta_judicial} onChange={(v) => set("carpeta_judicial", v)} placeholder="Pendiente por anexar" />
-            <Input label="R.N.D." value={form.rnd} onChange={(v) => set("rnd", v)} placeholder="Pendiente por anexar" />
+            <Input label="R.N.D." value={form.rnd} onChange={(v) => set("rnd", v)} placeholder="Ej. GR/FC/029/13062026/0016" />
             <DatePicker label="Fecha en que ocurrieron los hechos" value={form.hechos_fecha} onChange={(v) => set("hechos_fecha", v)} />
             <Input label="Agente del MP que firma el oficio" value={form.mp_firma_nombre} onChange={(v) => set("mp_firma_nombre", v)} placeholder="Ej. Lic. Emmanuel Cupertino Pérez Maury" />
             <div style={{ gridColumn: "1 / -1" }}>
