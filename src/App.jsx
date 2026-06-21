@@ -1389,7 +1389,96 @@ function DashboardMandos({ perfil }) {
 }
 
 
-function ModuloDetenidos({ perfil }) {
+// ─── SECCIÓN A — BÚSQUEDA OPERATIVA RÁPIDA ─────────────────────────────────────
+function BusquedaOperativa({ perfil, onAbrirDetenido }) {
+  const [detenidos, setDetenidos] = useState([]);
+  const [cargando, setCargando] = useState(true);
+  const [texto, setTexto] = useState("");
+  const [filtroDelito, setFiltroDelito] = useState("");
+  const [filtroRegion, setFiltroRegion] = useState("Todas");
+
+  const cargarDatos = async () => {
+    setCargando(true);
+    const { data } = await supabase.from("detenidos").select("*").order("creado_en", { ascending: false });
+    setDetenidos(data || []);
+    setCargando(false);
+  };
+
+  useEffect(() => { cargarDatos(); }, []);
+
+  const resultados = detenidos.filter((d) => {
+    const q = texto.toLowerCase();
+    const matchTexto = !q || (d.nombre || "").toLowerCase().includes(q) || (d.alias || "").toLowerCase().includes(q);
+    const matchDelito = !filtroDelito || (d.delito || "").toLowerCase().includes(filtroDelito.toLowerCase());
+    const matchRegion = filtroRegion === "Todas" || d.region === filtroRegion;
+    return matchTexto && matchDelito && matchRegion;
+  });
+
+  const hayFiltros = texto || filtroDelito || filtroRegion !== "Todas";
+
+  return (
+    <div>
+      <div style={{ color: "#5a7a9a", fontSize: 11, letterSpacing: 2, marginBottom: 16, textTransform: "uppercase" }}>🔍 Búsqueda Operativa Rápida</div>
+
+      <div style={{ background: "#0c1a27", border: "1px solid #1a3050", borderRadius: 10, padding: 16, marginBottom: 16 }}>
+        <div style={{ marginBottom: 12 }}>
+          <input value={texto} onChange={(e) => setTexto(e.target.value)} placeholder="Buscar por nombre o alias…" autoFocus
+            style={{ background: "#0a1525", border: "1px solid #1e3a5f", borderRadius: 8, padding: "12px 14px", color: "#e8f4ff", fontSize: 15, width: "100%", outline: "none", boxSizing: "border-box" }} />
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+          <input value={filtroDelito} onChange={(e) => setFiltroDelito(e.target.value)} placeholder="Filtrar por delito…"
+            style={{ background: "#0a1525", border: "1px solid #1e3a5f", borderRadius: 7, padding: "9px 12px", color: "#d0e4f4", fontSize: 13, outline: "none", boxSizing: "border-box" }} />
+          <select value={filtroRegion} onChange={(e) => setFiltroRegion(e.target.value)}
+            style={{ background: "#0a1525", border: "1px solid #1e3a5f", borderRadius: 7, padding: "9px 12px", color: "#d0e4f4", fontSize: 13, outline: "none" }}>
+            <option value="Todas">Todas las regiones</option>
+            {REGIONES.map((r) => <option key={r} value={r}>{r}</option>)}
+          </select>
+        </div>
+        {hayFiltros && (
+          <button onClick={() => { setTexto(""); setFiltroDelito(""); setFiltroRegion("Todas"); }}
+            style={{ marginTop: 10, background: "none", border: "1px solid #ef444444", borderRadius: 6, padding: "5px 12px", color: "#ef4444", fontSize: 11, cursor: "pointer" }}>
+            ✕ Limpiar filtros
+          </button>
+        )}
+      </div>
+
+      {!hayFiltros ? (
+        <div style={{ textAlign: "center", padding: 50, color: "#5a7a9a" }}>
+          <div style={{ fontSize: 36, marginBottom: 10, opacity: 0.4 }}>🔍</div>
+          <div style={{ fontSize: 13 }}>Escribe un nombre, alias, delito o filtra por región para buscar.</div>
+        </div>
+      ) : cargando ? (
+        <div style={{ textAlign: "center", padding: 40, color: "#5a7a9a" }}>Buscando…</div>
+      ) : resultados.length === 0 ? (
+        <div style={{ textAlign: "center", padding: 40, color: "#5a7a9a" }}>Sin resultados para esta búsqueda.</div>
+      ) : (
+        <>
+          <div style={{ color: "#5a7a9a", fontSize: 11, marginBottom: 10 }}>{resultados.length} resultado(s)</div>
+          {resultados.map((d) => {
+            const s = calcularSemaforo(d);
+            return (
+              <div key={d.id} onClick={() => onAbrirDetenido(d)} style={{ background: "#0c1a27", border: "1px solid #1a3050", borderRadius: 10, padding: 14, marginBottom: 8, cursor: "pointer" }}
+                onMouseEnter={(e) => e.currentTarget.style.borderColor = "#2a5080"}
+                onMouseLeave={(e) => e.currentTarget.style.borderColor = "#1a3050"}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                  <div>
+                    <div style={{ color: "#e8f4ff", fontSize: 14, fontWeight: 700 }}>{d.nombre}</div>
+                    <div style={{ color: "#f59e0b", fontSize: 12 }}>{d.alias}</div>
+                  </div>
+                  <SemaforoBadge detenido={d} />
+                </div>
+                <div style={{ color: "#c8daea", fontSize: 12, marginTop: 6 }}>{d.delito || "—"} · {(d.region || "—").replace("Región ", "")}</div>
+              </div>
+            );
+          })}
+        </>
+      )}
+    </div>
+  );
+}
+
+
+function ModuloDetenidos({ perfil, detenidoInicial, onDetenidoInicialUsado }) {
   const [form, setForm] = useState(initialForm);
   const [guardando, setGuardando] = useState(false);
   const [mensaje, setMensaje] = useState(null);
@@ -1399,6 +1488,13 @@ function ModuloDetenidos({ perfil }) {
   const [busqueda, setBusqueda] = useState("");
   const [detenidoActivo, setDetenidoActivo] = useState(null);
   const [archivos, setArchivos] = useState([]);
+
+  useEffect(() => {
+    if (detenidoInicial) {
+      setDetenidoActivo(detenidoInicial);
+      if (onDetenidoInicialUsado) onDetenidoInicialUsado();
+    }
+  }, [detenidoInicial]);
 
   const set = (k, v) => setForm((p) => ({ ...p, [k]: v }));
 
@@ -1637,11 +1733,17 @@ export default function App() {
 
   const cerrarSesion = async () => { await supabase.auth.signOut(); };
   const [tabApp, setTabApp] = useState("detenidos");
+  const [detenidoParaAbrir, setDetenidoParaAbrir] = useState(null);
 
   if (cargandoSesion) return <div style={{ minHeight: "100vh", background: "#070f1a", display: "flex", alignItems: "center", justifyContent: "center", color: "#5a7a9a" }}>Cargando…</div>;
   if (!sesion) return <Auth />;
 
   const puedeVerDashboard = perfil && ["coordinador", "regional", "mando"].includes(perfil.rol);
+
+  const abrirDesdeListaBusqueda = (d) => {
+    setDetenidoParaAbrir(d);
+    setTabApp("detenidos");
+  };
 
   return (
     <div style={{ minHeight: "100vh", background: "#070f1a", fontFamily: "'Trebuchet MS', sans-serif", color: "#c8daea" }}>
@@ -1666,15 +1768,18 @@ export default function App() {
         </div>
       </div>
 
-      {puedeVerDashboard && (
-        <div style={{ background: "#08111e", borderBottom: "1px solid #1a3050", padding: "0 20px", display: "flex", gap: 4 }}>
-          <button onClick={() => setTabApp("detenidos")} style={{ background: "none", border: "none", borderBottom: tabApp === "detenidos" ? "2px solid #4a9eff" : "2px solid transparent", padding: "12px 14px", color: tabApp === "detenidos" ? "#e8f4ff" : "#5a7a9a", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>🚔 Detenidos</button>
+      <div style={{ background: "#08111e", borderBottom: "1px solid #1a3050", padding: "0 20px", display: "flex", gap: 4 }}>
+        <button onClick={() => setTabApp("busqueda")} style={{ background: "none", border: "none", borderBottom: tabApp === "busqueda" ? "2px solid #4a9eff" : "2px solid transparent", padding: "12px 14px", color: tabApp === "busqueda" ? "#e8f4ff" : "#5a7a9a", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>🔍 Búsqueda</button>
+        <button onClick={() => setTabApp("detenidos")} style={{ background: "none", border: "none", borderBottom: tabApp === "detenidos" ? "2px solid #4a9eff" : "2px solid transparent", padding: "12px 14px", color: tabApp === "detenidos" ? "#e8f4ff" : "#5a7a9a", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>🚔 Detenidos</button>
+        {puedeVerDashboard && (
           <button onClick={() => setTabApp("dashboard")} style={{ background: "none", border: "none", borderBottom: tabApp === "dashboard" ? "2px solid #4a9eff" : "2px solid transparent", padding: "12px 14px", color: tabApp === "dashboard" ? "#e8f4ff" : "#5a7a9a", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>📊 Dashboard</button>
-        </div>
-      )}
+        )}
+      </div>
 
       <div style={{ padding: 20, maxWidth: tabApp === "dashboard" ? 1000 : 800, margin: "0 auto" }}>
-        {tabApp === "dashboard" && puedeVerDashboard ? <DashboardMandos perfil={perfil} /> : <ModuloDetenidos perfil={perfil} />}
+        {tabApp === "busqueda" && <BusquedaOperativa perfil={perfil} onAbrirDetenido={abrirDesdeListaBusqueda} />}
+        {tabApp === "dashboard" && puedeVerDashboard && <DashboardMandos perfil={perfil} />}
+        {tabApp === "detenidos" && <ModuloDetenidos perfil={perfil} detenidoInicial={detenidoParaAbrir} onDetenidoInicialUsado={() => setDetenidoParaAbrir(null)} />}
       </div>
     </div>
   );
