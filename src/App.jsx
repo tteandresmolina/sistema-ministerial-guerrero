@@ -923,6 +923,84 @@ function CoDetenidos({ detenido, perfil, onActualizado }) {
   );
 }
 
+// ─── VÍCTIMAS — en quién recae el delito ────────────────────────────────────────
+function Victimas({ detenido, perfil }) {
+  const [victimas, setVictimas] = useState([]);
+  const [cargando, setCargando] = useState(true);
+  const [mostrarForm, setMostrarForm] = useState(false);
+  const [nombre, setNombre] = useState("");
+  const [telefono, setTelefono] = useState("");
+  const [esMenor, setEsMenor] = useState(false);
+  const [guardando, setGuardando] = useState(false);
+
+  const cargarVictimas = async () => {
+    setCargando(true);
+    const { data } = await supabase.from("victimas").select("*").eq("detenido_id", detenido.id).order("creado_en", { ascending: false });
+    setVictimas(data || []);
+    setCargando(false);
+  };
+
+  useEffect(() => { cargarVictimas(); }, [detenido.id]);
+
+  const guardarVictima = async () => {
+    if (!nombre) { alert("El nombre de la víctima es obligatorio."); return; }
+    setGuardando(true);
+    const { error } = await supabase.from("victimas").insert([{
+      detenido_id: detenido.id,
+      nombre, telefono_contacto: telefono, es_menor_edad: esMenor,
+      registrado_por: perfil?.nombre_completo || "", registrado_por_id: perfil?.id || null,
+    }]);
+    setGuardando(false);
+    if (error) { alert("Error al guardar: " + error.message); return; }
+    setNombre(""); setTelefono(""); setEsMenor(false); setMostrarForm(false);
+    cargarVictimas();
+  };
+
+  return (
+    <div style={{ background: "#0c1a27", borderRadius: 10, padding: 18, marginBottom: 16, border: "1px solid #1a3050" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+        <div style={{ color: "#ec4899", fontSize: 11, fontWeight: 800, letterSpacing: 2, textTransform: "uppercase" }}>🧍 Víctima(s) — en quién recae el delito</div>
+        <button onClick={() => setMostrarForm((v) => !v)} style={{ background: "#3a0a1f", border: "1px solid #ec489944", borderRadius: 7, padding: "6px 12px", color: "#fbcfe8", fontSize: 11, fontWeight: 700, cursor: "pointer" }}>
+          {mostrarForm ? "✕ Cancelar" : "+ Agregar víctima"}
+        </button>
+      </div>
+
+      {mostrarForm && (
+        <div style={{ background: "#0a1525", borderRadius: 8, padding: 14, marginBottom: 14 }}>
+          <div style={{ display: "grid", gap: 10 }}>
+            <Input label="Nombre completo de la víctima" value={nombre} onChange={setNombre} required />
+            <Input label="Teléfono de contacto" value={telefono} onChange={setTelefono} placeholder="Opcional" />
+            <div style={{ display: "flex", alignItems: "center", gap: 8, background: esMenor ? "#3a0a1f" : "transparent", borderRadius: 7, padding: esMenor ? "8px 10px" : 0 }}>
+              <input type="checkbox" checked={esMenor} onChange={(e) => setEsMenor(e.target.checked)} style={{ width: 16, height: 16 }} />
+              <label style={{ color: "#ec4899", fontSize: 12, fontWeight: 700 }}>⚠ Es persona menor de edad</label>
+            </div>
+            {esMenor && <div style={{ color: "#fbcfe8", fontSize: 10 }}>Dato sensible: se manejará conforme a los protocolos de protección de menores vigentes.</div>}
+          </div>
+          <button onClick={guardarVictima} disabled={guardando} style={{ marginTop: 12, width: "100%", background: "linear-gradient(135deg,#9d174d,#831843)", border: "none", borderRadius: 7, padding: 10, color: "#fbcfe8", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
+            {guardando ? "GUARDANDO…" : "GUARDAR VÍCTIMA"}
+          </button>
+        </div>
+      )}
+
+      {cargando ? (
+        <div style={{ color: "#5a7a9a", fontSize: 12, textAlign: "center", padding: 16 }}>Cargando…</div>
+      ) : victimas.length === 0 ? (
+        <div style={{ color: "#5a7a9a", fontSize: 12, textAlign: "center", padding: 16 }}>Aún no se han registrado víctimas para este expediente.</div>
+      ) : (
+        victimas.map((v) => (
+          <div key={v.id} style={{ background: "#0a1525", borderRadius: 8, padding: "10px 12px", marginBottom: 6, border: v.es_menor_edad ? "1px solid #ec489944" : "1px solid transparent" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div style={{ color: "#e8f4ff", fontSize: 13, fontWeight: 600 }}>{v.nombre}</div>
+              {v.es_menor_edad && <span style={{ background: "#ec489922", color: "#fbcfe8", border: "1px solid #ec489955", borderRadius: 4, padding: "2px 8px", fontSize: 9, fontWeight: 700 }}>MENOR DE EDAD</span>}
+            </div>
+            {v.telefono_contacto && <div style={{ color: "#8a9ab0", fontSize: 11, marginTop: 2 }}>Tel: {v.telefono_contacto}</div>}
+          </div>
+        ))
+      )}
+    </div>
+  );
+}
+
 // ─── BITÁCORA / LÍNEA DE TIEMPO ─────────────────────────────────────────────────
 function Bitacora({ archivos }) {
   const ordenados = [...archivos].sort((a, b) => new Date(b.creado_en) - new Date(a.creado_en));
@@ -1249,6 +1327,8 @@ function ModuloDetenidos({ perfil }) {
           const { data } = await supabase.from("detenidos").select("*").eq("id", detenidoActivo.id).single();
           if (data) setDetenidoActivo(data);
         }} />
+
+        <Victimas detenido={detenidoActivo} perfil={perfil} />
 
         <Bitacora archivos={archivos} />
       </div>
