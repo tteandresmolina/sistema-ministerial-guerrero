@@ -272,6 +272,10 @@ function DateTimePicker24({ label, value, onChange, required = false }) {
   );
 }
 
+function Badge({ text, color }) {
+  return <span style={{ background: color + "22", color, border: `1px solid ${color}55`, borderRadius: 4, padding: "2px 9px", fontSize: 11, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", whiteSpace: "nowrap" }}>{text}</span>;
+}
+
 function Seccion({ titulo, color, children }) {
   return (
     <div style={{ background: "#0c1a27", borderRadius: 10, padding: 18, marginBottom: 16, border: "1px solid #1a3050" }}>
@@ -1478,6 +1482,162 @@ function BusquedaOperativa({ perfil, onAbrirDetenido }) {
 }
 
 
+// ─── SECCIÓN C — FICHA BÁSICA RESTRINGIDA (consulta histórica) ─────────────────
+function FichaBasicaRestringida({ detenido, perfil, onVolver }) {
+  const [solicitudes, setSolicitudes] = useState([]);
+  const [cargandoSol, setCargandoSol] = useState(true);
+  const [mostrarForm, setMostrarForm] = useState(false);
+  const [justificacion, setJustificacion] = useState("");
+  const [enviando, setEnviando] = useState(false);
+  const [mensaje, setMensaje] = useState(null);
+
+  useEffect(() => {
+    // Registro automático de la consulta — bitácora silenciosa
+    supabase.from("consultas_expediente").insert([{
+      detenido_id: detenido.id,
+      consultado_por: perfil?.nombre_completo || "",
+      consultado_por_id: perfil?.id || null,
+      rol_consultor: perfil?.rol || "",
+    }]);
+  }, [detenido.id]);
+
+  const cargarSolicitudes = async () => {
+    setCargandoSol(true);
+    const { data } = await supabase.from("solicitudes_edicion").select("*").eq("detenido_id", detenido.id).order("creado_en", { ascending: false });
+    setSolicitudes(data || []);
+    setCargandoSol(false);
+  };
+
+  useEffect(() => { cargarSolicitudes(); }, [detenido.id]);
+
+  const enviarSolicitud = async () => {
+    if (!justificacion.trim()) { alert("Escribe la justificación de tu solicitud."); return; }
+    setEnviando(true);
+    const { error } = await supabase.from("solicitudes_edicion").insert([{
+      detenido_id: detenido.id,
+      solicitado_por: perfil?.nombre_completo || "",
+      solicitado_por_id: perfil?.id || null,
+      justificacion,
+    }]);
+    setEnviando(false);
+    if (error) { setMensaje({ tipo: "error", texto: "Error: " + error.message }); return; }
+    setJustificacion(""); setMostrarForm(false);
+    setMensaje({ tipo: "ok", texto: "✅ Solicitud enviada. Un Coordinador Regional o Director General debe autorizarla." });
+    cargarSolicitudes();
+  };
+
+  const estadoColor = { pendiente: "#f59e0b", autorizada: "#22c55e", rechazada: "#ef4444" };
+  const hayPendiente = solicitudes.some((s) => s.estado === "pendiente");
+  const hayAutorizada = solicitudes.some((s) => s.estado === "autorizada");
+
+  return (
+    <div>
+      <button onClick={onVolver} style={{ background: "none", border: "none", color: "#4a9eff", fontSize: 13, cursor: "pointer", marginBottom: 14, padding: 0 }}>← Volver</button>
+
+      <div style={{ background: "#1a1410", border: "1px solid #f59e0b44", borderRadius: 8, padding: "10px 14px", marginBottom: 16, display: "flex", alignItems: "center", gap: 8 }}>
+        <span style={{ fontSize: 16 }}>🔒</span>
+        <span style={{ color: "#fde68a", fontSize: 12 }}>Expediente finalizado — vista de consulta histórica básica. Esta consulta ha quedado registrada.</span>
+      </div>
+
+      <div style={{ background: "#0c1a27", borderRadius: 10, padding: 18, marginBottom: 16, border: "1px solid #1a3050" }}>
+        <div style={{ display: "flex", gap: 14, alignItems: "flex-start" }}>
+          {detenido._fotoFrente ? (
+            <img src={detenido._fotoFrente} alt="frente" style={{ width: 80, height: 80, objectFit: "cover", borderRadius: 8, border: "1px solid #1e3a5f" }} />
+          ) : (
+            <div style={{ width: 80, height: 80, borderRadius: 8, background: "#0a1525", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 28, color: "#5a7a9a" }}>👤</div>
+          )}
+          <div>
+            <div style={{ color: "#ef4444", fontSize: 11, fontWeight: 700 }}>{detenido.id?.slice(0, 8)}</div>
+            <div style={{ color: "#e8f4ff", fontSize: 18, fontWeight: 700, marginTop: 2 }}>{detenido.nombre}</div>
+            <div style={{ color: "#f59e0b", fontSize: 13 }}>{detenido.alias}</div>
+            <div style={{ marginTop: 6 }}><Badge text="Finalizado" color="#6b7280" /></div>
+          </div>
+        </div>
+
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginTop: 16, paddingTop: 16, borderTop: "1px solid #1a3050" }}>
+          {[["Delito", detenido.delito], ["Región", detenido.region], ["Fecha de detención", detenido.fecha_deteccion], ["Tipo de detención", detenido.tipo_deteccion]].map(([k, v]) => (
+            <div key={k}>
+              <div style={{ color: "#5a7a9a", fontSize: 9, letterSpacing: 1, textTransform: "uppercase" }}>{k}</div>
+              <div style={{ color: "#c8daea", fontSize: 13, marginTop: 2 }}>{v || "—"}</div>
+            </div>
+          ))}
+        </div>
+
+        {detenido.senas_particulares && (
+          <div style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid #1a3050" }}>
+            <div style={{ color: "#5a7a9a", fontSize: 9, letterSpacing: 1, textTransform: "uppercase" }}>Señas particulares</div>
+            <div style={{ color: "#c8daea", fontSize: 13, marginTop: 2 }}>{detenido.senas_particulares}</div>
+          </div>
+        )}
+
+        {detenido.tatuajes && detenido.tatuajes.length > 0 && (
+          <div style={{ marginTop: 14 }}>
+            <div style={{ color: "#5a7a9a", fontSize: 9, letterSpacing: 1, textTransform: "uppercase", marginBottom: 6 }}>Tatuajes</div>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+              {detenido.tatuajes.map((t, i) => <Badge key={i} text={t} color="#a78bfa" />)}
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div style={{ background: "#0c1a27", borderRadius: 10, padding: 18, border: "1px solid #1a3050" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+          <div style={{ color: "#a78bfa", fontSize: 11, fontWeight: 800, letterSpacing: 2, textTransform: "uppercase" }}>📝 Solicitud de Edición Justificada</div>
+          {!hayPendiente && !hayAutorizada && (
+            <button onClick={() => setMostrarForm((v) => !v)} style={{ background: "#2e1065", border: "1px solid #a78bfa44", borderRadius: 7, padding: "6px 12px", color: "#ddd6fe", fontSize: 11, fontWeight: 700, cursor: "pointer" }}>
+              {mostrarForm ? "✕ Cancelar" : "+ Solicitar edición"}
+            </button>
+          )}
+        </div>
+
+        {hayAutorizada && (
+          <div style={{ background: "#0f2a1a", border: "1px solid #22c55e44", borderRadius: 7, padding: 10, marginBottom: 10, color: "#bbf7d0", fontSize: 12 }}>
+            ✅ Tu solicitud fue autorizada. Ya puedes regresar y editar este expediente con normalidad.
+          </div>
+        )}
+        {hayPendiente && (
+          <div style={{ background: "#2a2410", border: "1px solid #eab30844", borderRadius: 7, padding: 10, marginBottom: 10, color: "#fde047", fontSize: 12 }}>
+            ⏳ Hay una solicitud pendiente de autorización por un Coordinador Regional o Director General.
+          </div>
+        )}
+
+        {mostrarForm && (
+          <div style={{ background: "#0a1525", borderRadius: 8, padding: 12, marginBottom: 12 }}>
+            <TextArea label="Justificación de la solicitud" value={justificacion} onChange={setJustificacion} rows={3} />
+            <button onClick={enviarSolicitud} disabled={enviando} style={{ marginTop: 10, width: "100%", background: "linear-gradient(135deg,#4c1d95,#5b21b6)", border: "none", borderRadius: 7, padding: 10, color: "#ddd6fe", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
+              {enviando ? "Enviando…" : "Enviar solicitud"}
+            </button>
+          </div>
+        )}
+
+        {mensaje && (
+          <div style={{ background: mensaje.tipo === "ok" ? "#0f2a1a" : "#2a0f0f", border: `1px solid ${mensaje.tipo === "ok" ? "#22c55e44" : "#ef444444"}`, borderRadius: 7, padding: 10, marginBottom: 10, color: mensaje.tipo === "ok" ? "#4ade80" : "#f87171", fontSize: 12 }}>
+            {mensaje.texto}
+          </div>
+        )}
+
+        {!cargandoSol && solicitudes.length > 0 && (
+          <div>
+            <div style={{ color: "#5a7a9a", fontSize: 10, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 6 }}>Historial de solicitudes</div>
+            {solicitudes.map((s) => (
+              <div key={s.id} style={{ background: "#0a1525", borderRadius: 6, padding: 8, marginBottom: 6 }}>
+                <div style={{ display: "flex", justifyContent: "space-between" }}>
+                  <span style={{ color: "#c8daea", fontSize: 11 }}>{s.solicitado_por}</span>
+                  <Badge text={s.estado} color={estadoColor[s.estado]} />
+                </div>
+                <div style={{ color: "#8a9ab0", fontSize: 11, marginTop: 2 }}>{s.justificacion}</div>
+                <div style={{ color: "#5a7a9a", fontSize: 9, marginTop: 2 }}>{new Date(s.creado_en).toLocaleString("es-MX", { dateStyle: "short", timeStyle: "short" })}</div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+
+
 function ModuloDetenidos({ perfil, detenidoInicial, onDetenidoInicialUsado }) {
   const [form, setForm] = useState(initialForm);
   const [guardando, setGuardando] = useState(false);
@@ -1547,6 +1707,13 @@ function ModuloDetenidos({ perfil, detenidoInicial, onDetenidoInicialUsado }) {
   });
 
   if (detenidoActivo) {
+    const esVistaRestringida = detenidoActivo.estatus_clave === "finalizado" && perfil && ["agente", "coordinador"].includes(perfil.rol);
+
+    if (esVistaRestringida) {
+      const fotoFrente = archivos.find((a) => a.categoria === "foto_frente");
+      return <FichaBasicaRestringida detenido={{ ...detenidoActivo, _fotoFrente: fotoFrente?.url_archivo }} perfil={perfil} onVolver={() => { setDetenidoActivo(null); setForm(initialForm); setMensaje(null); }} />;
+    }
+
     return (
       <div>
         <button onClick={() => { setDetenidoActivo(null); setForm(initialForm); setMensaje(null); }} style={{ background: "none", border: "none", color: "#4a9eff", fontSize: 13, cursor: "pointer", marginBottom: 14, padding: 0 }}>← Volver</button>
