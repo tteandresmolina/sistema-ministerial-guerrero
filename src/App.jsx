@@ -1716,6 +1716,8 @@ function ModuloDetenidos({ perfil, detenidoInicial, onDetenidoInicialUsado }) {
   const [busqueda, setBusqueda] = useState("");
   const [detenidoActivo, setDetenidoActivo] = useState(null);
   const [archivos, setArchivos] = useState([]);
+  const [tieneAutorizacion, setTieneAutorizacion] = useState(false);
+  const [verificandoAutorizacion, setVerificandoAutorizacion] = useState(true);
 
   useEffect(() => {
     if (detenidoInicial) {
@@ -1723,6 +1725,16 @@ function ModuloDetenidos({ perfil, detenidoInicial, onDetenidoInicialUsado }) {
       if (onDetenidoInicialUsado) onDetenidoInicialUsado();
     }
   }, [detenidoInicial]);
+
+  useEffect(() => {
+    if (!detenidoActivo) { setTieneAutorizacion(false); return; }
+    setVerificandoAutorizacion(true);
+    supabase.from("solicitudes_edicion").select("id").eq("detenido_id", detenidoActivo.id).eq("estado", "autorizada").limit(1)
+      .then(({ data }) => {
+        setTieneAutorizacion((data || []).length > 0);
+        setVerificandoAutorizacion(false);
+      });
+  }, [detenidoActivo?.id]);
 
   const set = (k, v) => setForm((p) => ({ ...p, [k]: v }));
 
@@ -1775,7 +1787,13 @@ function ModuloDetenidos({ perfil, detenidoInicial, onDetenidoInicialUsado }) {
   });
 
   if (detenidoActivo) {
-    const esVistaRestringida = detenidoActivo.estatus_clave === "finalizado" && perfil && ["agente", "coordinador"].includes(perfil.rol);
+    const esFinalizadoYRolLimitado = detenidoActivo.estatus_clave === "finalizado" && perfil && ["agente", "coordinador"].includes(perfil.rol);
+
+    if (esFinalizadoYRolLimitado && verificandoAutorizacion) {
+      return <div style={{ textAlign: "center", padding: 40, color: "#5a7a9a" }}>Verificando permisos…</div>;
+    }
+
+    const esVistaRestringida = esFinalizadoYRolLimitado && !tieneAutorizacion;
 
     if (esVistaRestringida) {
       const fotoFrente = archivos.find((a) => a.categoria === "foto_frente");
@@ -1785,6 +1803,13 @@ function ModuloDetenidos({ perfil, detenidoInicial, onDetenidoInicialUsado }) {
     return (
       <div>
         <button onClick={() => { setDetenidoActivo(null); setForm(initialForm); setMensaje(null); }} style={{ background: "none", border: "none", color: "#4a9eff", fontSize: 13, cursor: "pointer", marginBottom: 14, padding: 0 }}>← Volver</button>
+
+        {esFinalizadoYRolLimitado && tieneAutorizacion && (
+          <div style={{ background: "#0f2a1a", border: "1px solid #22c55e44", borderRadius: 8, padding: "10px 14px", marginBottom: 16, display: "flex", alignItems: "center", gap: 8 }}>
+            <span style={{ fontSize: 16 }}>✅</span>
+            <span style={{ color: "#bbf7d0", fontSize: 12 }}>Edición autorizada para este expediente finalizado.</span>
+          </div>
+        )}
 
         <div style={{ background: "#0c1a27", borderRadius: 10, padding: 16, marginBottom: 16, border: "1px solid #1a3050" }}>
           <div style={{ color: "#ef4444", fontSize: 11, fontWeight: 700 }}>{detenidoActivo.id?.slice(0, 8)}</div>
