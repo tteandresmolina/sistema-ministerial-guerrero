@@ -9,6 +9,7 @@ const ESTADOS_CIVILES = ["Soltero(a)","Casado(a)","Unión libre","Divorciado(a)"
 const IDENTIFICACIONES = ["INE","Pasaporte","Licencia","Cédula profesional","No proporcionó","Otro"];
 const TIPOS_DOCUMENTO = ["Boleta de Internamiento","Oficio de Investigación","Pase de Visitas","Oficio de Solicitud a Plataforma México","Oficio de Solicitud a Otras Dependencias","Oficio de Solicitud de Cámaras C2, C4 y C5","Boleta de Libertad Bajo Reservas de Ley","Solicitud de Audiencia (Fecha y Hora Programada)","Otros"];
 const TIPOLOGIAS_INDICIO = ["Balístico","Narcóticos","Tecnológico","Vehículo","Bien Inmueble","Arma","Dinero","Otro"];
+const DESTINOS_MOVIMIENTO = ["Laboratorio","Bodega de Indicios","Perito","Ministerio Público","Juzgado","Otra autoridad","Devolución al lugar de origen","Otro"];
 const TIPOS_DETENCION = ["Flagrancia","Mandamiento Judicial / Orden de Aprehensión","Caso Urgente","Mandamiento Ministerial"];
 const tipologiaIcono = { "Balístico": "🎯", "Narcóticos": "💊", "Tecnológico": "💻", "Vehículo": "🚗", "Bien Inmueble": "🏠", "Arma": "🔫", "Dinero": "💵", "Otro": "📦" };
 const tipologiaColor = { "Balístico": "#ef4444", "Narcóticos": "#a78bfa", "Tecnológico": "#4a9eff", "Vehículo": "#f59e0b", "Bien Inmueble": "#14b8a6", "Arma": "#7f1d1d", "Dinero": "#22c55e", "Otro": "#5a7a9a" };
@@ -619,6 +620,33 @@ function IndicioCard({ indicio, perfil, detenidoId, onActualizado }) {
   const [subiendo, setSubiendo] = useState(false);
   const [archivos, setArchivos] = useState(indicio._archivos || []);
   const [expandido, setExpandido] = useState(false);
+  const [movimientos, setMovimientos] = useState([]);
+  const [mostrarFormMov, setMostrarFormMov] = useState(false);
+  const [nombreRecibe, setNombreRecibe] = useState("");
+  const [motivoMov, setMotivoMov] = useState("");
+  const [destinoMov, setDestinoMov] = useState("");
+  const [guardandoMov, setGuardandoMov] = useState(false);
+
+  const cargarMovimientos = async () => {
+    const { data } = await supabase.from("indicios_movimientos").select("*").eq("indicio_id", indicio.id).order("creado_en", { ascending: false });
+    setMovimientos(data || []);
+  };
+
+  useEffect(() => { if (expandido) cargarMovimientos(); }, [expandido]);
+
+  const registrarMovimiento = async () => {
+    if (!nombreRecibe || !motivoMov || !destinoMov) { alert("Completa nombre, motivo y destino."); return; }
+    setGuardandoMov(true);
+    const { error } = await supabase.from("indicios_movimientos").insert([{
+      indicio_id: indicio.id,
+      nombre_recibe: nombreRecibe, motivo: motivoMov, destino: destinoMov,
+      registrado_por: perfil?.nombre_completo || "", registrado_por_id: perfil?.id || null,
+    }]);
+    setGuardandoMov(false);
+    if (error) { alert("Error al registrar movimiento: " + error.message); return; }
+    setNombreRecibe(""); setMotivoMov(""); setDestinoMov(""); setMostrarFormMov(false);
+    cargarMovimientos();
+  };
 
   const subirArchivo = async (file) => {
     setSubiendo(true);
@@ -685,6 +713,40 @@ function IndicioCard({ indicio, perfil, detenidoId, onActualizado }) {
             style={{ background: "#1a3050", border: "1px solid #2a5080", borderRadius: 7, padding: "7px 14px", color: "#d0e4f4", fontSize: 11, fontWeight: 700, cursor: "pointer" }}>
             {subiendo ? "Subiendo…" : "📷🎥 Agregar foto o video"}
           </button>
+
+          <div style={{ marginTop: 14, paddingTop: 12, borderTop: "1px solid #1a3050" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+              <div style={{ color: "#5a7a9a", fontSize: 10, fontWeight: 800, letterSpacing: 1.5, textTransform: "uppercase" }}>🔗 Cadena de Custodia</div>
+              <button onClick={() => setMostrarFormMov((v) => !v)} style={{ background: "#1a3050", border: "1px solid #2a5080", borderRadius: 6, padding: "5px 10px", color: "#d0e4f4", fontSize: 10, fontWeight: 700, cursor: "pointer" }}>
+                {mostrarFormMov ? "✕ Cancelar" : "+ Registrar movimiento"}
+              </button>
+            </div>
+
+            {mostrarFormMov && (
+              <div style={{ background: "#0c1a27", borderRadius: 7, padding: 10, marginBottom: 10 }}>
+                <div style={{ display: "grid", gap: 8 }}>
+                  <Input label="Nombre de quien recibe" value={nombreRecibe} onChange={setNombreRecibe} required />
+                  <Input label="Motivo del traslado" value={motivoMov} onChange={setMotivoMov} placeholder="Ej. Análisis pericial" required />
+                  <Select label="Destino" value={destinoMov} onChange={setDestinoMov} options={DESTINOS_MOVIMIENTO} required />
+                </div>
+                <button onClick={registrarMovimiento} disabled={guardandoMov} style={{ marginTop: 10, width: "100%", background: "#1a3050", border: "1px solid #2a5080", borderRadius: 6, padding: 8, color: "#d0e4f4", fontSize: 11, fontWeight: 700, cursor: "pointer" }}>
+                  {guardandoMov ? "Guardando…" : "Guardar movimiento"}
+                </button>
+              </div>
+            )}
+
+            {movimientos.length === 0 ? (
+              <div style={{ color: "#5a7a9a", fontSize: 11 }}>Sin movimientos registrados. El indicio permanece en su ubicación original.</div>
+            ) : (
+              movimientos.map((m) => (
+                <div key={m.id} style={{ background: "#0c1a27", borderRadius: 6, padding: 8, marginBottom: 6 }}>
+                  <div style={{ color: "#e8f4ff", fontSize: 11, fontWeight: 600 }}>→ {m.destino}</div>
+                  <div style={{ color: "#8a9ab0", fontSize: 10, marginTop: 2 }}>Recibe: {m.nombre_recibe} · {m.motivo}</div>
+                  <div style={{ color: "#5a7a9a", fontSize: 9, marginTop: 2 }}>{new Date(m.creado_en).toLocaleString("es-MX", { dateStyle: "short", timeStyle: "short" })} · Registró: {m.registrado_por}</div>
+                </div>
+              ))
+            )}
+          </div>
         </div>
       )}
     </div>
