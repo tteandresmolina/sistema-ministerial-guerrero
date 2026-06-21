@@ -272,6 +272,27 @@ function DateTimePicker24({ label, value, onChange, required = false }) {
   );
 }
 
+function InputCarpeta20({ value, onChange }) {
+  const soloDigitos = (value || "").replace(/\D/g, "");
+  const completos = soloDigitos.length === 20;
+  return (
+    <div>
+      <label style={{ color: "#5a7a9a", fontSize: 10, fontWeight: 700, letterSpacing: 1.2, textTransform: "uppercase", display: "block", marginBottom: 4 }}>
+        Carpeta de investigación (20 dígitos) <span style={{ color: "#ef4444" }}>*</span>
+      </label>
+      <input
+        value={value}
+        onChange={(e) => onChange(e.target.value.replace(/[^\d]/g, "").slice(0, 20))}
+        placeholder="12030290200280050523"
+        style={{ background: "#0c1a27", border: `1px solid ${completos ? "#22c55e" : "#1e3a5f"}`, borderRadius: 7, padding: "9px 12px", color: "#d0e4f4", fontSize: 13, width: "100%", outline: "none", boxSizing: "border-box", fontFamily: "monospace", letterSpacing: 1 }}
+      />
+      <div style={{ marginTop: 4, display: "flex", justifyContent: "space-between" }}>
+        <span style={{ color: completos ? "#22c55e" : "#5a7a9a", fontSize: 10 }}>{completos ? "✓ " : ""}{soloDigitos.length}/20 dígitos {value ? `→ ${soloDigitos}*` : ""}</span>
+      </div>
+    </div>
+  );
+}
+
 function Badge({ text, color }) {
   return <span style={{ background: color + "22", color, border: `1px solid ${color}55`, borderRadius: 4, padding: "2px 9px", fontSize: 11, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", whiteSpace: "nowrap" }}>{text}</span>;
 }
@@ -403,7 +424,7 @@ function VerificarRostro({ detenido, archivos, perfil }) {
     <div style={{ background: "#0c1a27", border: "1px solid #1a3050", borderRadius: 10, padding: 14, marginTop: 10, position: "relative", overflow: "hidden" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div>
-          <div style={{ color: "#5a7a9a", fontSize: 11, fontWeight: 800, letterSpacing: 1.5, textTransform: "uppercase" }}>🔍 Reconocimiento Facial Básico</div>
+          <div style={{ color: "#5a7a9a", fontSize: 11, fontWeight: 800, letterSpacing: 1.5, textTransform: "uppercase" }}>🔍 Reconocimiento Facial con IA</div>
           <div style={{ color: "#5a7a9a", fontSize: 10, marginTop: 2 }}>Identifica coincidencias con detenidos ya registrados</div>
         </div>
         <button disabled style={{ background: "#1a1a2a", border: "1px solid #2a2a3a", borderRadius: 7, padding: "8px 14px", color: "#6b7280", fontSize: 11, fontWeight: 700, cursor: "not-allowed", whiteSpace: "nowrap", display: "flex", alignItems: "center", gap: 6 }}>
@@ -855,10 +876,17 @@ function CoDetenidos({ detenido, perfil, onActualizado }) {
 }
 
 // ─── VÍCTIMAS — en quién recae el delito ────────────────────────────────────────
+const TIPOS_AGRAVIO = [
+  { value: "identificada", label: "Persona identificada", icono: "🧍" },
+  { value: "sociedad", label: "La sociedad (sin víctima individual)", icono: "🏛️" },
+  { value: "quien_resulte", label: "Quien resulte (víctima desconocida)", icono: "❓" },
+];
+
 function Victimas({ detenido, perfil }) {
   const [victimas, setVictimas] = useState([]);
   const [cargando, setCargando] = useState(true);
   const [mostrarForm, setMostrarForm] = useState(false);
+  const [tipoAgravio, setTipoAgravio] = useState("identificada");
   const [nombre, setNombre] = useState("");
   const [telefono, setTelefono] = useState("");
   const [esMenor, setEsMenor] = useState(false);
@@ -874,18 +902,28 @@ function Victimas({ detenido, perfil }) {
   useEffect(() => { cargarVictimas(); }, [detenido.id]);
 
   const guardarVictima = async () => {
-    if (!nombre) { alert("El nombre de la víctima es obligatorio."); return; }
+    if (tipoAgravio === "identificada" && !nombre) { alert("Escribe el nombre de la víctima identificada."); return; }
     setGuardando(true);
     const { error } = await supabase.from("victimas").insert([{
       detenido_id: detenido.id,
-      nombre, telefono_contacto: telefono, es_menor_edad: esMenor,
+      tipo_agravio: tipoAgravio,
+      nombre: tipoAgravio === "identificada" ? nombre : null,
+      telefono_contacto: tipoAgravio === "identificada" ? telefono : null,
+      es_menor_edad: tipoAgravio === "identificada" ? esMenor : false,
       registrado_por: perfil?.nombre_completo || "", registrado_por_id: perfil?.id || null,
     }]);
     setGuardando(false);
     if (error) { alert("Error al guardar: " + error.message); return; }
-    setNombre(""); setTelefono(""); setEsMenor(false); setMostrarForm(false);
+    setNombre(""); setTelefono(""); setEsMenor(false); setTipoAgravio("identificada"); setMostrarForm(false);
     cargarVictimas();
   };
+
+  const etiquetaAgravio = (v) => {
+    if (v.tipo_agravio === "sociedad") return "En agravio de la sociedad";
+    if (v.tipo_agravio === "quien_resulte") return "En agravio de quien resulte";
+    return v.nombre;
+  };
+  const iconoAgravio = (v) => TIPOS_AGRAVIO.find((t) => t.value === v.tipo_agravio)?.icono || "🧍";
 
   return (
     <div style={{ background: "#0c1a27", borderRadius: 10, padding: 18, marginBottom: 16, border: "1px solid #1a3050" }}>
@@ -898,15 +936,28 @@ function Victimas({ detenido, perfil }) {
 
       {mostrarForm && (
         <div style={{ background: "#0a1525", borderRadius: 8, padding: 14, marginBottom: 14 }}>
-          <div style={{ display: "grid", gap: 10 }}>
-            <Input label="Nombre completo de la víctima" value={nombre} onChange={setNombre} required />
-            <Input label="Teléfono de contacto" value={telefono} onChange={setTelefono} placeholder="Opcional" />
-            <div style={{ display: "flex", alignItems: "center", gap: 8, background: esMenor ? "#3a0a1f" : "transparent", borderRadius: 7, padding: esMenor ? "8px 10px" : 0 }}>
-              <input type="checkbox" checked={esMenor} onChange={(e) => setEsMenor(e.target.checked)} style={{ width: 16, height: 16 }} />
-              <label style={{ color: "#ec4899", fontSize: 12, fontWeight: 700 }}>⚠ Es persona menor de edad</label>
-            </div>
-            {esMenor && <div style={{ color: "#fbcfe8", fontSize: 10 }}>Dato sensible: se manejará conforme a los protocolos de protección de menores vigentes.</div>}
+          <div style={{ display: "grid", gap: 8, marginBottom: 10 }}>
+            <label style={{ color: "#5a7a9a", fontSize: 10, fontWeight: 700, letterSpacing: 1.2, textTransform: "uppercase" }}>Cometido en agravio de</label>
+            {TIPOS_AGRAVIO.map((t) => (
+              <button key={t.value} type="button" onClick={() => setTipoAgravio(t.value)}
+                style={{ textAlign: "left", background: tipoAgravio === t.value ? "#3a0a1f" : "#0c1a27", border: `1px solid ${tipoAgravio === t.value ? "#ec489988" : "#1e3a5f"}`, borderRadius: 7, padding: "9px 12px", color: tipoAgravio === t.value ? "#fbcfe8" : "#8a9ab0", fontSize: 12, cursor: "pointer" }}>
+                {t.icono} {t.label}
+              </button>
+            ))}
           </div>
+
+          {tipoAgravio === "identificada" && (
+            <div style={{ display: "grid", gap: 10 }}>
+              <Input label="Nombre completo de la víctima" value={nombre} onChange={setNombre} required />
+              <Input label="Teléfono de contacto" value={telefono} onChange={setTelefono} placeholder="Opcional" />
+              <div style={{ display: "flex", alignItems: "center", gap: 8, background: esMenor ? "#3a0a1f" : "transparent", borderRadius: 7, padding: esMenor ? "8px 10px" : 0 }}>
+                <input type="checkbox" checked={esMenor} onChange={(e) => setEsMenor(e.target.checked)} style={{ width: 16, height: 16 }} />
+                <label style={{ color: "#ec4899", fontSize: 12, fontWeight: 700 }}>⚠ Es persona menor de edad</label>
+              </div>
+              {esMenor && <div style={{ color: "#fbcfe8", fontSize: 10 }}>Dato sensible: se manejará conforme a los protocolos de protección de menores vigentes.</div>}
+            </div>
+          )}
+
           <button onClick={guardarVictima} disabled={guardando} style={{ marginTop: 12, width: "100%", background: "linear-gradient(135deg,#9d174d,#831843)", border: "none", borderRadius: 7, padding: 10, color: "#fbcfe8", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
             {guardando ? "GUARDANDO…" : "GUARDAR VÍCTIMA"}
           </button>
@@ -921,7 +972,7 @@ function Victimas({ detenido, perfil }) {
         victimas.map((v) => (
           <div key={v.id} style={{ background: "#0a1525", borderRadius: 8, padding: "10px 12px", marginBottom: 6, border: v.es_menor_edad ? "1px solid #ec489944" : "1px solid transparent" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <div style={{ color: "#e8f4ff", fontSize: 13, fontWeight: 600 }}>{v.nombre}</div>
+              <div style={{ color: "#e8f4ff", fontSize: 13, fontWeight: 600 }}>{iconoAgravio(v)} {etiquetaAgravio(v)}</div>
               {v.es_menor_edad && <span style={{ background: "#ec489922", color: "#fbcfe8", border: "1px solid #ec489955", borderRadius: 4, padding: "2px 8px", fontSize: 9, fontWeight: 700 }}>MENOR DE EDAD</span>}
             </div>
             {v.telefono_contacto && <div style={{ color: "#8a9ab0", fontSize: 11, marginTop: 2 }}>Tel: {v.telefono_contacto}</div>}
@@ -959,6 +1010,7 @@ const initialForm = {
   region: "", zona: "", fecha_deteccion: "", delito: "", lugar_deteccion: "", tipo_deteccion: "",
   latitud: "", longitud: "", codetenidos_nombres: "",
   carpeta_investigacion: "", carpeta_judicial: "", rnd: "",
+  oficio_numero: "", hechos_fecha: "", hechos_descripcion: "", mp_firma_nombre: "",
   nombre: "", alias: "", fecha_nacimiento: "", lugar_nacimiento: "", lugar_residencia: "",
   ocupacion: "", sexo: "Masculino", estatura: "", complexion: "", color_piel: "",
   estado_civil: "", escolaridad: "", enfermedades: "", alergias: "", identificacion: "",
@@ -1687,6 +1739,7 @@ function ModuloDetenidos({ perfil, detenidoInicial, onDetenidoInicialUsado }) {
       ...form,
       fecha_deteccion: form.fecha_deteccion || null,
       fecha_nacimiento: form.fecha_nacimiento || null,
+      hechos_fecha: form.hechos_fecha || null,
       latitud: form.latitud ? parseFloat(form.latitud) : null,
       longitud: form.longitud ? parseFloat(form.longitud) : null,
       tatuajes: form.tatuajes.split("\n").map((s) => s.trim()).filter(Boolean),
@@ -1795,9 +1848,15 @@ function ModuloDetenidos({ perfil, detenidoInicial, onDetenidoInicialUsado }) {
             <div style={{ gridColumn: "1 / -1" }}><Input label="Lugar de la detención" value={form.lugar_deteccion} onChange={(v) => set("lugar_deteccion", v)} /></div>
             <Input label="Latitud" value={form.latitud} onChange={(v) => set("latitud", v)} placeholder="Ej. 16.8531200" />
             <Input label="Longitud" value={form.longitud} onChange={(v) => set("longitud", v)} placeholder="Ej. -99.8236500" />
-            <Input label="Carpeta de investigación" value={form.carpeta_investigacion} onChange={(v) => set("carpeta_investigacion", v)} placeholder="Pendiente por anexar" />
+            <div style={{ gridColumn: "1 / -1" }}><InputCarpeta20 value={form.carpeta_investigacion} onChange={(v) => set("carpeta_investigacion", v)} /></div>
+            <Input label="Oficio número" value={form.oficio_numero} onChange={(v) => set("oficio_numero", v)} placeholder="Ej. 2187" />
             <Input label="Carpeta judicial" value={form.carpeta_judicial} onChange={(v) => set("carpeta_judicial", v)} placeholder="Pendiente por anexar" />
             <Input label="R.N.D." value={form.rnd} onChange={(v) => set("rnd", v)} placeholder="Pendiente por anexar" />
+            <DatePicker label="Fecha en que ocurrieron los hechos" value={form.hechos_fecha} onChange={(v) => set("hechos_fecha", v)} />
+            <Input label="Agente del MP que firma el oficio" value={form.mp_firma_nombre} onChange={(v) => set("mp_firma_nombre", v)} placeholder="Ej. Lic. Emmanuel Cupertino Pérez Maury" />
+            <div style={{ gridColumn: "1 / -1" }}>
+              <TextArea label="Descripción breve de los hechos ocurridos" value={form.hechos_descripcion} onChange={(v) => set("hechos_descripcion", v)} rows={2} />
+            </div>
             <div style={{ gridColumn: "1 / -1" }}>
               <TextArea label="¿Hubo más detenidos en esta misma carpeta? Escribe sus nombres (uno por línea)" value={form.codetenidos_nombres} onChange={(v) => set("codetenidos_nombres", v)} rows={2} />
               <div style={{ color: "#5a7a9a", fontSize: 10, marginTop: 4 }}>A cada uno se le creará su propio expediente por separado. Si ya están registrados en el sistema, podrás vincularlos desde el expediente después de guardar.</div>
