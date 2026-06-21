@@ -3,7 +3,7 @@ import { supabase } from "./supabaseClient";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
 import {
   Shield, MapPin, Camera, FileText, Package, Users, User, FolderKanban,
-  Search, Siren, BarChart3, ClipboardList, IdCard, Phone, Crosshair,
+  Search, Siren, BarChart3, ClipboardList, BadgeCheck, Phone, Crosshair,
   Pill, Laptop, Car, Home, Lock as LockIcon, Banknote, ShieldAlert,
   CircleCheck, X, Check, Lock, Link2, Building2, UserCheck,
   Calendar, ImagePlus, Clock, FilePenLine, Camera as CameraIcon, HelpCircle,
@@ -376,7 +376,7 @@ function Bienvenida({ onContinuar }) {
         <div style={{ color: "#7c8db8", fontSize: 12, letterSpacing: 1, marginBottom: 36 }}>Policía de Investigación Ministerial</div>
 
         <div style={{ display: "flex", justifyContent: "center", gap: 28, marginBottom: 40, flexWrap: "wrap" }}>
-          {[["LEALTAD", Shield], ["HONOR", IdCard], ["INTEGRIDAD", CircleCheck]].map(([texto, Icon]) => (
+          {[["LEALTAD", Shield], ["HONOR", BadgeCheck], ["INTEGRIDAD", CircleCheck]].map(([texto, Icon]) => (
             <div key={texto} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
               <Icon size={20} style={{ color: "#b69054" }} />
               <span style={{ color: "#dce6f5", fontSize: 10, letterSpacing: 1.5 }}>{texto}</span>
@@ -531,7 +531,7 @@ function CapturaHuellasPRO() {
     <div style={{ background: "#ffffff", border: "1px solid #d9dee5", borderRadius: 10, padding: 14, marginTop: 10, position: "relative", overflow: "hidden" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div>
-          <div style={{ color: "#6b7280", fontSize: 11, fontWeight: 800, letterSpacing: 1.5, textTransform: "uppercase" }}><IdCard size={13} style={{ marginRight: 6, verticalAlign: -2 }} />Captura de Huellas Dactilares</div>
+          <div style={{ color: "#6b7280", fontSize: 11, fontWeight: 800, letterSpacing: 1.5, textTransform: "uppercase" }}><BadgeCheck size={13} style={{ marginRight: 6, verticalAlign: -2 }} />Captura de Huellas Dactilares</div>
           <div style={{ color: "#6b7280", fontSize: 10, marginTop: 2 }}>Sistema Vucetich — identificación decadactilar AFIS</div>
         </div>
         <button disabled style={{ background: "#f1efe8", border: "1px solid #d3d1c7", borderRadius: 7, padding: "8px 14px", color: "#6b7280", fontSize: 11, fontWeight: 700, cursor: "not-allowed", whiteSpace: "nowrap", display: "flex", alignItems: "center", gap: 6 }}>
@@ -1154,6 +1154,10 @@ function InterfazAvanzada({ detenido, perfil, onActualizado }) {
     aprehensor_externo_nombre: detenido.aprehensor_externo_nombre || "",
     aprehensor_externo_corporacion: detenido.aprehensor_externo_corporacion || "",
     tipo_deteccion: detenido.tipo_deteccion || "",
+    red_facebook: detenido.red_facebook || "",
+    red_instagram: detenido.red_instagram || "",
+    red_tiktok: detenido.red_tiktok || "",
+    red_x: detenido.red_x || "",
   });
   const [agentes, setAgentes] = useState([]);
   const [guardando, setGuardando] = useState(false);
@@ -1192,6 +1196,10 @@ function InterfazAvanzada({ detenido, perfil, onActualizado }) {
       aprehensor_externo_nombre: esExterno ? form.aprehensor_externo_nombre : null,
       aprehensor_externo_corporacion: esExterno ? form.aprehensor_externo_corporacion : null,
       tipo_deteccion: form.tipo_deteccion || null,
+      red_facebook: form.red_facebook || null,
+      red_instagram: form.red_instagram || null,
+      red_tiktok: form.red_tiktok || null,
+      red_x: form.red_x || null,
     };
     const { error } = await supabase.from("detenidos").update(payload).eq("id", detenido.id);
     setGuardando(false);
@@ -1215,7 +1223,7 @@ function InterfazAvanzada({ detenido, perfil, onActualizado }) {
   };
 
   const tabs = [
-    { key: "datos", label: "1. Datos", icono: IdCard, ok: estado.datos },
+    { key: "datos", label: "1. Datos", icono: BadgeCheck, ok: estado.datos },
     { key: "contacto", label: "2. Contacto", icono: Phone, ok: estado.contacto },
     { key: "disposicion", label: "3. Disposición", icono: ClipboardList, ok: estado.disposicion },
     { key: "aprehensor", label: "4. Aprehensor", icono: UserCheck, ok: estado.aprehensor },
@@ -1251,6 +1259,15 @@ function InterfazAvanzada({ detenido, perfil, onActualizado }) {
           <div style={{ gridColumn: "1 / -1", display: "flex", alignItems: "center", gap: 8 }}>
             <input type="checkbox" checked={form.alerta_delincuencia_organizada} onChange={(e) => set("alerta_delincuencia_organizada", e.target.checked)} style={{ width: 16, height: 16 }} />
             <label style={{ color: "#ef4444", fontSize: 12, fontWeight: 700 }}>⚠ Alerta de delincuencia organizada</label>
+          </div>
+          <div style={{ gridColumn: "1 / -1", paddingTop: 10, borderTop: "1px solid #d9dee5" }}>
+            <div style={{ color: "#ec4899", fontSize: 11, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}><UserCheck size={13} style={{ marginRight: 5, verticalAlign: -2 }} />Redes Sociales (si se proporcionan después)</div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+              <Input label="Facebook" value={form.red_facebook} onChange={(v) => set("red_facebook", v)} placeholder="Usuario o enlace de perfil" />
+              <Input label="Instagram" value={form.red_instagram} onChange={(v) => set("red_instagram", v)} placeholder="Usuario o enlace de perfil" />
+              <Input label="TikTok" value={form.red_tiktok} onChange={(v) => set("red_tiktok", v)} placeholder="Usuario o enlace de perfil" />
+              <Input label="X (Twitter)" value={form.red_x} onChange={(v) => set("red_x", v)} placeholder="Usuario o enlace de perfil" />
+            </div>
           </div>
         </div>
       )}
@@ -1955,12 +1972,24 @@ function ModuloDetenidos({ perfil, detenidoInicial, onDetenidoInicialUsado }) {
               )}
             </div>
           )}
-          <div style={{ color: "#1a1a2e", fontSize: 18, fontWeight: 700, marginTop: 2 }}>{detenidoActivo.nombre}</div>
-          <div style={{ color: "#f59e0b", fontSize: 13 }}>{detenidoActivo.alias}</div>
-          <div style={{ color: "#4a5268", fontSize: 12, marginTop: 4 }}>{detenidoActivo.delito} · {detenidoActivo.region}</div>
-          <div style={{ marginTop: 8, display: "flex", gap: 8, alignItems: "center" }}>
-            <SemaforoBadge detenido={detenidoActivo} />
-            <BotonMapa latitud={detenidoActivo.latitud} longitud={detenidoActivo.longitud} compacto />
+          <div style={{ display: "flex", gap: 14, alignItems: "flex-start" }}>
+            {(() => {
+              const fotoFrente = archivos.find((a) => a.categoria === "foto_frente");
+              return fotoFrente ? (
+                <img src={fotoFrente.url_archivo} alt={detenidoActivo.nombre} style={{ width: 64, height: 64, objectFit: "cover", borderRadius: 8, border: "1px solid #c3cbd6", flexShrink: 0 }} />
+              ) : (
+                <div style={{ width: 64, height: 64, borderRadius: 8, background: "#eef1f6", border: "1px solid #c3cbd6", display: "flex", alignItems: "center", justifyContent: "center", color: "#a8b3c2", flexShrink: 0 }}><User size={26} /></div>
+              );
+            })()}
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ color: "#1a1a2e", fontSize: 18, fontWeight: 700, marginTop: 2 }}>{detenidoActivo.nombre}</div>
+              <div style={{ color: "#f59e0b", fontSize: 13 }}>{detenidoActivo.alias}</div>
+              <div style={{ color: "#4a5268", fontSize: 12, marginTop: 4 }}>{detenidoActivo.delito} · {detenidoActivo.region}</div>
+              <div style={{ marginTop: 8, display: "flex", gap: 8, alignItems: "center" }}>
+                <SemaforoBadge detenido={detenidoActivo} />
+                <BotonMapa latitud={detenidoActivo.latitud} longitud={detenidoActivo.longitud} compacto />
+              </div>
+            </div>
           </div>
         </div>
 
