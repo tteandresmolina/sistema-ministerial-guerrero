@@ -79,7 +79,7 @@ function SemaforoBadge({ detenido }) {
 }
 
 const FOTO_SLOTS = [
-  { key: "foto_frente", label: "Frente", icono: User, multiple: false },
+  { key: "foto_frente", label: "Frente (cara y cuello)", icono: User, multiple: false, guia: "Captura de cara y cuello, fondo neutro, buena iluminación, sin lentes ni gorra — esta foto se usa para el Reconocimiento Facial con IA" },
   { key: "foto_perfil_izq", label: "Perfil izquierdo", icono: User, multiple: false },
   { key: "foto_perfil_der", label: "Perfil derecho", icono: User, multiple: false },
   { key: "foto_tatuaje", label: "Tatuajes / señas", icono: Search, multiple: true },
@@ -300,6 +300,34 @@ function InputCarpeta20({ value, onChange }) {
   );
 }
 
+function InputCURP({ value, onChange }) {
+  const limpio = (value || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
+  const completo = limpio.length === 18;
+  return (
+    <div style={{ gridColumn: "1 / -1" }}>
+      <label style={{ color: "#6b7280", fontSize: 10, fontWeight: 700, letterSpacing: 1.2, textTransform: "uppercase", display: "block", marginBottom: 4 }}>
+        CURP (18 caracteres) <span style={{ color: "#ef4444" }}>*</span>
+      </label>
+      <div style={{ display: "flex", gap: 8 }}>
+        <input
+          value={value}
+          onChange={(e) => onChange(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 18))}
+          placeholder="MOPE920630HS7MCLLD05"
+          style={{ flex: 1, background: "#ffffff", border: `1px solid ${completo ? "#22c55e" : "#c3cbd6"}`, borderRadius: 7, padding: "9px 12px", color: "#33394d", fontSize: 13, outline: "none", boxSizing: "border-box", fontFamily: "monospace", letterSpacing: 1 }}
+        />
+        <a href="https://www.gob.mx/curp/" target="_blank" rel="noopener noreferrer"
+          style={{ display: "flex", alignItems: "center", gap: 5, background: "#eef1f6", border: "1px solid #c3cbd6", borderRadius: 7, padding: "0 12px", color: "#001a4d", fontSize: 11, fontWeight: 700, textDecoration: "none", whiteSpace: "nowrap" }}>
+          <Search size={13} />RENAPO
+        </a>
+      </div>
+      <div style={{ marginTop: 4, display: "flex", justifyContent: "space-between" }}>
+        <span style={{ color: completo ? "#22c55e" : "#6b7280", fontSize: 10 }}>{completo ? "✓ " : ""}{limpio.length}/18 caracteres</span>
+        <span style={{ color: "#7c8494", fontSize: 9 }}>Sin INE: generar CURP en gob.mx con nombre, fecha de nacimiento y estado de registro</span>
+      </div>
+    </div>
+  );
+}
+
 function BotonMapa({ latitud, longitud, compacto }) {
   if (!latitud || !longitud) return null;
   const url = `https://www.google.com/maps?q=${latitud},${longitud}`;
@@ -498,6 +526,22 @@ function VerificarRostro({ detenido, archivos, perfil }) {
   );
 }
 
+function CapturaHuellasPRO() {
+  return (
+    <div style={{ background: "#ffffff", border: "1px solid #d9dee5", borderRadius: 10, padding: 14, marginTop: 10, position: "relative", overflow: "hidden" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div>
+          <div style={{ color: "#6b7280", fontSize: 11, fontWeight: 800, letterSpacing: 1.5, textTransform: "uppercase" }}><IdCard size={13} style={{ marginRight: 6, verticalAlign: -2 }} />Captura de Huellas Dactilares</div>
+          <div style={{ color: "#6b7280", fontSize: 10, marginTop: 2 }}>Sistema Vucetich — identificación decadactilar AFIS</div>
+        </div>
+        <button disabled style={{ background: "#f1efe8", border: "1px solid #d3d1c7", borderRadius: 7, padding: "8px 14px", color: "#6b7280", fontSize: 11, fontWeight: 700, cursor: "not-allowed", whiteSpace: "nowrap", display: "flex", alignItems: "center", gap: 6 }}>
+          <Lock size={12} style={{ marginRight: 4, verticalAlign: -2 }} />Disponible en versión PRO
+        </button>
+      </div>
+    </div>
+  );
+}
+
 
 // ─── SUBIDA DE UN SLOT DE FOTO ──────────────────────────────────────────────────
 function FotoSlot({ slot, detenidoId, perfil, archivos, onSubido }) {
@@ -542,6 +586,10 @@ function FotoSlot({ slot, detenidoId, perfil, archivos, onSubido }) {
             <img key={a.id} src={a.url_archivo} alt={slot.label} style={{ width: 56, height: 56, objectFit: "cover", borderRadius: 6, border: "1px solid #c3cbd6" }} />
           ))}
         </div>
+      )}
+
+      {slot.guia && existentes.length === 0 && (
+        <div style={{ background: "#eef1f6", borderRadius: 6, padding: 8, marginBottom: 8, color: "#6b7280", fontSize: 10, lineHeight: 1.4 }}>{slot.guia}</div>
       )}
 
       <input ref={inputRef} type="file" accept="image/*" capture="environment" multiple={slot.multiple} style={{ display: "none" }}
@@ -1079,6 +1127,7 @@ const initialForm = {
   estado_civil: "", escolaridad: "", enfermedades: "", alergias: "", identificacion: "",
   nombre_padre: "", nombre_madre: "", pareja_sentimental: "", telefono_contacto: "",
   vestimenta: "", senas_particulares: "", tatuajes: "", domicilios: "",
+  red_facebook: "", red_instagram: "", red_tiktok: "", red_x: "",
 };
 
 const SITUACIONES_MIGRATORIAS = ["No aplica", "Regular", "Irregular", "En trámite"];
@@ -1192,7 +1241,7 @@ function InterfazAvanzada({ detenido, perfil, onActualizado }) {
 
       {tab === "datos" && (
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-          <Input label="CURP" value={form.curp} onChange={(v) => set("curp", v)} required />
+          <InputCURP value={form.curp} onChange={(v) => set("curp", v)} />
           <Input label="Nacionalidad" value={form.nacionalidad} onChange={(v) => set("nacionalidad", v)} required />
           <Select label="Situación migratoria" value={form.situacion_migratoria} onChange={(v) => set("situacion_migratoria", v)} options={SITUACIONES_MIGRATORIAS} />
           <Input label="Lengua nativa" value={form.lengua_nativa} onChange={(v) => set("lengua_nativa", v)} placeholder="Español" />
@@ -1513,7 +1562,16 @@ function BusquedaOperativa({ perfil, onAbrirDetenido }) {
   const cargarDatos = async () => {
     setCargando(true);
     const { data } = await supabase.from("detenidos").select("*").order("creado_en", { ascending: false });
-    setDetenidos(data || []);
+    const lista = data || [];
+    if (lista.length > 0) {
+      const ids = lista.map((d) => d.id);
+      const { data: fotos } = await supabase.from("documentos_expediente").select("detenido_id, url_archivo").eq("categoria", "foto_frente").in("detenido_id", ids);
+      const mapaFotos = {};
+      (fotos || []).forEach((f) => { if (!mapaFotos[f.detenido_id]) mapaFotos[f.detenido_id] = f.url_archivo; });
+      setDetenidos(lista.map((d) => ({ ...d, _fotoFrente: mapaFotos[d.id] })));
+    } else {
+      setDetenidos(lista);
+    }
     setCargando(false);
   };
 
@@ -1573,14 +1631,29 @@ function BusquedaOperativa({ perfil, onAbrirDetenido }) {
               <div key={d.id} onClick={() => onAbrirDetenido(d)} style={{ background: "#ffffff", border: "1px solid #d9dee5", borderRadius: 10, padding: 14, marginBottom: 8, cursor: "pointer" }}
                 onMouseEnter={(e) => e.currentTarget.style.borderColor = "#a8b3c2"}
                 onMouseLeave={(e) => e.currentTarget.style.borderColor = "#d9dee5"}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                  <div>
-                    <div style={{ color: "#1a1a2e", fontSize: 14, fontWeight: 700 }}>{d.nombre}</div>
-                    <div style={{ color: "#f59e0b", fontSize: 12 }}>{d.alias}</div>
+                <div style={{ display: "flex", gap: 12 }}>
+                  {d._fotoFrente ? (
+                    <img src={d._fotoFrente} alt={d.nombre} style={{ width: 48, height: 48, objectFit: "cover", borderRadius: 8, border: "1px solid #c3cbd6", flexShrink: 0 }} />
+                  ) : (
+                    <div style={{ width: 48, height: 48, borderRadius: 8, background: "#eef1f6", border: "1px solid #c3cbd6", display: "flex", alignItems: "center", justifyContent: "center", color: "#a8b3c2", flexShrink: 0 }}><User size={20} /></div>
+                  )}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                      <div>
+                        <div style={{ color: "#1a1a2e", fontSize: 14, fontWeight: 700 }}>{d.nombre}</div>
+                        <div style={{ color: "#f59e0b", fontSize: 12 }}>{d.alias}</div>
+                      </div>
+                      <SemaforoBadge detenido={d} />
+                    </div>
+                    <div style={{ color: "#4a5268", fontSize: 12, marginTop: 6 }}>{d.delito || "—"} · {(d.region || "—").replace("Región ", "")}</div>
+                    {(d.carpeta_investigacion || d.rnd) && (
+                      <div style={{ color: "#7c8494", fontSize: 10, marginTop: 4, fontFamily: "monospace" }}>
+                        {d.carpeta_investigacion && <>Carpeta: {d.carpeta_investigacion}* </>}
+                        {d.rnd && <>· R.N.D.: {d.rnd}</>}
+                      </div>
+                    )}
                   </div>
-                  <SemaforoBadge detenido={d} />
                 </div>
-                <div style={{ color: "#4a5268", fontSize: 12, marginTop: 6 }}>{d.delito || "—"} · {(d.region || "—").replace("Región ", "")}</div>
                 {(d.latitud && d.longitud) && (
                   <div style={{ marginTop: 6 }}><BotonMapa latitud={d.latitud} longitud={d.longitud} compacto /></div>
                 )}
@@ -1785,7 +1858,16 @@ function ModuloDetenidos({ perfil, detenidoInicial, onDetenidoInicialUsado }) {
   const cargarDetenidos = async () => {
     setCargando(true);
     const { data } = await supabase.from("detenidos").select("*").order("creado_en", { ascending: false });
-    setDetenidos(data || []);
+    const lista = data || [];
+    if (lista.length > 0) {
+      const ids = lista.map((d) => d.id);
+      const { data: fotos } = await supabase.from("documentos_expediente").select("detenido_id, url_archivo").eq("categoria", "foto_frente").in("detenido_id", ids);
+      const mapaFotos = {};
+      (fotos || []).forEach((f) => { if (!mapaFotos[f.detenido_id]) mapaFotos[f.detenido_id] = f.url_archivo; });
+      setDetenidos(lista.map((d) => ({ ...d, _fotoFrente: mapaFotos[d.id] })));
+    } else {
+      setDetenidos(lista);
+    }
     setCargando(false);
   };
 
@@ -1895,6 +1977,7 @@ function ModuloDetenidos({ perfil, detenidoInicial, onDetenidoInicialUsado }) {
           </div>
           <div style={{ gridColumn: "1 / -1" }}>
             <VerificarRostro detenido={detenidoActivo} archivos={archivos} perfil={perfil} />
+            <CapturaHuellasPRO />
           </div>
         </Seccion>
 
@@ -1979,6 +2062,13 @@ function ModuloDetenidos({ perfil, detenidoInicial, onDetenidoInicialUsado }) {
             <div style={{ gridColumn: "1 / -1" }}><TextArea label="Domicilios conocidos (uno por línea)" value={form.domicilios} onChange={(v) => set("domicilios", v)} rows={2} /></div>
           </Seccion>
 
+          <Seccion titulo="Redes Sociales (si las proporciona en entrevista)" color="#ec4899" icon={UserCheck}>
+            <Input label="Facebook" value={form.red_facebook} onChange={(v) => set("red_facebook", v)} placeholder="Usuario o enlace de perfil" />
+            <Input label="Instagram" value={form.red_instagram} onChange={(v) => set("red_instagram", v)} placeholder="Usuario o enlace de perfil" />
+            <Input label="TikTok" value={form.red_tiktok} onChange={(v) => set("red_tiktok", v)} placeholder="Usuario o enlace de perfil" />
+            <Input label="X (Twitter)" value={form.red_x} onChange={(v) => set("red_x", v)} placeholder="Usuario o enlace de perfil" />
+          </Seccion>
+
           {mensaje && (
             <div style={{ background: mensaje.tipo === "ok" ? "#e1f5ee" : "#fcebeb", border: `1px solid ${mensaje.tipo === "ok" ? "#22c55e44" : "#ef444444"}`, borderRadius: 8, padding: 12, marginBottom: 16, color: mensaje.tipo === "ok" ? "#0f6e56" : "#791f1f", fontSize: 13 }}>
               {mensaje.texto}
@@ -2021,16 +2111,31 @@ function ModuloDetenidos({ perfil, detenidoInicial, onDetenidoInicialUsado }) {
           ) : (
             listaFiltrada.map((d) => (
               <div key={d.id} onClick={() => setDetenidoActivo(d)} style={{ background: "#ffffff", border: "1px solid #d9dee5", borderRadius: 10, padding: 14, marginBottom: 10, cursor: "pointer" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                  <div>
-                    <div style={{ color: "#1a1a2e", fontSize: 15, fontWeight: 700 }}>{d.nombre}</div>
-                    <div style={{ color: "#f59e0b", fontSize: 12 }}>{d.alias}</div>
+                <div style={{ display: "flex", gap: 12 }}>
+                  {d._fotoFrente ? (
+                    <img src={d._fotoFrente} alt={d.nombre} style={{ width: 52, height: 52, objectFit: "cover", borderRadius: 8, border: "1px solid #c3cbd6", flexShrink: 0 }} />
+                  ) : (
+                    <div style={{ width: 52, height: 52, borderRadius: 8, background: "#eef1f6", border: "1px solid #c3cbd6", display: "flex", alignItems: "center", justifyContent: "center", color: "#a8b3c2", flexShrink: 0 }}><User size={22} /></div>
+                  )}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                      <div>
+                        <div style={{ color: "#1a1a2e", fontSize: 15, fontWeight: 700 }}>{d.nombre}</div>
+                        <div style={{ color: "#f59e0b", fontSize: 12 }}>{d.alias}</div>
+                      </div>
+                      <SemaforoBadge detenido={d} />
+                    </div>
+                    <div style={{ color: "#4a5268", fontSize: 12, marginTop: 6 }}>{d.delito} · {d.region} · {d.fecha_deteccion}</div>
+                    {(d.carpeta_investigacion || d.rnd) && (
+                      <div style={{ color: "#7c8494", fontSize: 10, marginTop: 4, fontFamily: "monospace" }}>
+                        {d.carpeta_investigacion && <>Carpeta: {d.carpeta_investigacion}* </>}
+                        {d.rnd && <>· R.N.D.: {d.rnd}</>}
+                      </div>
+                    )}
                   </div>
-                  <SemaforoBadge detenido={d} />
                 </div>
-                <div style={{ color: "#4a5268", fontSize: 12, marginTop: 6 }}>{d.delito} · {d.region} · {d.fecha_deteccion}</div>
                 {d.fecha_limite_48h && (
-                  <div style={{ color: "#6b7280", fontSize: 11, marginTop: 4 }}>⏱ {tiempoRestanteTexto(d.fecha_limite_48h)}</div>
+                  <div style={{ color: "#6b7280", fontSize: 11, marginTop: 6 }}>⏱ {tiempoRestanteTexto(d.fecha_limite_48h)}</div>
                 )}
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginTop: 6 }}>
                   {d.registrado_por && <div style={{ color: "#6b7280", fontSize: 11 }}>Registrado por: {d.registrado_por}</div>}
