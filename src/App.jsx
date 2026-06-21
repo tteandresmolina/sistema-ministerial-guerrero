@@ -293,6 +293,25 @@ function InputCarpeta20({ value, onChange }) {
   );
 }
 
+function BotonMapa({ latitud, longitud, compacto }) {
+  if (!latitud || !longitud) return null;
+  const url = `https://www.google.com/maps?q=${latitud},${longitud}`;
+  if (compacto) {
+    return (
+      <a href={url} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()}
+        style={{ display: "inline-flex", alignItems: "center", gap: 4, background: "#0a2a1a", border: "1px solid #22c55e44", borderRadius: 6, padding: "3px 9px", color: "#86efac", fontSize: 10, fontWeight: 700, textDecoration: "none" }}>
+        📍 Mapa
+      </a>
+    );
+  }
+  return (
+    <a href={url} target="_blank" rel="noopener noreferrer"
+      style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "#0f2a1a", border: "1px solid #22c55e55", borderRadius: 7, padding: "8px 14px", color: "#bbf7d0", fontSize: 12, fontWeight: 700, textDecoration: "none" }}>
+      📍 Ver en Google Maps
+    </a>
+  );
+}
+
 function Badge({ text, color }) {
   return <span style={{ background: color + "22", color, border: `1px solid ${color}55`, borderRadius: 4, padding: "2px 9px", fontSize: 11, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", whiteSpace: "nowrap" }}>{text}</span>;
 }
@@ -1518,6 +1537,9 @@ function BusquedaOperativa({ perfil, onAbrirDetenido }) {
                   <SemaforoBadge detenido={d} />
                 </div>
                 <div style={{ color: "#c8daea", fontSize: 12, marginTop: 6 }}>{d.delito || "—"} · {(d.region || "—").replace("Región ", "")}</div>
+                {(d.latitud && d.longitud) && (
+                  <div style={{ marginTop: 6 }}><BotonMapa latitud={d.latitud} longitud={d.longitud} compacto /></div>
+                )}
               </div>
             );
           })}
@@ -1795,7 +1817,10 @@ function ModuloDetenidos({ perfil, detenidoInicial, onDetenidoInicialUsado }) {
           <div style={{ color: "#e8f4ff", fontSize: 18, fontWeight: 700, marginTop: 2 }}>{detenidoActivo.nombre}</div>
           <div style={{ color: "#f59e0b", fontSize: 13 }}>{detenidoActivo.alias}</div>
           <div style={{ color: "#c8daea", fontSize: 12, marginTop: 4 }}>{detenidoActivo.delito} · {detenidoActivo.region}</div>
-          <div style={{ marginTop: 8 }}><SemaforoBadge detenido={detenidoActivo} /></div>
+          <div style={{ marginTop: 8, display: "flex", gap: 8, alignItems: "center" }}>
+            <SemaforoBadge detenido={detenidoActivo} />
+            <BotonMapa latitud={detenidoActivo.latitud} longitud={detenidoActivo.longitud} compacto />
+          </div>
         </div>
 
         <InterfazAvanzada detenido={detenidoActivo} perfil={perfil} onActualizado={async () => {
@@ -1948,7 +1973,10 @@ function ModuloDetenidos({ perfil, detenidoInicial, onDetenidoInicialUsado }) {
                 {d.fecha_limite_48h && (
                   <div style={{ color: "#5a7a9a", fontSize: 11, marginTop: 4 }}>⏱ {tiempoRestanteTexto(d.fecha_limite_48h)}</div>
                 )}
-                {d.registrado_por && <div style={{ color: "#5a7a9a", fontSize: 11, marginTop: 4 }}>Registrado por: {d.registrado_por}</div>}
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginTop: 6 }}>
+                  {d.registrado_por && <div style={{ color: "#5a7a9a", fontSize: 11 }}>Registrado por: {d.registrado_por}</div>}
+                  <BotonMapa latitud={d.latitud} longitud={d.longitud} compacto />
+                </div>
               </div>
             ))
           )}
