@@ -13,25 +13,25 @@ const TIPOLOGIAS_INDICIO = ["Balístico","Narcóticos","Tecnológico","Vehículo
 const DESTINOS_MOVIMIENTO = ["Laboratorio","Bodega de Indicios","Perito","Ministerio Público","Juzgado","Otra autoridad","Devolución al lugar de origen","Otro"];
 const TIPOS_DETENCION = ["Flagrancia","Mandamiento Judicial / Orden de Aprehensión","Caso Urgente","Mandamiento Ministerial"];
 const tipologiaIcono = { "Balístico": "🎯", "Narcóticos": "💊", "Tecnológico": "💻", "Vehículo": "🚗", "Bien Inmueble": "🏠", "Arma": "🔫", "Dinero": "💵", "Otro": "📦" };
-const tipologiaColor = { "Balístico": "#ef4444", "Narcóticos": "#a78bfa", "Tecnológico": "#4a9eff", "Vehículo": "#f59e0b", "Bien Inmueble": "#14b8a6", "Arma": "#7f1d1d", "Dinero": "#22c55e", "Otro": "#5a7a9a" };
+const tipologiaColor = { "Balístico": "#ef4444", "Narcóticos": "#a78bfa", "Tecnológico": "#001a4d", "Vehículo": "#f59e0b", "Bien Inmueble": "#14b8a6", "Arma": "#7f1d1d", "Dinero": "#22c55e", "Otro": "#6b7280" };
 const rolLabel = { agente: "Agente", coordinador: "Coordinador de Zona", regional: "Director Regional", mando: "Director General" };
-const rolColor = { agente: "#4a9eff", coordinador: "#f59e0b", regional: "#a78bfa", mando: "#ef4444" };
+const rolColor = { agente: "#001a4d", coordinador: "#f59e0b", regional: "#a78bfa", mando: "#ef4444" };
 
 // ─── SEMÁFORO DE 48 HORAS ───────────────────────────────────────────────────────
 const SEMAFORO = {
-  verde:   { bg: "#0f2a1a", border: "#22c55e", dot: "#22c55e", texto: "#bbf7d0", label: "En Proceso" },
-  amarillo:{ bg: "#2a2410", border: "#eab308", dot: "#eab308", texto: "#fde047", label: "En Proceso" },
-  naranja: { bg: "#2a1810", border: "#f97316", dot: "#f97316", texto: "#fdba74", label: "Alerta por Vencer" },
-  rojo:    { bg: "#2a0f0f", border: "#ef4444", dot: "#ef4444", texto: "#fca5a5", label: "Por vencer" },
-  negro:   { bg: "#1f0808", border: "#7f1d1d", dot: "#6b7280", texto: "#9ca3af", label: "Omisión de Plazo" },
+  verde:   { bg: "#e1f5ee", border: "#22c55e", dot: "#22c55e", texto: "#085041", label: "En Proceso" },
+  amarillo:{ bg: "#faeeda", border: "#eab308", dot: "#eab308", texto: "#854f0b", label: "En Proceso" },
+  naranja: { bg: "#faeeda", border: "#f97316", dot: "#f97316", texto: "#854f0b", label: "Alerta por Vencer" },
+  rojo:    { bg: "#fcebeb", border: "#ef4444", dot: "#ef4444", texto: "#791f1f", label: "Por vencer" },
+  negro:   { bg: "#f1efe8", border: "#7f1d1d", dot: "#6b7280", texto: "#5f5e5a", label: "Omisión de Plazo" },
 };
 
 function calcularSemaforo(detenido) {
   // Si ya tiene un estatus que no es "en_proceso", se respeta tal cual (finalizado, traslado, etc.)
   if (detenido.estatus_clave && detenido.estatus_clave !== "en_proceso") {
     if (detenido.estatus_clave === "omision_plazo") return { ...SEMAFORO.negro, label: "Omisión de Plazo" };
-    if (detenido.estatus_clave === "finalizado") return { bg: "#1a1a1a", border: "#6b7280", dot: "#9ca3af", texto: "#d1d5db", label: "Finalizado" };
-    return { bg: "#0c1a27", border: "#4a9eff", dot: "#4a9eff", texto: "#cfe3fa", label: detenido.estatus_clave.replace(/_/g, " ") };
+    if (detenido.estatus_clave === "finalizado") return { bg: "#1a1a1a", border: "#6b7280", dot: "#5f5e5a", texto: "#d1d5db", label: "Finalizado" };
+    return { bg: "#ffffff", border: "#001a4d", dot: "#001a4d", texto: "#dce6f5", label: detenido.estatus_clave.replace(/_/g, " ") };
   }
 
   if (!detenido.fecha_limite_48h) return { ...SEMAFORO.verde, label: "En Proceso" };
@@ -83,11 +83,11 @@ const FOTO_SLOTS = [
 function Input({ label, value, onChange, placeholder = "", type = "text", required = false }) {
   return (
     <div>
-      <label style={{ color: "#5a7a9a", fontSize: 10, fontWeight: 700, letterSpacing: 1.2, textTransform: "uppercase", display: "block", marginBottom: 4 }}>
+      <label style={{ color: "#6b7280", fontSize: 10, fontWeight: 700, letterSpacing: 1.2, textTransform: "uppercase", display: "block", marginBottom: 4 }}>
         {label} {required && <span style={{ color: "#ef4444" }}>*</span>}
       </label>
       <input type={type} value={value} placeholder={placeholder} onChange={(e) => onChange(e.target.value)}
-        style={{ background: "#0c1a27", border: "1px solid #1e3a5f", borderRadius: 7, padding: "9px 12px", color: "#d0e4f4", fontSize: 13, width: "100%", outline: "none", boxSizing: "border-box" }} />
+        style={{ background: "#ffffff", border: "1px solid #c3cbd6", borderRadius: 7, padding: "9px 12px", color: "#33394d", fontSize: 13, width: "100%", outline: "none", boxSizing: "border-box" }} />
     </div>
   );
 }
@@ -95,11 +95,11 @@ function Input({ label, value, onChange, placeholder = "", type = "text", requir
 function Select({ label, value, onChange, options, required = false }) {
   return (
     <div>
-      <label style={{ color: "#5a7a9a", fontSize: 10, fontWeight: 700, letterSpacing: 1.2, textTransform: "uppercase", display: "block", marginBottom: 4 }}>
+      <label style={{ color: "#6b7280", fontSize: 10, fontWeight: 700, letterSpacing: 1.2, textTransform: "uppercase", display: "block", marginBottom: 4 }}>
         {label} {required && <span style={{ color: "#ef4444" }}>*</span>}
       </label>
       <select value={value} onChange={(e) => onChange(e.target.value)}
-        style={{ background: "#0c1a27", border: "1px solid #1e3a5f", borderRadius: 7, padding: "9px 12px", color: "#d0e4f4", fontSize: 13, width: "100%", outline: "none", boxSizing: "border-box" }}>
+        style={{ background: "#ffffff", border: "1px solid #c3cbd6", borderRadius: 7, padding: "9px 12px", color: "#33394d", fontSize: 13, width: "100%", outline: "none", boxSizing: "border-box" }}>
         <option value="">— Seleccionar —</option>
         {options.map((o) => <option key={o} value={o}>{o}</option>)}
       </select>
@@ -110,9 +110,9 @@ function Select({ label, value, onChange, options, required = false }) {
 function TextArea({ label, value, onChange, rows = 3 }) {
   return (
     <div>
-      <label style={{ color: "#5a7a9a", fontSize: 10, fontWeight: 700, letterSpacing: 1.2, textTransform: "uppercase", display: "block", marginBottom: 4 }}>{label}</label>
+      <label style={{ color: "#6b7280", fontSize: 10, fontWeight: 700, letterSpacing: 1.2, textTransform: "uppercase", display: "block", marginBottom: 4 }}>{label}</label>
       <textarea value={value} onChange={(e) => onChange(e.target.value)} rows={rows}
-        style={{ background: "#0c1a27", border: "1px solid #1e3a5f", borderRadius: 7, padding: "9px 12px", color: "#d0e4f4", fontSize: 13, width: "100%", outline: "none", boxSizing: "border-box", resize: "vertical", fontFamily: "inherit" }} />
+        style={{ background: "#ffffff", border: "1px solid #c3cbd6", borderRadius: 7, padding: "9px 12px", color: "#33394d", fontSize: 13, width: "100%", outline: "none", boxSizing: "border-box", resize: "vertical", fontFamily: "inherit" }} />
     </div>
   );
 }
@@ -169,33 +169,33 @@ function DatePicker({ label, value, onChange, required = false }) {
 
   return (
     <div ref={ref} style={{ position: "relative" }}>
-      <label style={{ color: "#5a7a9a", fontSize: 10, fontWeight: 700, letterSpacing: 1.2, textTransform: "uppercase", display: "block", marginBottom: 4 }}>
+      <label style={{ color: "#6b7280", fontSize: 10, fontWeight: 700, letterSpacing: 1.2, textTransform: "uppercase", display: "block", marginBottom: 4 }}>
         {label} {required && <span style={{ color: "#ef4444" }}>*</span>}
       </label>
       <button type="button" onClick={() => setAbierto((v) => !v)}
-        style={{ background: "#0c1a27", border: "1px solid #1e3a5f", borderRadius: 7, padding: "9px 12px", color: value ? "#d0e4f4" : "#5a7a9a", fontSize: 13, width: "100%", textAlign: "left", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center", boxSizing: "border-box" }}>
+        style={{ background: "#ffffff", border: "1px solid #c3cbd6", borderRadius: 7, padding: "9px 12px", color: value ? "#33394d" : "#6b7280", fontSize: 13, width: "100%", textAlign: "left", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center", boxSizing: "border-box" }}>
         <span>{value ? formatearFechaLegible(value) : "Seleccionar fecha"}</span>
-        <span style={{ color: "#4a9eff" }}>📅</span>
+        <span style={{ color: "#001a4d" }}>📅</span>
       </button>
 
       {abierto && (
-        <div style={{ position: "absolute", zIndex: 50, top: "calc(100% + 6px)", left: 0, background: "#0a1525", border: "1px solid #2a5080", borderRadius: 10, padding: 14, width: 280, boxShadow: "0 8px 24px rgba(0,0,0,0.5)" }}>
+        <div style={{ position: "absolute", zIndex: 50, top: "calc(100% + 6px)", left: 0, background: "#eef1f6", border: "1px solid #a8b3c2", borderRadius: 10, padding: 14, width: 280, boxShadow: "0 8px 24px rgba(0,0,0,0.5)" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10, gap: 6 }}>
-            <button type="button" onClick={() => cambiarMes(-1)} style={{ background: "#1a3050", border: "none", borderRadius: 6, width: 28, height: 28, color: "#d0e4f4", cursor: "pointer", fontSize: 14 }}>‹</button>
+            <button type="button" onClick={() => cambiarMes(-1)} style={{ background: "#d9dee5", border: "none", borderRadius: 6, width: 28, height: 28, color: "#33394d", cursor: "pointer", fontSize: 14 }}>‹</button>
             <select value={mesVista} onChange={(e) => setMesVista(Number(e.target.value))}
-              style={{ background: "#0c1a27", border: "1px solid #1e3a5f", borderRadius: 6, padding: "4px 6px", color: "#d0e4f4", fontSize: 12, flex: 1 }}>
+              style={{ background: "#ffffff", border: "1px solid #c3cbd6", borderRadius: 6, padding: "4px 6px", color: "#33394d", fontSize: 12, flex: 1 }}>
               {MESES.map((m, i) => <option key={m} value={i}>{m}</option>)}
             </select>
             <select value={anioVista} onChange={(e) => setAnioVista(Number(e.target.value))}
-              style={{ background: "#0c1a27", border: "1px solid #1e3a5f", borderRadius: 6, padding: "4px 6px", color: "#d0e4f4", fontSize: 12 }}>
+              style={{ background: "#ffffff", border: "1px solid #c3cbd6", borderRadius: 6, padding: "4px 6px", color: "#33394d", fontSize: 12 }}>
               {anios.map((a) => <option key={a} value={a}>{a}</option>)}
             </select>
-            <button type="button" onClick={() => cambiarMes(1)} style={{ background: "#1a3050", border: "none", borderRadius: 6, width: 28, height: 28, color: "#d0e4f4", cursor: "pointer", fontSize: 14 }}>›</button>
+            <button type="button" onClick={() => cambiarMes(1)} style={{ background: "#d9dee5", border: "none", borderRadius: 6, width: 28, height: 28, color: "#33394d", cursor: "pointer", fontSize: 14 }}>›</button>
           </div>
 
           <div style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", gap: 2, marginBottom: 4 }}>
             {DIAS_SEMANA.map((d, i) => (
-              <div key={i} style={{ textAlign: "center", color: "#5a7a9a", fontSize: 10, fontWeight: 700, padding: "4px 0" }}>{d}</div>
+              <div key={i} style={{ textAlign: "center", color: "#6b7280", fontSize: 10, fontWeight: 700, padding: "4px 0" }}>{d}</div>
             ))}
           </div>
 
@@ -203,9 +203,9 @@ function DatePicker({ label, value, onChange, required = false }) {
             {celdas.map((dia, i) => (
               <button key={i} type="button" disabled={!dia} onClick={() => dia && seleccionarDia(dia)}
                 style={{
-                  background: esSeleccionado(dia) ? "#1a4fa0" : "transparent",
-                  border: esHoy(dia) && !esSeleccionado(dia) ? "1px solid #4a9eff" : "1px solid transparent",
-                  borderRadius: 6, height: 30, color: !dia ? "transparent" : esSeleccionado(dia) ? "#e8f4ff" : "#c8daea",
+                  background: esSeleccionado(dia) ? "#001a4d" : "transparent",
+                  border: esHoy(dia) && !esSeleccionado(dia) ? "1px solid #001a4d" : "1px solid transparent",
+                  borderRadius: 6, height: 30, color: !dia ? "transparent" : esSeleccionado(dia) ? "#ffffff" : "#4a5268",
                   fontSize: 12, cursor: dia ? "pointer" : "default", fontWeight: esSeleccionado(dia) ? 700 : 400,
                 }}>
                 {dia || ""}
@@ -243,28 +243,28 @@ function DateTimePicker24({ label, value, onChange, required = false }) {
 
   return (
     <div>
-      <label style={{ color: "#5a7a9a", fontSize: 10, fontWeight: 700, letterSpacing: 1.2, textTransform: "uppercase", display: "block", marginBottom: 4 }}>
+      <label style={{ color: "#6b7280", fontSize: 10, fontWeight: 700, letterSpacing: 1.2, textTransform: "uppercase", display: "block", marginBottom: 4 }}>
         {label} {required && <span style={{ color: "#ef4444" }}>*</span>}
       </label>
       <div style={{ display: "grid", gridTemplateColumns: "1fr auto auto", gap: 8, alignItems: "end" }}>
         <DatePicker label="" value={fechaParte} onChange={(v) => actualizar(v, undefined, undefined)} />
         <div>
           <select value={hh} onChange={(e) => actualizar(undefined, e.target.value, undefined)}
-            style={{ background: "#0c1a27", border: "1px solid #1e3a5f", borderRadius: 7, padding: "9px 8px", color: "#d0e4f4", fontSize: 13, outline: "none" }}>
+            style={{ background: "#ffffff", border: "1px solid #c3cbd6", borderRadius: 7, padding: "9px 8px", color: "#33394d", fontSize: 13, outline: "none" }}>
             <option value="">HH</option>
             {horas.map((h) => <option key={h} value={h}>{h}</option>)}
           </select>
         </div>
         <div>
           <select value={mm} onChange={(e) => actualizar(undefined, undefined, e.target.value)}
-            style={{ background: "#0c1a27", border: "1px solid #1e3a5f", borderRadius: 7, padding: "9px 8px", color: "#d0e4f4", fontSize: 13, outline: "none" }}>
+            style={{ background: "#ffffff", border: "1px solid #c3cbd6", borderRadius: 7, padding: "9px 8px", color: "#33394d", fontSize: 13, outline: "none" }}>
             <option value="">MM</option>
             {minutos.map((m) => <option key={m} value={m}>{m}</option>)}
           </select>
         </div>
       </div>
       {hh && (
-        <div style={{ color: "#5a7a9a", fontSize: 10, marginTop: 4 }}>
+        <div style={{ color: "#6b7280", fontSize: 10, marginTop: 4 }}>
           Formato 24 horas — {hh}:{mm || "00"} {parseInt(hh) < 12 ? "(antes del mediodía)" : parseInt(hh) === 12 ? "(mediodía)" : "(después del mediodía)"}
         </div>
       )}
@@ -277,17 +277,17 @@ function InputCarpeta20({ value, onChange }) {
   const completos = soloDigitos.length === 20;
   return (
     <div>
-      <label style={{ color: "#5a7a9a", fontSize: 10, fontWeight: 700, letterSpacing: 1.2, textTransform: "uppercase", display: "block", marginBottom: 4 }}>
+      <label style={{ color: "#6b7280", fontSize: 10, fontWeight: 700, letterSpacing: 1.2, textTransform: "uppercase", display: "block", marginBottom: 4 }}>
         Carpeta de investigación (20 dígitos) <span style={{ color: "#ef4444" }}>*</span>
       </label>
       <input
         value={value}
         onChange={(e) => onChange(e.target.value.replace(/[^\d]/g, "").slice(0, 20))}
         placeholder="12030290200280050523"
-        style={{ background: "#0c1a27", border: `1px solid ${completos ? "#22c55e" : "#1e3a5f"}`, borderRadius: 7, padding: "9px 12px", color: "#d0e4f4", fontSize: 13, width: "100%", outline: "none", boxSizing: "border-box", fontFamily: "monospace", letterSpacing: 1 }}
+        style={{ background: "#ffffff", border: `1px solid ${completos ? "#22c55e" : "#c3cbd6"}`, borderRadius: 7, padding: "9px 12px", color: "#33394d", fontSize: 13, width: "100%", outline: "none", boxSizing: "border-box", fontFamily: "monospace", letterSpacing: 1 }}
       />
       <div style={{ marginTop: 4, display: "flex", justifyContent: "space-between" }}>
-        <span style={{ color: completos ? "#22c55e" : "#5a7a9a", fontSize: 10 }}>{completos ? "✓ " : ""}{soloDigitos.length}/20 dígitos {value ? `→ ${soloDigitos}*` : ""}</span>
+        <span style={{ color: completos ? "#22c55e" : "#6b7280", fontSize: 10 }}>{completos ? "✓ " : ""}{soloDigitos.length}/20 dígitos {value ? `→ ${soloDigitos}*` : ""}</span>
       </div>
     </div>
   );
@@ -299,14 +299,14 @@ function BotonMapa({ latitud, longitud, compacto }) {
   if (compacto) {
     return (
       <a href={url} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()}
-        style={{ display: "inline-flex", alignItems: "center", gap: 4, background: "#0a2a1a", border: "1px solid #22c55e44", borderRadius: 6, padding: "3px 9px", color: "#86efac", fontSize: 10, fontWeight: 700, textDecoration: "none" }}>
+        style={{ display: "inline-flex", alignItems: "center", gap: 4, background: "#e1f5ee", border: "1px solid #5dcaa599", borderRadius: 6, padding: "3px 9px", color: "#085041", fontSize: 10, fontWeight: 700, textDecoration: "none" }}>
         📍 Mapa
       </a>
     );
   }
   return (
     <a href={url} target="_blank" rel="noopener noreferrer"
-      style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "#0f2a1a", border: "1px solid #22c55e55", borderRadius: 7, padding: "8px 14px", color: "#bbf7d0", fontSize: 12, fontWeight: 700, textDecoration: "none" }}>
+      style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "#e1f5ee", border: "1px solid #22c55e55", borderRadius: 7, padding: "8px 14px", color: "#085041", fontSize: 12, fontWeight: 700, textDecoration: "none" }}>
       📍 Ver en Google Maps
     </a>
   );
@@ -318,7 +318,7 @@ function Badge({ text, color }) {
 
 function Seccion({ titulo, color, children }) {
   return (
-    <div style={{ background: "#0c1a27", borderRadius: 10, padding: 18, marginBottom: 16, border: "1px solid #1a3050" }}>
+    <div style={{ background: "#ffffff", borderRadius: 10, padding: 18, marginBottom: 16, border: "1px solid #d9dee5" }}>
       <div style={{ color, fontSize: 11, fontWeight: 800, letterSpacing: 2, marginBottom: 14, textTransform: "uppercase" }}>{titulo}</div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>{children}</div>
     </div>
@@ -358,17 +358,17 @@ function Auth() {
   };
 
   return (
-    <div style={{ minHeight: "100vh", background: "#070f1a", display: "flex", alignItems: "center", justifyContent: "center", padding: 20, fontFamily: "'Trebuchet MS', sans-serif" }}>
+    <div style={{ minHeight: "100vh", background: "#f4f6f9", display: "flex", alignItems: "center", justifyContent: "center", padding: 20, fontFamily: "'Trebuchet MS', sans-serif" }}>
       <div style={{ width: "100%", maxWidth: 400 }}>
         <div style={{ textAlign: "center", marginBottom: 28 }}>
           <div style={{ fontSize: 46, marginBottom: 10 }}>🛡️</div>
-          <div style={{ color: "#e8f4ff", fontSize: 18, fontWeight: 700, letterSpacing: 1 }}>FISCALÍA GENERAL DEL ESTADO</div>
-          <div style={{ color: "#4a9eff", fontSize: 11, letterSpacing: 3, marginTop: 4 }}>SISTEMA MINISTERIAL — GUERRERO</div>
+          <div style={{ color: "#1a1a2e", fontSize: 18, fontWeight: 700, letterSpacing: 1 }}>FISCALÍA GENERAL DEL ESTADO</div>
+          <div style={{ color: "#001a4d", fontSize: 11, letterSpacing: 3, marginTop: 4 }}>SISTEMA MINISTERIAL — GUERRERO</div>
         </div>
-        <div style={{ background: "#0a1525", border: "1px solid #1e3a5f", borderRadius: 14, padding: 26 }}>
-          <div style={{ display: "flex", gap: 6, marginBottom: 20, background: "#0c1a27", borderRadius: 8, padding: 4 }}>
-            <button onClick={() => { setModo("login"); setError(""); setExito(""); }} style={{ flex: 1, background: modo === "login" ? "#1e3a5f" : "none", border: "none", borderRadius: 6, padding: "8px", color: modo === "login" ? "#e8f4ff" : "#5a7a9a", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>Iniciar sesión</button>
-            <button onClick={() => { setModo("registro"); setError(""); setExito(""); }} style={{ flex: 1, background: modo === "registro" ? "#1e3a5f" : "none", border: "none", borderRadius: 6, padding: "8px", color: modo === "registro" ? "#e8f4ff" : "#5a7a9a", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>Crear cuenta</button>
+        <div style={{ background: "#eef1f6", border: "1px solid #c3cbd6", borderRadius: 14, padding: 26 }}>
+          <div style={{ display: "flex", gap: 6, marginBottom: 20, background: "#ffffff", borderRadius: 8, padding: 4 }}>
+            <button onClick={() => { setModo("login"); setError(""); setExito(""); }} style={{ flex: 1, background: modo === "login" ? "#c3cbd6" : "none", border: "none", borderRadius: 6, padding: "8px", color: modo === "login" ? "#1a1a2e" : "#6b7280", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>Iniciar sesión</button>
+            <button onClick={() => { setModo("registro"); setError(""); setExito(""); }} style={{ flex: 1, background: modo === "registro" ? "#c3cbd6" : "none", border: "none", borderRadius: 6, padding: "8px", color: modo === "registro" ? "#1a1a2e" : "#6b7280", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>Crear cuenta</button>
           </div>
           <div style={{ display: "grid", gap: 14 }}>
             {modo === "registro" && (<>
@@ -379,10 +379,10 @@ function Auth() {
             <Input label="Correo electrónico" value={email} onChange={setEmail} type="email" required />
             <Input label="Contraseña" value={password} onChange={setPassword} type="password" required />
           </div>
-          {error && <div style={{ background: "#2a0f0f", border: "1px solid #ef444444", borderRadius: 8, padding: 10, marginTop: 14, color: "#f87171", fontSize: 12 }}>{error}</div>}
-          {exito && <div style={{ background: "#0f2a1a", border: "1px solid #22c55e44", borderRadius: 8, padding: 10, marginTop: 14, color: "#4ade80", fontSize: 12 }}>{exito}</div>}
+          {error && <div style={{ background: "#fcebeb", border: "1px solid #ef444444", borderRadius: 8, padding: 10, marginTop: 14, color: "#791f1f", fontSize: 12 }}>{error}</div>}
+          {exito && <div style={{ background: "#e1f5ee", border: "1px solid #22c55e44", borderRadius: 8, padding: 10, marginTop: 14, color: "#0f6e56", fontSize: 12 }}>{exito}</div>}
           <button onClick={modo === "login" ? iniciarSesion : registrarse} disabled={cargando}
-            style={{ marginTop: 18, width: "100%", background: cargando ? "#1a3050" : "linear-gradient(135deg,#1a4fa0,#0d3070)", border: "none", borderRadius: 8, padding: 12, color: "#e8f4ff", fontSize: 14, fontWeight: 700, cursor: cargando ? "default" : "pointer", letterSpacing: 1 }}>
+            style={{ marginTop: 18, width: "100%", background: cargando ? "#d9dee5" : "linear-gradient(135deg,#001a4d,#001237)", border: "none", borderRadius: 8, padding: 12, color: "#ffffff", fontSize: 14, fontWeight: 700, cursor: cargando ? "default" : "pointer", letterSpacing: 1 }}>
             {cargando ? "PROCESANDO…" : modo === "login" ? "INGRESAR" : "CREAR CUENTA"}
           </button>
         </div>
@@ -440,13 +440,13 @@ function distanciaEuclidiana(a, b) {
 
 function VerificarRostro({ detenido, archivos, perfil }) {
   return (
-    <div style={{ background: "#0c1a27", border: "1px solid #1a3050", borderRadius: 10, padding: 14, marginTop: 10, position: "relative", overflow: "hidden" }}>
+    <div style={{ background: "#ffffff", border: "1px solid #d9dee5", borderRadius: 10, padding: 14, marginTop: 10, position: "relative", overflow: "hidden" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div>
-          <div style={{ color: "#5a7a9a", fontSize: 11, fontWeight: 800, letterSpacing: 1.5, textTransform: "uppercase" }}>🔍 Reconocimiento Facial con IA</div>
-          <div style={{ color: "#5a7a9a", fontSize: 10, marginTop: 2 }}>Identifica coincidencias con detenidos ya registrados</div>
+          <div style={{ color: "#6b7280", fontSize: 11, fontWeight: 800, letterSpacing: 1.5, textTransform: "uppercase" }}>🔍 Reconocimiento Facial con IA</div>
+          <div style={{ color: "#6b7280", fontSize: 10, marginTop: 2 }}>Identifica coincidencias con detenidos ya registrados</div>
         </div>
-        <button disabled style={{ background: "#1a1a2a", border: "1px solid #2a2a3a", borderRadius: 7, padding: "8px 14px", color: "#6b7280", fontSize: 11, fontWeight: 700, cursor: "not-allowed", whiteSpace: "nowrap", display: "flex", alignItems: "center", gap: 6 }}>
+        <button disabled style={{ background: "#f1efe8", border: "1px solid #d3d1c7", borderRadius: 7, padding: "8px 14px", color: "#6b7280", fontSize: 11, fontWeight: 700, cursor: "not-allowed", whiteSpace: "nowrap", display: "flex", alignItems: "center", gap: 6 }}>
           🔒 Disponible en versión PRO
         </button>
       </div>
@@ -486,16 +486,16 @@ function FotoSlot({ slot, detenidoId, perfil, archivos, onSubido }) {
   };
 
   return (
-    <div style={{ background: "#0c1a27", border: "1px solid #1a3050", borderRadius: 10, padding: 12 }}>
+    <div style={{ background: "#ffffff", border: "1px solid #d9dee5", borderRadius: 10, padding: 12 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-        <div style={{ color: "#c8daea", fontSize: 12, fontWeight: 700 }}>{slot.icono} {slot.label}</div>
+        <div style={{ color: "#4a5268", fontSize: 12, fontWeight: 700 }}>{slot.icono} {slot.label}</div>
         {existentes.length > 0 && <span style={{ color: "#22c55e", fontSize: 11 }}>✓ {existentes.length}</span>}
       </div>
 
       {existentes.length > 0 && (
         <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 8 }}>
           {existentes.map((a) => (
-            <img key={a.id} src={a.url_archivo} alt={slot.label} style={{ width: 56, height: 56, objectFit: "cover", borderRadius: 6, border: "1px solid #1e3a5f" }} />
+            <img key={a.id} src={a.url_archivo} alt={slot.label} style={{ width: 56, height: 56, objectFit: "cover", borderRadius: 6, border: "1px solid #c3cbd6" }} />
           ))}
         </div>
       )}
@@ -503,7 +503,7 @@ function FotoSlot({ slot, detenidoId, perfil, archivos, onSubido }) {
       <input ref={inputRef} type="file" accept="image/*" capture="environment" multiple={slot.multiple} style={{ display: "none" }}
         onChange={(e) => { Array.from(e.target.files).forEach(subirArchivo); e.target.value = ""; }} />
       <button onClick={() => inputRef.current.click()} disabled={subiendo}
-        style={{ width: "100%", background: "#1a3050", border: "1px solid #2a5080", borderRadius: 7, padding: "8px", color: "#d0e4f4", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
+        style={{ width: "100%", background: "#d9dee5", border: "1px solid #a8b3c2", borderRadius: 7, padding: "8px", color: "#33394d", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
         {subiendo ? "Subiendo…" : (slot.multiple ? "+ Agregar foto" : existentes.length > 0 ? "Reemplazar" : "📷 Tomar / Subir foto")}
       </button>
     </div>
@@ -550,9 +550,9 @@ function DocumentosExpediente({ detenidoId, perfil, archivos, onSubido }) {
   };
 
   return (
-    <div style={{ background: "#0c1a27", borderRadius: 10, padding: 18, marginBottom: 16, border: "1px solid #1a3050" }}>
+    <div style={{ background: "#ffffff", borderRadius: 10, padding: 18, marginBottom: 16, border: "1px solid #d9dee5" }}>
       <div style={{ color: "#22c55e", fontSize: 11, fontWeight: 800, letterSpacing: 2, marginBottom: 14, textTransform: "uppercase" }}>📄 Documentos del Expediente</div>
-      <div style={{ color: "#5a7a9a", fontSize: 11, marginBottom: 14 }}>Integra los documentos conforme se generen dentro del plazo constitucional de 48 horas.</div>
+      <div style={{ color: "#6b7280", fontSize: 11, marginBottom: 14 }}>Integra los documentos conforme se generen dentro del plazo constitucional de 48 horas.</div>
 
       <div style={{ display: "flex", gap: 8, marginBottom: 12, flexWrap: "wrap" }}>
         <div style={{ flex: "1 1 220px" }}>
@@ -562,22 +562,22 @@ function DocumentosExpediente({ detenidoId, perfil, archivos, onSubido }) {
           <input ref={inputRef} type="file" accept="image/*,.pdf" style={{ display: "none" }}
             onChange={(e) => { if (e.target.files[0]) subirDocumento(e.target.files[0]); e.target.value = ""; }} />
           <button onClick={() => tipoSeleccionado ? inputRef.current.click() : alert("Selecciona primero el tipo de documento.")} disabled={subiendo}
-            style={{ background: "#14532d", border: "1px solid #22c55e44", borderRadius: 7, padding: "9px 16px", color: "#bbf7d0", fontSize: 12, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" }}>
+            style={{ background: "#0f6e56", border: "none", borderRadius: 7, padding: "9px 16px", color: "#ffffff", fontSize: 12, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" }}>
             {subiendo ? "Subiendo…" : "+ Subir documento"}
           </button>
         </div>
       </div>
 
       {documentos.length === 0 ? (
-        <div style={{ color: "#5a7a9a", fontSize: 12, textAlign: "center", padding: 16 }}>Aún no se han integrado documentos a este expediente.</div>
+        <div style={{ color: "#6b7280", fontSize: 12, textAlign: "center", padding: 16 }}>Aún no se han integrado documentos a este expediente.</div>
       ) : (
         documentos.map((d) => (
-          <a key={d.id} href={d.url_archivo} target="_blank" rel="noreferrer" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "#0a1525", borderRadius: 8, padding: "10px 12px", marginBottom: 6, textDecoration: "none" }}>
+          <a key={d.id} href={d.url_archivo} target="_blank" rel="noreferrer" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "#eef1f6", borderRadius: 8, padding: "10px 12px", marginBottom: 6, textDecoration: "none" }}>
             <div>
-              <div style={{ color: "#e8f4ff", fontSize: 12, fontWeight: 600 }}>{d.tipo_documento}</div>
-              <div style={{ color: "#5a7a9a", fontSize: 10 }}>{d.nombre_archivo}</div>
+              <div style={{ color: "#1a1a2e", fontSize: 12, fontWeight: 600 }}>{d.tipo_documento}</div>
+              <div style={{ color: "#6b7280", fontSize: 10 }}>{d.nombre_archivo}</div>
             </div>
-            <span style={{ color: "#4a9eff", fontSize: 11 }}>Ver →</span>
+            <span style={{ color: "#001a4d", fontSize: 11 }}>Ver →</span>
           </a>
         ))
       )}
@@ -646,34 +646,34 @@ function IndicioCard({ indicio, perfil, detenidoId, onActualizado }) {
     if (onActualizado) onActualizado();
   };
 
-  const color = tipologiaColor[indicio.tipologia] || "#5a7a9a";
+  const color = tipologiaColor[indicio.tipologia] || "#6b7280";
 
   return (
-    <div style={{ background: "#0a1525", border: `1px solid ${color}44`, borderRadius: 10, padding: 14, marginBottom: 10 }}>
+    <div style={{ background: "#eef1f6", border: `1px solid ${color}44`, borderRadius: 10, padding: 14, marginBottom: 10 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", cursor: "pointer" }} onClick={() => setExpandido((v) => !v)}>
         <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
           <span style={{ fontSize: 22 }}>{tipologiaIcono[indicio.tipologia] || "📦"}</span>
           <div>
             <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
               <span style={{ background: color + "22", color, border: `1px solid ${color}55`, borderRadius: 4, padding: "2px 8px", fontSize: 10, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase" }}>{indicio.tipologia}</span>
-              {indicio.cantidad && <span style={{ color: "#8a9ab0", fontSize: 11 }}>Cant: {indicio.cantidad}</span>}
+              {indicio.cantidad && <span style={{ color: "#7c8494", fontSize: 11 }}>Cant: {indicio.cantidad}</span>}
             </div>
-            <div style={{ color: "#e8f4ff", fontSize: 13, marginTop: 4 }}>{indicio.descripcion}</div>
-            {indicio.folio_cadena_custodia && <div style={{ color: "#5a7a9a", fontSize: 11, marginTop: 2 }}>Folio cadena de custodia: {indicio.folio_cadena_custodia}</div>}
+            <div style={{ color: "#1a1a2e", fontSize: 13, marginTop: 4 }}>{indicio.descripcion}</div>
+            {indicio.folio_cadena_custodia && <div style={{ color: "#6b7280", fontSize: 11, marginTop: 2 }}>Folio cadena de custodia: {indicio.folio_cadena_custodia}</div>}
           </div>
         </div>
-        <span style={{ color: "#5a7a9a", fontSize: 14 }}>{expandido ? "▲" : "▼"}</span>
+        <span style={{ color: "#6b7280", fontSize: 14 }}>{expandido ? "▲" : "▼"}</span>
       </div>
 
       {expandido && (
-        <div style={{ marginTop: 12, paddingTop: 12, borderTop: "1px solid #1a3050" }}>
+        <div style={{ marginTop: 12, paddingTop: 12, borderTop: "1px solid #d9dee5" }}>
           {archivos.length > 0 && (
             <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 10 }}>
               {archivos.map((a) => (
                 a.tipo_archivo === "video" ? (
-                  <video key={a.id} src={a.url_archivo} controls style={{ width: 100, height: 70, borderRadius: 6, border: "1px solid #1e3a5f" }} />
+                  <video key={a.id} src={a.url_archivo} controls style={{ width: 100, height: 70, borderRadius: 6, border: "1px solid #c3cbd6" }} />
                 ) : (
-                  <img key={a.id} src={a.url_archivo} alt="indicio" style={{ width: 70, height: 70, objectFit: "cover", borderRadius: 6, border: "1px solid #1e3a5f" }} />
+                  <img key={a.id} src={a.url_archivo} alt="indicio" style={{ width: 70, height: 70, objectFit: "cover", borderRadius: 6, border: "1px solid #c3cbd6" }} />
                 )
               ))}
             </div>
@@ -681,39 +681,39 @@ function IndicioCard({ indicio, perfil, detenidoId, onActualizado }) {
           <input ref={inputRef} type="file" accept="image/*,video/*" style={{ display: "none" }}
             onChange={(e) => { if (e.target.files[0]) subirArchivo(e.target.files[0]); e.target.value = ""; }} />
           <button onClick={() => inputRef.current.click()} disabled={subiendo}
-            style={{ background: "#1a3050", border: "1px solid #2a5080", borderRadius: 7, padding: "7px 14px", color: "#d0e4f4", fontSize: 11, fontWeight: 700, cursor: "pointer" }}>
+            style={{ background: "#d9dee5", border: "1px solid #a8b3c2", borderRadius: 7, padding: "7px 14px", color: "#33394d", fontSize: 11, fontWeight: 700, cursor: "pointer" }}>
             {subiendo ? "Subiendo…" : "📷🎥 Agregar foto o video"}
           </button>
 
-          <div style={{ marginTop: 14, paddingTop: 12, borderTop: "1px solid #1a3050" }}>
+          <div style={{ marginTop: 14, paddingTop: 12, borderTop: "1px solid #d9dee5" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-              <div style={{ color: "#5a7a9a", fontSize: 10, fontWeight: 800, letterSpacing: 1.5, textTransform: "uppercase" }}>🔗 Cadena de Custodia</div>
-              <button onClick={() => setMostrarFormMov((v) => !v)} style={{ background: "#1a3050", border: "1px solid #2a5080", borderRadius: 6, padding: "5px 10px", color: "#d0e4f4", fontSize: 10, fontWeight: 700, cursor: "pointer" }}>
+              <div style={{ color: "#6b7280", fontSize: 10, fontWeight: 800, letterSpacing: 1.5, textTransform: "uppercase" }}>🔗 Cadena de Custodia</div>
+              <button onClick={() => setMostrarFormMov((v) => !v)} style={{ background: "#d9dee5", border: "1px solid #a8b3c2", borderRadius: 6, padding: "5px 10px", color: "#33394d", fontSize: 10, fontWeight: 700, cursor: "pointer" }}>
                 {mostrarFormMov ? "✕ Cancelar" : "+ Registrar movimiento"}
               </button>
             </div>
 
             {mostrarFormMov && (
-              <div style={{ background: "#0c1a27", borderRadius: 7, padding: 10, marginBottom: 10 }}>
+              <div style={{ background: "#ffffff", borderRadius: 7, padding: 10, marginBottom: 10 }}>
                 <div style={{ display: "grid", gap: 8 }}>
                   <Input label="Nombre de quien recibe" value={nombreRecibe} onChange={setNombreRecibe} required />
                   <Input label="Motivo del traslado" value={motivoMov} onChange={setMotivoMov} placeholder="Ej. Análisis pericial" required />
                   <Select label="Destino" value={destinoMov} onChange={setDestinoMov} options={DESTINOS_MOVIMIENTO} required />
                 </div>
-                <button onClick={registrarMovimiento} disabled={guardandoMov} style={{ marginTop: 10, width: "100%", background: "#1a3050", border: "1px solid #2a5080", borderRadius: 6, padding: 8, color: "#d0e4f4", fontSize: 11, fontWeight: 700, cursor: "pointer" }}>
+                <button onClick={registrarMovimiento} disabled={guardandoMov} style={{ marginTop: 10, width: "100%", background: "#d9dee5", border: "1px solid #a8b3c2", borderRadius: 6, padding: 8, color: "#33394d", fontSize: 11, fontWeight: 700, cursor: "pointer" }}>
                   {guardandoMov ? "Guardando…" : "Guardar movimiento"}
                 </button>
               </div>
             )}
 
             {movimientos.length === 0 ? (
-              <div style={{ color: "#5a7a9a", fontSize: 11 }}>Sin movimientos registrados. El indicio permanece en su ubicación original.</div>
+              <div style={{ color: "#6b7280", fontSize: 11 }}>Sin movimientos registrados. El indicio permanece en su ubicación original.</div>
             ) : (
               movimientos.map((m) => (
-                <div key={m.id} style={{ background: "#0c1a27", borderRadius: 6, padding: 8, marginBottom: 6 }}>
-                  <div style={{ color: "#e8f4ff", fontSize: 11, fontWeight: 600 }}>→ {m.destino}</div>
-                  <div style={{ color: "#8a9ab0", fontSize: 10, marginTop: 2 }}>Recibe: {m.nombre_recibe} · {m.motivo}</div>
-                  <div style={{ color: "#5a7a9a", fontSize: 9, marginTop: 2 }}>{new Date(m.creado_en).toLocaleString("es-MX", { dateStyle: "short", timeStyle: "short" })} · Registró: {m.registrado_por}</div>
+                <div key={m.id} style={{ background: "#ffffff", borderRadius: 6, padding: 8, marginBottom: 6 }}>
+                  <div style={{ color: "#1a1a2e", fontSize: 11, fontWeight: 600 }}>→ {m.destino}</div>
+                  <div style={{ color: "#7c8494", fontSize: 10, marginTop: 2 }}>Recibe: {m.nombre_recibe} · {m.motivo}</div>
+                  <div style={{ color: "#6b7280", fontSize: 9, marginTop: 2 }}>{new Date(m.creado_en).toLocaleString("es-MX", { dateStyle: "short", timeStyle: "short" })} · Registró: {m.registrado_por}</div>
                 </div>
               ))
             )}
@@ -767,16 +767,16 @@ function IndiciosAsegurados({ detenidoId, perfil }) {
   };
 
   return (
-    <div style={{ background: "#0c1a27", borderRadius: 10, padding: 18, marginBottom: 16, border: "1px solid #1a3050" }}>
+    <div style={{ background: "#ffffff", borderRadius: 10, padding: 18, marginBottom: 16, border: "1px solid #d9dee5" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
         <div style={{ color: "#f59e0b", fontSize: 11, fontWeight: 800, letterSpacing: 2, textTransform: "uppercase" }}>📦 Indicios Asegurados</div>
-        <button onClick={() => setMostrarForm((v) => !v)} style={{ background: "#3a2a0a", border: "1px solid #f59e0b44", borderRadius: 7, padding: "6px 12px", color: "#fde68a", fontSize: 11, fontWeight: 700, cursor: "pointer" }}>
+        <button onClick={() => setMostrarForm((v) => !v)} style={{ background: "#faeeda", border: "1px solid #f59e0b44", borderRadius: 7, padding: "6px 12px", color: "#854f0b", fontSize: 11, fontWeight: 700, cursor: "pointer" }}>
           {mostrarForm ? "✕ Cancelar" : "+ Agregar indicio"}
         </button>
       </div>
 
       {mostrarForm && (
-        <div style={{ background: "#0a1525", borderRadius: 8, padding: 14, marginBottom: 14 }}>
+        <div style={{ background: "#eef1f6", borderRadius: 8, padding: 14, marginBottom: 14 }}>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 10 }}>
             <Select label="Tipología" value={tipologia} onChange={setTipologia} options={TIPOLOGIAS_INDICIO} required />
             <Input label="Cantidad" value={cantidad} onChange={setCantidad} placeholder="Ej. 1 pieza, 50 gramos" />
@@ -787,16 +787,16 @@ function IndiciosAsegurados({ detenidoId, perfil }) {
           <div style={{ marginBottom: 12 }}>
             <Input label="Folio de cadena de custodia" value={folio} onChange={setFolio} placeholder="Opcional" />
           </div>
-          <button onClick={guardarIndicio} disabled={guardando} style={{ width: "100%", background: guardando ? "#3a2a0a" : "linear-gradient(135deg,#92400e,#713f12)", border: "none", borderRadius: 7, padding: 10, color: "#fde68a", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
+          <button onClick={guardarIndicio} disabled={guardando} style={{ width: "100%", background: guardando ? "#faeeda" : "linear-gradient(135deg,#92400e,#713f12)", border: "none", borderRadius: 7, padding: 10, color: "#854f0b", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
             {guardando ? "GUARDANDO…" : "GUARDAR INDICIO"}
           </button>
         </div>
       )}
 
       {cargando ? (
-        <div style={{ color: "#5a7a9a", fontSize: 12, textAlign: "center", padding: 16 }}>Cargando…</div>
+        <div style={{ color: "#6b7280", fontSize: 12, textAlign: "center", padding: 16 }}>Cargando…</div>
       ) : indicios.length === 0 ? (
-        <div style={{ color: "#5a7a9a", fontSize: 12, textAlign: "center", padding: 16 }}>Aún no se han registrado indicios para este expediente.</div>
+        <div style={{ color: "#6b7280", fontSize: 12, textAlign: "center", padding: 16 }}>Aún no se han registrado indicios para este expediente.</div>
       ) : (
         indicios.map((ind) => <IndicioCard key={ind.id} indicio={ind} perfil={perfil} detenidoId={detenidoId} onActualizado={cargarIndicios} />)
       )}
@@ -842,14 +842,14 @@ function CoDetenidos({ detenido, perfil, onActualizado }) {
   };
 
   return (
-    <div style={{ background: "#0c1a27", borderRadius: 10, padding: 18, marginBottom: 16, border: "1px solid #1a3050" }}>
+    <div style={{ background: "#ffffff", borderRadius: 10, padding: 18, marginBottom: 16, border: "1px solid #d9dee5" }}>
       <div style={{ color: "#a78bfa", fontSize: 11, fontWeight: 800, letterSpacing: 2, marginBottom: 14, textTransform: "uppercase" }}>👥 Co-detenidos de la misma carpeta</div>
 
       {detenido.codetenidos_nombres && (
-        <div style={{ background: "#0a1525", borderRadius: 8, padding: 12, marginBottom: 12 }}>
-          <div style={{ color: "#5a7a9a", fontSize: 10, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4 }}>Nombres anotados al registrar (sin vincular aún)</div>
+        <div style={{ background: "#eef1f6", borderRadius: 8, padding: 12, marginBottom: 12 }}>
+          <div style={{ color: "#6b7280", fontSize: 10, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4 }}>Nombres anotados al registrar (sin vincular aún)</div>
           {detenido.codetenidos_nombres.split("\n").filter(Boolean).map((n, i) => (
-            <div key={i} style={{ color: "#c8daea", fontSize: 13 }}>• {n}</div>
+            <div key={i} style={{ color: "#4a5268", fontSize: 13 }}>• {n}</div>
           ))}
         </div>
       )}
@@ -857,10 +857,10 @@ function CoDetenidos({ detenido, perfil, onActualizado }) {
       {!cargando && vinculados.length > 0 && (
         <div style={{ marginBottom: 12 }}>
           {vinculados.map((v) => (
-            <div key={v.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "#0a1525", borderRadius: 8, padding: "10px 12px", marginBottom: 6 }}>
+            <div key={v.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "#eef1f6", borderRadius: 8, padding: "10px 12px", marginBottom: 6 }}>
               <div>
-                <div style={{ color: "#e8f4ff", fontSize: 13, fontWeight: 600 }}>{v.vinculado?.nombre}</div>
-                <div style={{ color: "#8a9ab0", fontSize: 11 }}>{v.vinculado?.alias} · {v.vinculado?.delito}</div>
+                <div style={{ color: "#1a1a2e", fontSize: 13, fontWeight: 600 }}>{v.vinculado?.nombre}</div>
+                <div style={{ color: "#7c8494", fontSize: 11 }}>{v.vinculado?.alias} · {v.vinculado?.delito}</div>
               </div>
               <span style={{ color: "#a78bfa", fontSize: 16 }}>🔗</span>
             </div>
@@ -870,20 +870,20 @@ function CoDetenidos({ detenido, perfil, onActualizado }) {
 
       <div style={{ position: "relative" }}>
         <input value={busqueda} onChange={(e) => buscar(e.target.value)} placeholder="Buscar detenido ya registrado por nombre…"
-          style={{ background: "#0a1525", border: "1px solid #1e3a5f", borderRadius: 7, padding: "9px 12px", color: "#d0e4f4", fontSize: 13, width: "100%", outline: "none", boxSizing: "border-box" }} />
+          style={{ background: "#eef1f6", border: "1px solid #c3cbd6", borderRadius: 7, padding: "9px 12px", color: "#33394d", fontSize: 13, width: "100%", outline: "none", boxSizing: "border-box" }} />
         {busqueda.length >= 2 && (
-          <div style={{ background: "#0a1525", border: "1px solid #2a5080", borderRadius: 8, marginTop: 4, maxHeight: 200, overflowY: "auto" }}>
+          <div style={{ background: "#eef1f6", border: "1px solid #a8b3c2", borderRadius: 8, marginTop: 4, maxHeight: 200, overflowY: "auto" }}>
             {buscando ? (
-              <div style={{ color: "#5a7a9a", fontSize: 12, padding: 10 }}>Buscando…</div>
+              <div style={{ color: "#6b7280", fontSize: 12, padding: 10 }}>Buscando…</div>
             ) : resultados.length === 0 ? (
-              <div style={{ color: "#5a7a9a", fontSize: 12, padding: 10 }}>Sin resultados.</div>
+              <div style={{ color: "#6b7280", fontSize: 12, padding: 10 }}>Sin resultados.</div>
             ) : (
               resultados.map((r) => (
-                <div key={r.id} onClick={() => vincular(r)} style={{ padding: "8px 12px", cursor: "pointer", borderBottom: "1px solid #1a3050" }}
-                  onMouseEnter={(e) => e.currentTarget.style.background = "#1a3050"}
+                <div key={r.id} onClick={() => vincular(r)} style={{ padding: "8px 12px", cursor: "pointer", borderBottom: "1px solid #d9dee5" }}
+                  onMouseEnter={(e) => e.currentTarget.style.background = "#d9dee5"}
                   onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}>
-                  <div style={{ color: "#e8f4ff", fontSize: 13 }}>{r.nombre}</div>
-                  <div style={{ color: "#8a9ab0", fontSize: 11 }}>{r.alias} · {r.delito}</div>
+                  <div style={{ color: "#1a1a2e", fontSize: 13 }}>{r.nombre}</div>
+                  <div style={{ color: "#7c8494", fontSize: 11 }}>{r.alias} · {r.delito}</div>
                 </div>
               ))
             )}
@@ -945,21 +945,21 @@ function Victimas({ detenido, perfil }) {
   const iconoAgravio = (v) => TIPOS_AGRAVIO.find((t) => t.value === v.tipo_agravio)?.icono || "🧍";
 
   return (
-    <div style={{ background: "#0c1a27", borderRadius: 10, padding: 18, marginBottom: 16, border: "1px solid #1a3050" }}>
+    <div style={{ background: "#ffffff", borderRadius: 10, padding: 18, marginBottom: 16, border: "1px solid #d9dee5" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
         <div style={{ color: "#ec4899", fontSize: 11, fontWeight: 800, letterSpacing: 2, textTransform: "uppercase" }}>🧍 Víctima(s) — en quién recae el delito</div>
-        <button onClick={() => setMostrarForm((v) => !v)} style={{ background: "#3a0a1f", border: "1px solid #ec489944", borderRadius: 7, padding: "6px 12px", color: "#fbcfe8", fontSize: 11, fontWeight: 700, cursor: "pointer" }}>
+        <button onClick={() => setMostrarForm((v) => !v)} style={{ background: "#fbeaf0", border: "1px solid #ec489944", borderRadius: 7, padding: "6px 12px", color: "#72243e", fontSize: 11, fontWeight: 700, cursor: "pointer" }}>
           {mostrarForm ? "✕ Cancelar" : "+ Agregar víctima"}
         </button>
       </div>
 
       {mostrarForm && (
-        <div style={{ background: "#0a1525", borderRadius: 8, padding: 14, marginBottom: 14 }}>
+        <div style={{ background: "#eef1f6", borderRadius: 8, padding: 14, marginBottom: 14 }}>
           <div style={{ display: "grid", gap: 8, marginBottom: 10 }}>
-            <label style={{ color: "#5a7a9a", fontSize: 10, fontWeight: 700, letterSpacing: 1.2, textTransform: "uppercase" }}>Cometido en agravio de</label>
+            <label style={{ color: "#6b7280", fontSize: 10, fontWeight: 700, letterSpacing: 1.2, textTransform: "uppercase" }}>Cometido en agravio de</label>
             {TIPOS_AGRAVIO.map((t) => (
               <button key={t.value} type="button" onClick={() => setTipoAgravio(t.value)}
-                style={{ textAlign: "left", background: tipoAgravio === t.value ? "#3a0a1f" : "#0c1a27", border: `1px solid ${tipoAgravio === t.value ? "#ec489988" : "#1e3a5f"}`, borderRadius: 7, padding: "9px 12px", color: tipoAgravio === t.value ? "#fbcfe8" : "#8a9ab0", fontSize: 12, cursor: "pointer" }}>
+                style={{ textAlign: "left", background: tipoAgravio === t.value ? "#fbeaf0" : "#ffffff", border: `1px solid ${tipoAgravio === t.value ? "#ec489988" : "#c3cbd6"}`, borderRadius: 7, padding: "9px 12px", color: tipoAgravio === t.value ? "#72243e" : "#7c8494", fontSize: 12, cursor: "pointer" }}>
                 {t.icono} {t.label}
               </button>
             ))}
@@ -969,32 +969,32 @@ function Victimas({ detenido, perfil }) {
             <div style={{ display: "grid", gap: 10 }}>
               <Input label="Nombre completo de la víctima" value={nombre} onChange={setNombre} required />
               <Input label="Teléfono de contacto" value={telefono} onChange={setTelefono} placeholder="Opcional" />
-              <div style={{ display: "flex", alignItems: "center", gap: 8, background: esMenor ? "#3a0a1f" : "transparent", borderRadius: 7, padding: esMenor ? "8px 10px" : 0 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, background: esMenor ? "#fbeaf0" : "transparent", borderRadius: 7, padding: esMenor ? "8px 10px" : 0 }}>
                 <input type="checkbox" checked={esMenor} onChange={(e) => setEsMenor(e.target.checked)} style={{ width: 16, height: 16 }} />
                 <label style={{ color: "#ec4899", fontSize: 12, fontWeight: 700 }}>⚠ Es persona menor de edad</label>
               </div>
-              {esMenor && <div style={{ color: "#fbcfe8", fontSize: 10 }}>Dato sensible: se manejará conforme a los protocolos de protección de menores vigentes.</div>}
+              {esMenor && <div style={{ color: "#72243e", fontSize: 10 }}>Dato sensible: se manejará conforme a los protocolos de protección de menores vigentes.</div>}
             </div>
           )}
 
-          <button onClick={guardarVictima} disabled={guardando} style={{ marginTop: 12, width: "100%", background: "linear-gradient(135deg,#9d174d,#831843)", border: "none", borderRadius: 7, padding: 10, color: "#fbcfe8", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
+          <button onClick={guardarVictima} disabled={guardando} style={{ marginTop: 12, width: "100%", background: "#993556", border: "none", borderRadius: 7, padding: 10, color: "#ffffff", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
             {guardando ? "GUARDANDO…" : "GUARDAR VÍCTIMA"}
           </button>
         </div>
       )}
 
       {cargando ? (
-        <div style={{ color: "#5a7a9a", fontSize: 12, textAlign: "center", padding: 16 }}>Cargando…</div>
+        <div style={{ color: "#6b7280", fontSize: 12, textAlign: "center", padding: 16 }}>Cargando…</div>
       ) : victimas.length === 0 ? (
-        <div style={{ color: "#5a7a9a", fontSize: 12, textAlign: "center", padding: 16 }}>Aún no se han registrado víctimas para este expediente.</div>
+        <div style={{ color: "#6b7280", fontSize: 12, textAlign: "center", padding: 16 }}>Aún no se han registrado víctimas para este expediente.</div>
       ) : (
         victimas.map((v) => (
-          <div key={v.id} style={{ background: "#0a1525", borderRadius: 8, padding: "10px 12px", marginBottom: 6, border: v.es_menor_edad ? "1px solid #ec489944" : "1px solid transparent" }}>
+          <div key={v.id} style={{ background: "#eef1f6", borderRadius: 8, padding: "10px 12px", marginBottom: 6, border: v.es_menor_edad ? "1px solid #ec489944" : "1px solid transparent" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <div style={{ color: "#e8f4ff", fontSize: 13, fontWeight: 600 }}>{iconoAgravio(v)} {etiquetaAgravio(v)}</div>
-              {v.es_menor_edad && <span style={{ background: "#ec489922", color: "#fbcfe8", border: "1px solid #ec489955", borderRadius: 4, padding: "2px 8px", fontSize: 9, fontWeight: 700 }}>MENOR DE EDAD</span>}
+              <div style={{ color: "#1a1a2e", fontSize: 13, fontWeight: 600 }}>{iconoAgravio(v)} {etiquetaAgravio(v)}</div>
+              {v.es_menor_edad && <span style={{ background: "#ec489922", color: "#72243e", border: "1px solid #ec489955", borderRadius: 4, padding: "2px 8px", fontSize: 9, fontWeight: 700 }}>MENOR DE EDAD</span>}
             </div>
-            {v.telefono_contacto && <div style={{ color: "#8a9ab0", fontSize: 11, marginTop: 2 }}>Tel: {v.telefono_contacto}</div>}
+            {v.telefono_contacto && <div style={{ color: "#7c8494", fontSize: 11, marginTop: 2 }}>Tel: {v.telefono_contacto}</div>}
           </div>
         ))
       )}
@@ -1010,13 +1010,13 @@ function Bitacora({ archivos }) {
   if (ordenados.length === 0) return null;
 
   return (
-    <div style={{ background: "#0c1a27", borderRadius: 10, padding: 18, marginBottom: 16, border: "1px solid #1a3050" }}>
+    <div style={{ background: "#ffffff", borderRadius: 10, padding: 18, marginBottom: 16, border: "1px solid #d9dee5" }}>
       <div style={{ color: "#a78bfa", fontSize: 11, fontWeight: 800, letterSpacing: 2, marginBottom: 14, textTransform: "uppercase" }}>🕐 Bitácora del Expediente</div>
       {ordenados.map((a) => (
-        <div key={a.id} style={{ display: "flex", gap: 10, padding: "8px 0", borderBottom: "1px solid #1a3050" }}>
-          <div style={{ color: "#5a7a9a", fontSize: 11, whiteSpace: "nowrap" }}>{new Date(a.creado_en).toLocaleString("es-MX", { dateStyle: "short", timeStyle: "short" })}</div>
-          <div style={{ color: "#c8daea", fontSize: 12 }}>
-            <strong style={{ color: "#e8f4ff" }}>{a.subido_por || "Agente"}</strong> subió {a.categoria === "documento" ? a.tipo_documento : etiqueta[a.categoria]}
+        <div key={a.id} style={{ display: "flex", gap: 10, padding: "8px 0", borderBottom: "1px solid #d9dee5" }}>
+          <div style={{ color: "#6b7280", fontSize: 11, whiteSpace: "nowrap" }}>{new Date(a.creado_en).toLocaleString("es-MX", { dateStyle: "short", timeStyle: "short" })}</div>
+          <div style={{ color: "#4a5268", fontSize: 12 }}>
+            <strong style={{ color: "#1a1a2e" }}>{a.subido_por || "Agente"}</strong> subió {a.categoria === "documento" ? a.tipo_documento : etiqueta[a.categoria]}
           </div>
         </div>
       ))}
@@ -1129,15 +1129,15 @@ function InterfazAvanzada({ detenido, perfil, onActualizado }) {
   ];
 
   return (
-    <div style={{ background: "#0c1a27", borderRadius: 10, padding: 18, marginBottom: 16, border: "1px solid #1a3050" }}>
-      <div style={{ color: "#4a9eff", fontSize: 11, fontWeight: 800, letterSpacing: 2, marginBottom: 14, textTransform: "uppercase" }}>🗂️ Interfaz Avanzada de Robustecimiento</div>
+    <div style={{ background: "#ffffff", borderRadius: 10, padding: 18, marginBottom: 16, border: "1px solid #d9dee5" }}>
+      <div style={{ color: "#001a4d", fontSize: 11, fontWeight: 800, letterSpacing: 2, marginBottom: 14, textTransform: "uppercase" }}>🗂️ Interfaz Avanzada de Robustecimiento</div>
 
       <div style={{ display: "flex", gap: 6, marginBottom: 16, flexWrap: "wrap" }}>
         {tabs.map((t) => (
           <button key={t.key} onClick={() => setTab(t.key)} style={{
-            background: tab === t.key ? "#1e3a5f" : "#0a1525",
-            border: `1px solid ${t.ok ? "#22c55e55" : "#2a5080"}`,
-            borderRadius: 8, padding: "8px 12px", color: tab === t.key ? "#e8f4ff" : "#8a9ab0",
+            background: tab === t.key ? "#c3cbd6" : "#eef1f6",
+            border: `1px solid ${t.ok ? "#22c55e55" : "#a8b3c2"}`,
+            borderRadius: 8, padding: "8px 12px", color: tab === t.key ? "#1a1a2e" : "#7c8494",
             fontSize: 11, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: 5,
           }}>
             <span>{t.icono}</span><span>{t.label}</span>
@@ -1184,23 +1184,23 @@ function InterfazAvanzada({ detenido, perfil, onActualizado }) {
       {tab === "aprehensor" && (
         <div>
           <div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
-            <button type="button" onClick={() => set("aprehensorTipo", "rh")} style={{ flex: 1, background: (form.aprehensorTipo || "rh") === "rh" ? "#1e3a5f" : "#0a1525", border: "1px solid #2a5080", borderRadius: 7, padding: "8px", color: (form.aprehensorTipo || "rh") === "rh" ? "#e8f4ff" : "#8a9ab0", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
+            <button type="button" onClick={() => set("aprehensorTipo", "rh")} style={{ flex: 1, background: (form.aprehensorTipo || "rh") === "rh" ? "#c3cbd6" : "#eef1f6", border: "1px solid #a8b3c2", borderRadius: 7, padding: "8px", color: (form.aprehensorTipo || "rh") === "rh" ? "#1a1a2e" : "#7c8494", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
               👮 Personal FGE (buscar en RH)
             </button>
-            <button type="button" onClick={() => set("aprehensorTipo", "externo")} style={{ flex: 1, background: form.aprehensorTipo === "externo" ? "#1e3a5f" : "#0a1525", border: "1px solid #2a5080", borderRadius: 7, padding: "8px", color: form.aprehensorTipo === "externo" ? "#e8f4ff" : "#8a9ab0", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
+            <button type="button" onClick={() => set("aprehensorTipo", "externo")} style={{ flex: 1, background: form.aprehensorTipo === "externo" ? "#c3cbd6" : "#eef1f6", border: "1px solid #a8b3c2", borderRadius: 7, padding: "8px", color: form.aprehensorTipo === "externo" ? "#1a1a2e" : "#7c8494", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
               🏛️ Otra corporación
             </button>
           </div>
 
           {(form.aprehensorTipo || "rh") === "rh" ? (
             <>
-              <label style={{ color: "#5a7a9a", fontSize: 10, fontWeight: 700, letterSpacing: 1.2, textTransform: "uppercase", display: "block", marginBottom: 4 }}>Agente aprehensor (verificado contra RH) <span style={{ color: "#ef4444" }}>*</span></label>
+              <label style={{ color: "#6b7280", fontSize: 10, fontWeight: 700, letterSpacing: 1.2, textTransform: "uppercase", display: "block", marginBottom: 4 }}>Agente aprehensor (verificado contra RH) <span style={{ color: "#ef4444" }}>*</span></label>
               <select value={form.aprehensor_id} onChange={(e) => set("aprehensor_id", e.target.value)}
-                style={{ background: "#0a1525", border: "1px solid #1e3a5f", borderRadius: 7, padding: "9px 12px", color: "#d0e4f4", fontSize: 13, width: "100%", outline: "none", boxSizing: "border-box" }}>
+                style={{ background: "#eef1f6", border: "1px solid #c3cbd6", borderRadius: 7, padding: "9px 12px", color: "#33394d", fontSize: 13, width: "100%", outline: "none", boxSizing: "border-box" }}>
                 <option value="">— Seleccionar agente —</option>
                 {agentes.map((a) => <option key={a.id} value={a.id}>{a.nombre_completo} {a.grado ? `— ${a.grado}` : ""}</option>)}
               </select>
-              {agentes.length === 0 && <div style={{ color: "#5a7a9a", fontSize: 11, marginTop: 8 }}>No hay agentes registrados aún en el sistema.</div>}
+              {agentes.length === 0 && <div style={{ color: "#6b7280", fontSize: 11, marginTop: 8 }}>No hay agentes registrados aún en el sistema.</div>}
             </>
           ) : (
             <div style={{ display: "grid", gap: 10 }}>
@@ -1213,16 +1213,16 @@ function InterfazAvanzada({ detenido, perfil, onActualizado }) {
       )}
 
       {mensaje && (
-        <div style={{ background: mensaje.tipo === "ok" ? "#0f2a1a" : "#2a0f0f", border: `1px solid ${mensaje.tipo === "ok" ? "#22c55e44" : "#ef444444"}`, borderRadius: 8, padding: 10, marginTop: 14, color: mensaje.tipo === "ok" ? "#4ade80" : "#f87171", fontSize: 12 }}>
+        <div style={{ background: mensaje.tipo === "ok" ? "#e1f5ee" : "#fcebeb", border: `1px solid ${mensaje.tipo === "ok" ? "#22c55e44" : "#ef444444"}`, borderRadius: 8, padding: 10, marginTop: 14, color: mensaje.tipo === "ok" ? "#0f6e56" : "#791f1f", fontSize: 12 }}>
           {mensaje.texto}
         </div>
       )}
 
       <div style={{ display: "flex", gap: 8, marginTop: 14 }}>
-        <button onClick={() => guardar(true)} disabled={guardando} style={{ flex: 1, background: "#1a3050", border: "1px solid #2a5080", borderRadius: 8, padding: 11, color: "#d0e4f4", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
+        <button onClick={() => guardar(true)} disabled={guardando} style={{ flex: 1, background: "#d9dee5", border: "1px solid #a8b3c2", borderRadius: 8, padding: 11, color: "#33394d", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
           {guardando ? "Guardando…" : "Guardar avance"}
         </button>
-        <button onClick={finalizarEvento} disabled={guardando} style={{ flex: 1, background: todasCompletas ? "linear-gradient(135deg,#14532d,#166534)" : "#1a1a1a", border: `1px solid ${todasCompletas ? "#22c55e" : "#3a3a3a"}`, borderRadius: 8, padding: 11, color: todasCompletas ? "#bbf7d0" : "#6b7280", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
+        <button onClick={finalizarEvento} disabled={guardando} style={{ flex: 1, background: todasCompletas ? "#0f6e56" : "#e4e2da", border: `1px solid ${todasCompletas ? "#0f6e56" : "#d3d1c7"}`, borderRadius: 8, padding: 11, color: todasCompletas ? "#ffffff" : "#888780", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
           {todasCompletas ? "✓ FINALIZAR EVENTO" : "Finalizar (faltan pestañas)"}
         </button>
       </div>
@@ -1232,7 +1232,7 @@ function InterfazAvanzada({ detenido, perfil, onActualizado }) {
 
 
 // ─── DASHBOARD DE MANDOS ─────────────────────────────────────────────────────
-const COLORES_CHART = ["#4a9eff", "#22c55e", "#f59e0b", "#ef4444", "#a78bfa", "#ec4899", "#14b8a6"];
+const COLORES_CHART = ["#001a4d", "#22c55e", "#f59e0b", "#ef4444", "#a78bfa", "#ec4899", "#14b8a6"];
 
 // ─── REVISIÓN DE SOLICITUDES DE EDICIÓN (Regional / Mando) ─────────────────────
 function RevisionSolicitudes({ perfil }) {
@@ -1269,25 +1269,25 @@ function RevisionSolicitudes({ perfil }) {
   if (solicitudes.length === 0) return null;
 
   return (
-    <div style={{ background: "#1a1410", border: "1px solid #f59e0b44", borderRadius: 10, padding: 18, marginBottom: 20 }}>
-      <div style={{ color: "#fde68a", fontSize: 11, fontWeight: 800, letterSpacing: 2, marginBottom: 14, textTransform: "uppercase" }}>⏳ Solicitudes de Edición Pendientes ({solicitudes.length})</div>
+    <div style={{ background: "#faeeda", border: "1px solid #f59e0b44", borderRadius: 10, padding: 18, marginBottom: 20 }}>
+      <div style={{ color: "#854f0b", fontSize: 11, fontWeight: 800, letterSpacing: 2, marginBottom: 14, textTransform: "uppercase" }}>⏳ Solicitudes de Edición Pendientes ({solicitudes.length})</div>
       {solicitudes.map((s) => (
-        <div key={s.id} style={{ background: "#0c1a27", borderRadius: 8, padding: 12, marginBottom: 8 }}>
+        <div key={s.id} style={{ background: "#ffffff", borderRadius: 8, padding: 12, marginBottom: 8 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 8 }}>
             <div style={{ flex: 1, minWidth: 200 }}>
-              <div style={{ color: "#e8f4ff", fontSize: 13, fontWeight: 700 }}>{s.detenido?.nombre} <span style={{ color: "#f59e0b", fontWeight: 400 }}>({s.detenido?.alias})</span></div>
-              <div style={{ color: "#8a9ab0", fontSize: 11, marginTop: 2 }}>{s.detenido?.delito} · {s.detenido?.region}</div>
-              <div style={{ color: "#c8daea", fontSize: 12, marginTop: 6 }}>Solicita: <strong>{s.solicitado_por}</strong></div>
+              <div style={{ color: "#1a1a2e", fontSize: 13, fontWeight: 700 }}>{s.detenido?.nombre} <span style={{ color: "#f59e0b", fontWeight: 400 }}>({s.detenido?.alias})</span></div>
+              <div style={{ color: "#7c8494", fontSize: 11, marginTop: 2 }}>{s.detenido?.delito} · {s.detenido?.region}</div>
+              <div style={{ color: "#4a5268", fontSize: 12, marginTop: 6 }}>Solicita: <strong>{s.solicitado_por}</strong></div>
               <div style={{ color: "#a78bfa", fontSize: 12, marginTop: 2, fontStyle: "italic" }}>"{s.justificacion}"</div>
-              <div style={{ color: "#5a7a9a", fontSize: 10, marginTop: 4 }}>{new Date(s.creado_en).toLocaleString("es-MX", { dateStyle: "short", timeStyle: "short" })}</div>
+              <div style={{ color: "#6b7280", fontSize: 10, marginTop: 4 }}>{new Date(s.creado_en).toLocaleString("es-MX", { dateStyle: "short", timeStyle: "short" })}</div>
             </div>
             <div style={{ display: "flex", gap: 6 }}>
               <button onClick={() => resolver(s.id, "autorizada")} disabled={procesando === s.id}
-                style={{ background: "#14532d", border: "1px solid #22c55e55", borderRadius: 6, padding: "6px 12px", color: "#bbf7d0", fontSize: 11, fontWeight: 700, cursor: "pointer" }}>
+                style={{ background: "#0f6e56", border: "none", borderRadius: 6, padding: "6px 12px", color: "#ffffff", fontSize: 11, fontWeight: 700, cursor: "pointer" }}>
                 ✓ Autorizar
               </button>
               <button onClick={() => resolver(s.id, "rechazada")} disabled={procesando === s.id}
-                style={{ background: "#7f1d1d", border: "1px solid #ef444455", borderRadius: 6, padding: "6px 12px", color: "#fecaca", fontSize: 11, fontWeight: 700, cursor: "pointer" }}>
+                style={{ background: "#A32D2D", border: "none", borderRadius: 6, padding: "6px 12px", color: "#ffffff", fontSize: 11, fontWeight: 700, cursor: "pointer" }}>
                 ✕ Rechazar
               </button>
             </div>
@@ -1371,7 +1371,7 @@ function DashboardMandos({ perfil }) {
     a.click();
   };
 
-  if (cargando) return <div style={{ textAlign: "center", padding: 40, color: "#5a7a9a" }}>Cargando dashboard…</div>;
+  if (cargando) return <div style={{ textAlign: "center", padding: 40, color: "#6b7280" }}>Cargando dashboard…</div>;
 
   const puedeRevisarSolicitudes = perfil && ["regional", "mando"].includes(perfil.rol);
 
@@ -1380,72 +1380,72 @@ function DashboardMandos({ perfil }) {
       {puedeRevisarSolicitudes && <RevisionSolicitudes perfil={perfil} />}
 
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 18, flexWrap: "wrap", gap: 10 }}>
-        <div style={{ color: "#5a7a9a", fontSize: 11, letterSpacing: 2, textTransform: "uppercase" }}>Detenidos Activos en Custodia</div>
+        <div style={{ color: "#6b7280", fontSize: 11, letterSpacing: 2, textTransform: "uppercase" }}>Detenidos Activos en Custodia</div>
         <div style={{ display: "flex", gap: 8 }}>
           {!esRegional && (
             <select value={filtroRegion} onChange={(e) => setFiltroRegion(e.target.value)}
-              style={{ background: "#0c1a27", border: "1px solid #1a3050", borderRadius: 7, padding: "8px 11px", color: "#d0e4f4", fontSize: 12 }}>
+              style={{ background: "#ffffff", border: "1px solid #d9dee5", borderRadius: 7, padding: "8px 11px", color: "#33394d", fontSize: 12 }}>
               <option value="Todas">Todo el estado</option>
               {REGIONES.map((r) => <option key={r} value={r}>{r}</option>)}
             </select>
           )}
-          <button onClick={exportarReporte} style={{ background: "linear-gradient(135deg,#713f12,#92400e)", border: "none", borderRadius: 8, padding: "8px 16px", color: "#fde68a", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>⬇ Descargar reporte</button>
+          <button onClick={exportarReporte} style={{ background: "linear-gradient(135deg,#713f12,#92400e)", border: "none", borderRadius: 8, padding: "8px 16px", color: "#854f0b", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>⬇ Descargar reporte</button>
         </div>
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(140px,1fr))", gap: 12, marginBottom: 22 }}>
         {[
-          { label: "Total expedientes", value: detenidosFiltrados.length, color: "#4a9eff", icon: "📁" },
+          { label: "Total expedientes", value: detenidosFiltrados.length, color: "#001a4d", icon: "📁" },
           { label: "En Proceso", value: porSemaforo.verde + porSemaforo.amarillo, color: "#22c55e", icon: "🟢" },
           { label: "Alerta por Vencer", value: porSemaforo.naranja, color: "#f97316", icon: "🟠" },
           { label: "Omisión de Plazo", value: porSemaforo.negro, color: "#ef4444", icon: "⚫" },
           { label: "Finalizados", value: porSemaforo.finalizado, color: "#6b7280", icon: "✅" },
         ].map((c) => (
-          <div key={c.label} style={{ background: "#0c1a27", border: `1px solid ${c.color}33`, borderRadius: 10, padding: "14px 16px", position: "relative", overflow: "hidden" }}>
+          <div key={c.label} style={{ background: "#ffffff", border: `1px solid ${c.color}33`, borderRadius: 10, padding: "14px 16px", position: "relative", overflow: "hidden" }}>
             <div style={{ position: "absolute", right: 10, top: 10, fontSize: 22, opacity: 0.15 }}>{c.icon}</div>
-            <div style={{ color: "#5a7a9a", fontSize: 9, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase" }}>{c.label}</div>
+            <div style={{ color: "#6b7280", fontSize: 9, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase" }}>{c.label}</div>
             <div style={{ color: c.color, fontSize: 26, fontWeight: 900, fontFamily: "monospace", marginTop: 4 }}>{c.value}</div>
           </div>
         ))}
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 16 }}>
-        <div style={{ background: "#0c1a27", border: "1px solid #1a3050", borderRadius: 10, padding: 16 }}>
-          <div style={{ color: "#4a9eff", fontSize: 10, fontWeight: 700, letterSpacing: 2, marginBottom: 12, textTransform: "uppercase" }}>Estatus de Expedientes</div>
-          {datosSemaforo.length === 0 ? <div style={{ color: "#5a7a9a", fontSize: 12 }}>Sin datos aún</div> : (
+        <div style={{ background: "#ffffff", border: "1px solid #d9dee5", borderRadius: 10, padding: 16 }}>
+          <div style={{ color: "#001a4d", fontSize: 10, fontWeight: 700, letterSpacing: 2, marginBottom: 12, textTransform: "uppercase" }}>Estatus de Expedientes</div>
+          {datosSemaforo.length === 0 ? <div style={{ color: "#6b7280", fontSize: 12 }}>Sin datos aún</div> : (
             <ResponsiveContainer width="100%" height={180}>
               <PieChart>
                 <Pie data={datosSemaforo} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={65} label={({ name, value }) => `${value}`} labelLine={false} fontSize={11}>
                   {datosSemaforo.map((e, i) => <Cell key={i} fill={e.color} />)}
                 </Pie>
-                <Tooltip contentStyle={{ background: "#0a1525", border: "1px solid #1a3050", color: "#c8daea", fontSize: 12 }} />
-                <Legend wrapperStyle={{ fontSize: 10, color: "#8a9ab0" }} />
+                <Tooltip contentStyle={{ background: "#eef1f6", border: "1px solid #d9dee5", color: "#4a5268", fontSize: 12 }} />
+                <Legend wrapperStyle={{ fontSize: 10, color: "#7c8494" }} />
               </PieChart>
             </ResponsiveContainer>
           )}
         </div>
 
-        <div style={{ background: "#0c1a27", border: "1px solid #1a3050", borderRadius: 10, padding: 16 }}>
+        <div style={{ background: "#ffffff", border: "1px solid #d9dee5", borderRadius: 10, padding: 16 }}>
           <div style={{ color: "#f59e0b", fontSize: 10, fontWeight: 700, letterSpacing: 2, marginBottom: 12, textTransform: "uppercase" }}>{esRegional ? "Detenidos en mi Región" : "Detenidos por Región"}</div>
           <ResponsiveContainer width="100%" height={180}>
             <BarChart data={detPorRegion} margin={{ top: 0, right: 10, left: -20, bottom: 30 }}>
-              <XAxis dataKey="name" tick={{ fill: "#5a7a9a", fontSize: 9 }} angle={-30} textAnchor="end" />
-              <YAxis tick={{ fill: "#5a7a9a", fontSize: 10 }} allowDecimals={false} />
-              <Tooltip contentStyle={{ background: "#0a1525", border: "1px solid #1a3050", color: "#c8daea", fontSize: 12 }} />
-              <Bar dataKey="value" fill="#4a9eff" radius={[4, 4, 0, 0]} />
+              <XAxis dataKey="name" tick={{ fill: "#6b7280", fontSize: 9 }} angle={-30} textAnchor="end" />
+              <YAxis tick={{ fill: "#6b7280", fontSize: 10 }} allowDecimals={false} />
+              <Tooltip contentStyle={{ background: "#eef1f6", border: "1px solid #d9dee5", color: "#4a5268", fontSize: 12 }} />
+              <Bar dataKey="value" fill="#001a4d" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
       </div>
 
-      <div style={{ background: "#0c1a27", border: "1px solid #1a3050", borderRadius: 10, padding: 16 }}>
+      <div style={{ background: "#ffffff", border: "1px solid #d9dee5", borderRadius: 10, padding: 16 }}>
         <div style={{ color: "#a78bfa", fontSize: 10, fontWeight: 700, letterSpacing: 2, marginBottom: 12, textTransform: "uppercase" }}>Delitos más frecuentes</div>
-        {delitosData.length === 0 ? <div style={{ color: "#5a7a9a", fontSize: 12 }}>Sin datos aún</div> : (
+        {delitosData.length === 0 ? <div style={{ color: "#6b7280", fontSize: 12 }}>Sin datos aún</div> : (
           <ResponsiveContainer width="100%" height={Math.max(140, delitosData.length * 36)}>
             <BarChart data={delitosData} layout="vertical" margin={{ top: 0, right: 20, left: 10, bottom: 0 }}>
-              <XAxis type="number" tick={{ fill: "#5a7a9a", fontSize: 10 }} allowDecimals={false} />
-              <YAxis type="category" dataKey="name" tick={{ fill: "#c8daea", fontSize: 11 }} width={140} />
-              <Tooltip contentStyle={{ background: "#0a1525", border: "1px solid #1a3050", color: "#c8daea", fontSize: 12 }} />
+              <XAxis type="number" tick={{ fill: "#6b7280", fontSize: 10 }} allowDecimals={false} />
+              <YAxis type="category" dataKey="name" tick={{ fill: "#4a5268", fontSize: 11 }} width={140} />
+              <Tooltip contentStyle={{ background: "#eef1f6", border: "1px solid #d9dee5", color: "#4a5268", fontSize: 12 }} />
               <Bar dataKey="value" radius={[0, 4, 4, 0]}>
                 {delitosData.map((_, i) => <Cell key={i} fill={COLORES_CHART[i % COLORES_CHART.length]} />)}
               </Bar>
@@ -1487,18 +1487,18 @@ function BusquedaOperativa({ perfil, onAbrirDetenido }) {
 
   return (
     <div>
-      <div style={{ color: "#5a7a9a", fontSize: 11, letterSpacing: 2, marginBottom: 16, textTransform: "uppercase" }}>🔍 Búsqueda Operativa Rápida</div>
+      <div style={{ color: "#6b7280", fontSize: 11, letterSpacing: 2, marginBottom: 16, textTransform: "uppercase" }}>🔍 Búsqueda Operativa Rápida</div>
 
-      <div style={{ background: "#0c1a27", border: "1px solid #1a3050", borderRadius: 10, padding: 16, marginBottom: 16 }}>
+      <div style={{ background: "#ffffff", border: "1px solid #d9dee5", borderRadius: 10, padding: 16, marginBottom: 16 }}>
         <div style={{ marginBottom: 12 }}>
           <input value={texto} onChange={(e) => setTexto(e.target.value)} placeholder="Buscar por nombre o alias…" autoFocus
-            style={{ background: "#0a1525", border: "1px solid #1e3a5f", borderRadius: 8, padding: "12px 14px", color: "#e8f4ff", fontSize: 15, width: "100%", outline: "none", boxSizing: "border-box" }} />
+            style={{ background: "#eef1f6", border: "1px solid #c3cbd6", borderRadius: 8, padding: "12px 14px", color: "#1a1a2e", fontSize: 15, width: "100%", outline: "none", boxSizing: "border-box" }} />
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
           <input value={filtroDelito} onChange={(e) => setFiltroDelito(e.target.value)} placeholder="Filtrar por delito…"
-            style={{ background: "#0a1525", border: "1px solid #1e3a5f", borderRadius: 7, padding: "9px 12px", color: "#d0e4f4", fontSize: 13, outline: "none", boxSizing: "border-box" }} />
+            style={{ background: "#eef1f6", border: "1px solid #c3cbd6", borderRadius: 7, padding: "9px 12px", color: "#33394d", fontSize: 13, outline: "none", boxSizing: "border-box" }} />
           <select value={filtroRegion} onChange={(e) => setFiltroRegion(e.target.value)}
-            style={{ background: "#0a1525", border: "1px solid #1e3a5f", borderRadius: 7, padding: "9px 12px", color: "#d0e4f4", fontSize: 13, outline: "none" }}>
+            style={{ background: "#eef1f6", border: "1px solid #c3cbd6", borderRadius: 7, padding: "9px 12px", color: "#33394d", fontSize: 13, outline: "none" }}>
             <option value="Todas">Todas las regiones</option>
             {REGIONES.map((r) => <option key={r} value={r}>{r}</option>)}
           </select>
@@ -1512,31 +1512,31 @@ function BusquedaOperativa({ perfil, onAbrirDetenido }) {
       </div>
 
       {!hayFiltros ? (
-        <div style={{ textAlign: "center", padding: 50, color: "#5a7a9a" }}>
+        <div style={{ textAlign: "center", padding: 50, color: "#6b7280" }}>
           <div style={{ fontSize: 36, marginBottom: 10, opacity: 0.4 }}>🔍</div>
           <div style={{ fontSize: 13 }}>Escribe un nombre, alias, delito o filtra por región para buscar.</div>
         </div>
       ) : cargando ? (
-        <div style={{ textAlign: "center", padding: 40, color: "#5a7a9a" }}>Buscando…</div>
+        <div style={{ textAlign: "center", padding: 40, color: "#6b7280" }}>Buscando…</div>
       ) : resultados.length === 0 ? (
-        <div style={{ textAlign: "center", padding: 40, color: "#5a7a9a" }}>Sin resultados para esta búsqueda.</div>
+        <div style={{ textAlign: "center", padding: 40, color: "#6b7280" }}>Sin resultados para esta búsqueda.</div>
       ) : (
         <>
-          <div style={{ color: "#5a7a9a", fontSize: 11, marginBottom: 10 }}>{resultados.length} resultado(s)</div>
+          <div style={{ color: "#6b7280", fontSize: 11, marginBottom: 10 }}>{resultados.length} resultado(s)</div>
           {resultados.map((d) => {
             const s = calcularSemaforo(d);
             return (
-              <div key={d.id} onClick={() => onAbrirDetenido(d)} style={{ background: "#0c1a27", border: "1px solid #1a3050", borderRadius: 10, padding: 14, marginBottom: 8, cursor: "pointer" }}
-                onMouseEnter={(e) => e.currentTarget.style.borderColor = "#2a5080"}
-                onMouseLeave={(e) => e.currentTarget.style.borderColor = "#1a3050"}>
+              <div key={d.id} onClick={() => onAbrirDetenido(d)} style={{ background: "#ffffff", border: "1px solid #d9dee5", borderRadius: 10, padding: 14, marginBottom: 8, cursor: "pointer" }}
+                onMouseEnter={(e) => e.currentTarget.style.borderColor = "#a8b3c2"}
+                onMouseLeave={(e) => e.currentTarget.style.borderColor = "#d9dee5"}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                   <div>
-                    <div style={{ color: "#e8f4ff", fontSize: 14, fontWeight: 700 }}>{d.nombre}</div>
+                    <div style={{ color: "#1a1a2e", fontSize: 14, fontWeight: 700 }}>{d.nombre}</div>
                     <div style={{ color: "#f59e0b", fontSize: 12 }}>{d.alias}</div>
                   </div>
                   <SemaforoBadge detenido={d} />
                 </div>
-                <div style={{ color: "#c8daea", fontSize: 12, marginTop: 6 }}>{d.delito || "—"} · {(d.region || "—").replace("Región ", "")}</div>
+                <div style={{ color: "#4a5268", fontSize: 12, marginTop: 6 }}>{d.delito || "—"} · {(d.region || "—").replace("Región ", "")}</div>
                 {(d.latitud && d.longitud) && (
                   <div style={{ marginTop: 6 }}><BotonMapa latitud={d.latitud} longitud={d.longitud} compacto /></div>
                 )}
@@ -1600,47 +1600,47 @@ function FichaBasicaRestringida({ detenido, perfil, onVolver }) {
 
   return (
     <div>
-      <button onClick={onVolver} style={{ background: "none", border: "none", color: "#4a9eff", fontSize: 13, cursor: "pointer", marginBottom: 14, padding: 0 }}>← Volver</button>
+      <button onClick={onVolver} style={{ background: "none", border: "none", color: "#001a4d", fontSize: 13, cursor: "pointer", marginBottom: 14, padding: 0 }}>← Volver</button>
 
-      <div style={{ background: "#1a1410", border: "1px solid #f59e0b44", borderRadius: 8, padding: "10px 14px", marginBottom: 16, display: "flex", alignItems: "center", gap: 8 }}>
+      <div style={{ background: "#faeeda", border: "1px solid #f59e0b44", borderRadius: 8, padding: "10px 14px", marginBottom: 16, display: "flex", alignItems: "center", gap: 8 }}>
         <span style={{ fontSize: 16 }}>🔒</span>
-        <span style={{ color: "#fde68a", fontSize: 12 }}>Expediente finalizado — vista de consulta histórica básica. Esta consulta ha quedado registrada.</span>
+        <span style={{ color: "#854f0b", fontSize: 12 }}>Expediente finalizado — vista de consulta histórica básica. Esta consulta ha quedado registrada.</span>
       </div>
 
-      <div style={{ background: "#0c1a27", borderRadius: 10, padding: 18, marginBottom: 16, border: "1px solid #1a3050" }}>
+      <div style={{ background: "#ffffff", borderRadius: 10, padding: 18, marginBottom: 16, border: "1px solid #d9dee5" }}>
         <div style={{ display: "flex", gap: 14, alignItems: "flex-start" }}>
           {detenido._fotoFrente ? (
-            <img src={detenido._fotoFrente} alt="frente" style={{ width: 80, height: 80, objectFit: "cover", borderRadius: 8, border: "1px solid #1e3a5f" }} />
+            <img src={detenido._fotoFrente} alt="frente" style={{ width: 80, height: 80, objectFit: "cover", borderRadius: 8, border: "1px solid #c3cbd6" }} />
           ) : (
-            <div style={{ width: 80, height: 80, borderRadius: 8, background: "#0a1525", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 28, color: "#5a7a9a" }}>👤</div>
+            <div style={{ width: 80, height: 80, borderRadius: 8, background: "#eef1f6", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 28, color: "#6b7280" }}>👤</div>
           )}
           <div>
             <div style={{ color: "#ef4444", fontSize: 11, fontWeight: 700 }}>{detenido.id?.slice(0, 8)}</div>
-            <div style={{ color: "#e8f4ff", fontSize: 18, fontWeight: 700, marginTop: 2 }}>{detenido.nombre}</div>
+            <div style={{ color: "#1a1a2e", fontSize: 18, fontWeight: 700, marginTop: 2 }}>{detenido.nombre}</div>
             <div style={{ color: "#f59e0b", fontSize: 13 }}>{detenido.alias}</div>
             <div style={{ marginTop: 6 }}><Badge text="Finalizado" color="#6b7280" /></div>
           </div>
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginTop: 16, paddingTop: 16, borderTop: "1px solid #1a3050" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginTop: 16, paddingTop: 16, borderTop: "1px solid #d9dee5" }}>
           {[["Delito", detenido.delito], ["Región", detenido.region], ["Fecha de detención", detenido.fecha_deteccion], ["Tipo de detención", detenido.tipo_deteccion]].map(([k, v]) => (
             <div key={k}>
-              <div style={{ color: "#5a7a9a", fontSize: 9, letterSpacing: 1, textTransform: "uppercase" }}>{k}</div>
-              <div style={{ color: "#c8daea", fontSize: 13, marginTop: 2 }}>{v || "—"}</div>
+              <div style={{ color: "#6b7280", fontSize: 9, letterSpacing: 1, textTransform: "uppercase" }}>{k}</div>
+              <div style={{ color: "#4a5268", fontSize: 13, marginTop: 2 }}>{v || "—"}</div>
             </div>
           ))}
         </div>
 
         {detenido.senas_particulares && (
-          <div style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid #1a3050" }}>
-            <div style={{ color: "#5a7a9a", fontSize: 9, letterSpacing: 1, textTransform: "uppercase" }}>Señas particulares</div>
-            <div style={{ color: "#c8daea", fontSize: 13, marginTop: 2 }}>{detenido.senas_particulares}</div>
+          <div style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid #d9dee5" }}>
+            <div style={{ color: "#6b7280", fontSize: 9, letterSpacing: 1, textTransform: "uppercase" }}>Señas particulares</div>
+            <div style={{ color: "#4a5268", fontSize: 13, marginTop: 2 }}>{detenido.senas_particulares}</div>
           </div>
         )}
 
         {detenido.tatuajes && detenido.tatuajes.length > 0 && (
           <div style={{ marginTop: 14 }}>
-            <div style={{ color: "#5a7a9a", fontSize: 9, letterSpacing: 1, textTransform: "uppercase", marginBottom: 6 }}>Tatuajes</div>
+            <div style={{ color: "#6b7280", fontSize: 9, letterSpacing: 1, textTransform: "uppercase", marginBottom: 6 }}>Tatuajes</div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
               {detenido.tatuajes.map((t, i) => <Badge key={i} text={t} color="#a78bfa" />)}
             </div>
@@ -1648,53 +1648,53 @@ function FichaBasicaRestringida({ detenido, perfil, onVolver }) {
         )}
       </div>
 
-      <div style={{ background: "#0c1a27", borderRadius: 10, padding: 18, border: "1px solid #1a3050" }}>
+      <div style={{ background: "#ffffff", borderRadius: 10, padding: 18, border: "1px solid #d9dee5" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
           <div style={{ color: "#a78bfa", fontSize: 11, fontWeight: 800, letterSpacing: 2, textTransform: "uppercase" }}>📝 Solicitud de Edición Justificada</div>
           {!hayPendiente && !hayAutorizada && (
-            <button onClick={() => setMostrarForm((v) => !v)} style={{ background: "#2e1065", border: "1px solid #a78bfa44", borderRadius: 7, padding: "6px 12px", color: "#ddd6fe", fontSize: 11, fontWeight: 700, cursor: "pointer" }}>
+            <button onClick={() => setMostrarForm((v) => !v)} style={{ background: "#534AB7", border: "none", borderRadius: 7, padding: "6px 12px", color: "#ffffff", fontSize: 11, fontWeight: 700, cursor: "pointer" }}>
               {mostrarForm ? "✕ Cancelar" : "+ Solicitar edición"}
             </button>
           )}
         </div>
 
         {hayAutorizada && (
-          <div style={{ background: "#0f2a1a", border: "1px solid #22c55e44", borderRadius: 7, padding: 10, marginBottom: 10, color: "#bbf7d0", fontSize: 12 }}>
+          <div style={{ background: "#e1f5ee", border: "1px solid #22c55e44", borderRadius: 7, padding: 10, marginBottom: 10, color: "#085041", fontSize: 12 }}>
             ✅ Tu solicitud fue autorizada. Ya puedes regresar y editar este expediente con normalidad.
           </div>
         )}
         {hayPendiente && (
-          <div style={{ background: "#2a2410", border: "1px solid #eab30844", borderRadius: 7, padding: 10, marginBottom: 10, color: "#fde047", fontSize: 12 }}>
+          <div style={{ background: "#faeeda", border: "1px solid #eab30844", borderRadius: 7, padding: 10, marginBottom: 10, color: "#854f0b", fontSize: 12 }}>
             ⏳ Hay una solicitud pendiente de autorización por un Coordinador Regional o Director General.
           </div>
         )}
 
         {mostrarForm && (
-          <div style={{ background: "#0a1525", borderRadius: 8, padding: 12, marginBottom: 12 }}>
+          <div style={{ background: "#eef1f6", borderRadius: 8, padding: 12, marginBottom: 12 }}>
             <TextArea label="Justificación de la solicitud" value={justificacion} onChange={setJustificacion} rows={3} />
-            <button onClick={enviarSolicitud} disabled={enviando} style={{ marginTop: 10, width: "100%", background: "linear-gradient(135deg,#4c1d95,#5b21b6)", border: "none", borderRadius: 7, padding: 10, color: "#ddd6fe", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
+            <button onClick={enviarSolicitud} disabled={enviando} style={{ marginTop: 10, width: "100%", background: "#534AB7", border: "none", borderRadius: 7, padding: 10, color: "#ffffff", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
               {enviando ? "Enviando…" : "Enviar solicitud"}
             </button>
           </div>
         )}
 
         {mensaje && (
-          <div style={{ background: mensaje.tipo === "ok" ? "#0f2a1a" : "#2a0f0f", border: `1px solid ${mensaje.tipo === "ok" ? "#22c55e44" : "#ef444444"}`, borderRadius: 7, padding: 10, marginBottom: 10, color: mensaje.tipo === "ok" ? "#4ade80" : "#f87171", fontSize: 12 }}>
+          <div style={{ background: mensaje.tipo === "ok" ? "#e1f5ee" : "#fcebeb", border: `1px solid ${mensaje.tipo === "ok" ? "#22c55e44" : "#ef444444"}`, borderRadius: 7, padding: 10, marginBottom: 10, color: mensaje.tipo === "ok" ? "#0f6e56" : "#791f1f", fontSize: 12 }}>
             {mensaje.texto}
           </div>
         )}
 
         {!cargandoSol && solicitudes.length > 0 && (
           <div>
-            <div style={{ color: "#5a7a9a", fontSize: 10, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 6 }}>Historial de solicitudes</div>
+            <div style={{ color: "#6b7280", fontSize: 10, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 6 }}>Historial de solicitudes</div>
             {solicitudes.map((s) => (
-              <div key={s.id} style={{ background: "#0a1525", borderRadius: 6, padding: 8, marginBottom: 6 }}>
+              <div key={s.id} style={{ background: "#eef1f6", borderRadius: 6, padding: 8, marginBottom: 6 }}>
                 <div style={{ display: "flex", justifyContent: "space-between" }}>
-                  <span style={{ color: "#c8daea", fontSize: 11 }}>{s.solicitado_por}</span>
+                  <span style={{ color: "#4a5268", fontSize: 11 }}>{s.solicitado_por}</span>
                   <Badge text={s.estado} color={estadoColor[s.estado]} />
                 </div>
-                <div style={{ color: "#8a9ab0", fontSize: 11, marginTop: 2 }}>{s.justificacion}</div>
-                <div style={{ color: "#5a7a9a", fontSize: 9, marginTop: 2 }}>{new Date(s.creado_en).toLocaleString("es-MX", { dateStyle: "short", timeStyle: "short" })}</div>
+                <div style={{ color: "#7c8494", fontSize: 11, marginTop: 2 }}>{s.justificacion}</div>
+                <div style={{ color: "#6b7280", fontSize: 9, marginTop: 2 }}>{new Date(s.creado_en).toLocaleString("es-MX", { dateStyle: "short", timeStyle: "short" })}</div>
               </div>
             ))}
           </div>
@@ -1791,7 +1791,7 @@ function ModuloDetenidos({ perfil, detenidoInicial, onDetenidoInicialUsado }) {
     const esFinalizadoYRolLimitado = detenidoActivo.estatus_clave === "finalizado" && perfil && ["agente", "coordinador"].includes(perfil.rol);
 
     if (esFinalizadoYRolLimitado && verificandoAutorizacion) {
-      return <div style={{ textAlign: "center", padding: 40, color: "#5a7a9a" }}>Verificando permisos…</div>;
+      return <div style={{ textAlign: "center", padding: 40, color: "#6b7280" }}>Verificando permisos…</div>;
     }
 
     const esVistaRestringida = esFinalizadoYRolLimitado && !tieneAutorizacion;
@@ -1803,35 +1803,35 @@ function ModuloDetenidos({ perfil, detenidoInicial, onDetenidoInicialUsado }) {
 
     return (
       <div>
-        <button onClick={() => { setDetenidoActivo(null); setForm(initialForm); setMensaje(null); }} style={{ background: "none", border: "none", color: "#4a9eff", fontSize: 13, cursor: "pointer", marginBottom: 14, padding: 0 }}>← Volver</button>
+        <button onClick={() => { setDetenidoActivo(null); setForm(initialForm); setMensaje(null); }} style={{ background: "none", border: "none", color: "#001a4d", fontSize: 13, cursor: "pointer", marginBottom: 14, padding: 0 }}>← Volver</button>
 
         {esFinalizadoYRolLimitado && tieneAutorizacion && (
-          <div style={{ background: "#0f2a1a", border: "1px solid #22c55e44", borderRadius: 8, padding: "10px 14px", marginBottom: 16, display: "flex", alignItems: "center", gap: 8 }}>
+          <div style={{ background: "#e1f5ee", border: "1px solid #22c55e44", borderRadius: 8, padding: "10px 14px", marginBottom: 16, display: "flex", alignItems: "center", gap: 8 }}>
             <span style={{ fontSize: 16 }}>✅</span>
-            <span style={{ color: "#bbf7d0", fontSize: 12 }}>Edición autorizada para este expediente finalizado.</span>
+            <span style={{ color: "#085041", fontSize: 12 }}>Edición autorizada para este expediente finalizado.</span>
           </div>
         )}
 
-        <div style={{ background: "#0c1a27", borderRadius: 10, padding: 16, marginBottom: 16, border: "1px solid #1a3050" }}>
+        <div style={{ background: "#ffffff", borderRadius: 10, padding: 16, marginBottom: 16, border: "1px solid #d9dee5" }}>
           {(detenidoActivo.carpeta_investigacion || detenidoActivo.rnd) && (
             <div style={{ display: "flex", gap: 14, flexWrap: "wrap", marginBottom: 8 }}>
               {detenidoActivo.carpeta_investigacion && (
                 <div>
-                  <div style={{ color: "#5a7a9a", fontSize: 9, letterSpacing: 1, textTransform: "uppercase" }}>Carpeta de Investigación</div>
+                  <div style={{ color: "#6b7280", fontSize: 9, letterSpacing: 1, textTransform: "uppercase" }}>Carpeta de Investigación</div>
                   <div style={{ color: "#ef4444", fontSize: 12, fontWeight: 700, fontFamily: "monospace", letterSpacing: 0.5 }}>{detenidoActivo.carpeta_investigacion}*</div>
                 </div>
               )}
               {detenidoActivo.rnd && (
                 <div>
-                  <div style={{ color: "#5a7a9a", fontSize: 9, letterSpacing: 1, textTransform: "uppercase" }}>R.N.D.</div>
+                  <div style={{ color: "#6b7280", fontSize: 9, letterSpacing: 1, textTransform: "uppercase" }}>R.N.D.</div>
                   <div style={{ color: "#ef4444", fontSize: 12, fontWeight: 700, fontFamily: "monospace" }}>{detenidoActivo.rnd}</div>
                 </div>
               )}
             </div>
           )}
-          <div style={{ color: "#e8f4ff", fontSize: 18, fontWeight: 700, marginTop: 2 }}>{detenidoActivo.nombre}</div>
+          <div style={{ color: "#1a1a2e", fontSize: 18, fontWeight: 700, marginTop: 2 }}>{detenidoActivo.nombre}</div>
           <div style={{ color: "#f59e0b", fontSize: 13 }}>{detenidoActivo.alias}</div>
-          <div style={{ color: "#c8daea", fontSize: 12, marginTop: 4 }}>{detenidoActivo.delito} · {detenidoActivo.region}</div>
+          <div style={{ color: "#4a5268", fontSize: 12, marginTop: 4 }}>{detenidoActivo.delito} · {detenidoActivo.region}</div>
           <div style={{ marginTop: 8, display: "flex", gap: 8, alignItems: "center" }}>
             <SemaforoBadge detenido={detenidoActivo} />
             <BotonMapa latitud={detenidoActivo.latitud} longitud={detenidoActivo.longitud} compacto />
@@ -1843,7 +1843,7 @@ function ModuloDetenidos({ perfil, detenidoInicial, onDetenidoInicialUsado }) {
           if (data) setDetenidoActivo(data);
         }} />
 
-        <Seccion titulo="📸 Fotografías del Detenido" color="#4a9eff">
+        <Seccion titulo="📸 Fotografías del Detenido" color="#001a4d">
           <div style={{ gridColumn: "1 / -1", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
             {FOTO_SLOTS.map((slot) => (
               <FotoSlot key={slot.key} slot={slot} detenidoId={detenidoActivo.id} perfil={perfil} archivos={archivos} onSubido={() => cargarArchivos(detenidoActivo.id)} />
@@ -1872,9 +1872,9 @@ function ModuloDetenidos({ perfil, detenidoInicial, onDetenidoInicialUsado }) {
 
   return (
     <div>
-      <div style={{ display: "flex", gap: 6, marginBottom: 18, background: "#0a1525", borderRadius: 10, padding: 6, width: "fit-content" }}>
-        <button onClick={() => setVista("nuevo")} style={{ background: vista === "nuevo" ? "#1e3a5f" : "none", border: "none", borderRadius: 8, padding: "8px 16px", color: vista === "nuevo" ? "#e8f4ff" : "#5a7a9a", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>+ Nuevo Detenido</button>
-        <button onClick={() => setVista("lista")} style={{ background: vista === "lista" ? "#1e3a5f" : "none", border: "none", borderRadius: 8, padding: "8px 16px", color: vista === "lista" ? "#e8f4ff" : "#5a7a9a", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>📋 Consultar Base</button>
+      <div style={{ display: "flex", gap: 6, marginBottom: 18, background: "#eef1f6", borderRadius: 10, padding: 6, width: "fit-content" }}>
+        <button onClick={() => setVista("nuevo")} style={{ background: vista === "nuevo" ? "#c3cbd6" : "none", border: "none", borderRadius: 8, padding: "8px 16px", color: vista === "nuevo" ? "#1a1a2e" : "#6b7280", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>+ Nuevo Detenido</button>
+        <button onClick={() => setVista("lista")} style={{ background: vista === "lista" ? "#c3cbd6" : "none", border: "none", borderRadius: 8, padding: "8px 16px", color: vista === "lista" ? "#1a1a2e" : "#6b7280", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>📋 Consultar Base</button>
       </div>
 
       {vista === "nuevo" && (
@@ -1899,11 +1899,11 @@ function ModuloDetenidos({ perfil, detenidoInicial, onDetenidoInicialUsado }) {
             </div>
             <div style={{ gridColumn: "1 / -1" }}>
               <TextArea label="¿Hubo más detenidos en esta misma carpeta? Escribe sus nombres (uno por línea)" value={form.codetenidos_nombres} onChange={(v) => set("codetenidos_nombres", v)} rows={2} />
-              <div style={{ color: "#5a7a9a", fontSize: 10, marginTop: 4 }}>A cada uno se le creará su propio expediente por separado. Si ya están registrados en el sistema, podrás vincularlos desde el expediente después de guardar.</div>
+              <div style={{ color: "#6b7280", fontSize: 10, marginTop: 4 }}>A cada uno se le creará su propio expediente por separado. Si ya están registrados en el sistema, podrás vincularlos desde el expediente después de guardar.</div>
             </div>
           </Seccion>
 
-          <Seccion titulo="👤 Datos Generales del Detenido" color="#4a9eff">
+          <Seccion titulo="👤 Datos Generales del Detenido" color="#001a4d">
             <div style={{ gridColumn: "1 / -1" }}><Input label="Nombre completo" value={form.nombre} onChange={(v) => set("nombre", v)} required /></div>
             <Input label="Alias / Apodo" value={form.alias} onChange={(v) => set("alias", v)} />
             <DatePicker label="Fecha de nacimiento" value={form.fecha_nacimiento} onChange={(v) => set("fecha_nacimiento", v)} />
@@ -1936,12 +1936,12 @@ function ModuloDetenidos({ perfil, detenidoInicial, onDetenidoInicialUsado }) {
           </Seccion>
 
           {mensaje && (
-            <div style={{ background: mensaje.tipo === "ok" ? "#0f2a1a" : "#2a0f0f", border: `1px solid ${mensaje.tipo === "ok" ? "#22c55e44" : "#ef444444"}`, borderRadius: 8, padding: 12, marginBottom: 16, color: mensaje.tipo === "ok" ? "#4ade80" : "#f87171", fontSize: 13 }}>
+            <div style={{ background: mensaje.tipo === "ok" ? "#e1f5ee" : "#fcebeb", border: `1px solid ${mensaje.tipo === "ok" ? "#22c55e44" : "#ef444444"}`, borderRadius: 8, padding: 12, marginBottom: 16, color: mensaje.tipo === "ok" ? "#0f6e56" : "#791f1f", fontSize: 13 }}>
               {mensaje.texto}
             </div>
           )}
 
-          <button onClick={guardar} disabled={guardando} style={{ width: "100%", background: guardando ? "#1a3050" : "linear-gradient(135deg,#1a4fa0,#0d3070)", border: "none", borderRadius: 9, padding: 14, color: "#e8f4ff", fontSize: 14, fontWeight: 700, cursor: guardando ? "default" : "pointer", letterSpacing: 1 }}>
+          <button onClick={guardar} disabled={guardando} style={{ width: "100%", background: guardando ? "#d9dee5" : "linear-gradient(135deg,#001a4d,#001237)", border: "none", borderRadius: 9, padding: 14, color: "#ffffff", fontSize: 14, fontWeight: 700, cursor: guardando ? "default" : "pointer", letterSpacing: 1 }}>
             {guardando ? "GUARDANDO…" : "GUARDAR DETENIDO Y CONTINUAR"}
           </button>
         </>
@@ -1962,34 +1962,34 @@ function ModuloDetenidos({ perfil, detenidoInicial, onDetenidoInicialUsado }) {
                   <div key={c} style={{ background: SEMAFORO[c].bg, border: `1px solid ${SEMAFORO[c].border}`, borderRadius: 8, padding: "6px 12px", display: "flex", alignItems: "center", gap: 6 }}>
                     <span style={{ width: 8, height: 8, borderRadius: "50%", background: SEMAFORO[c].dot }} />
                     <span style={{ color: SEMAFORO[c].texto, fontSize: 11, fontWeight: 700 }}>{count}</span>
-                    <span style={{ color: "#8a9ab0", fontSize: 10 }}>{etiquetas[c]}</span>
+                    <span style={{ color: "#7c8494", fontSize: 10 }}>{etiquetas[c]}</span>
                   </div>
                 );
               })}
             </div>
           )}
           <input value={busqueda} onChange={(e) => setBusqueda(e.target.value)} placeholder="Buscar por nombre, alias, delito…"
-            style={{ background: "#0c1a27", border: "1px solid #1e3a5f", borderRadius: 8, padding: "10px 14px", color: "#d0e4f4", fontSize: 13, width: "100%", outline: "none", boxSizing: "border-box", marginBottom: 14 }} />
+            style={{ background: "#ffffff", border: "1px solid #c3cbd6", borderRadius: 8, padding: "10px 14px", color: "#33394d", fontSize: 13, width: "100%", outline: "none", boxSizing: "border-box", marginBottom: 14 }} />
           {cargando ? (
-            <div style={{ textAlign: "center", padding: 40, color: "#5a7a9a" }}>Cargando desde Supabase…</div>
+            <div style={{ textAlign: "center", padding: 40, color: "#6b7280" }}>Cargando desde Supabase…</div>
           ) : listaFiltrada.length === 0 ? (
-            <div style={{ textAlign: "center", padding: 40, color: "#5a7a9a" }}>No hay detenidos registrados aún.</div>
+            <div style={{ textAlign: "center", padding: 40, color: "#6b7280" }}>No hay detenidos registrados aún.</div>
           ) : (
             listaFiltrada.map((d) => (
-              <div key={d.id} onClick={() => setDetenidoActivo(d)} style={{ background: "#0c1a27", border: "1px solid #1a3050", borderRadius: 10, padding: 14, marginBottom: 10, cursor: "pointer" }}>
+              <div key={d.id} onClick={() => setDetenidoActivo(d)} style={{ background: "#ffffff", border: "1px solid #d9dee5", borderRadius: 10, padding: 14, marginBottom: 10, cursor: "pointer" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                   <div>
-                    <div style={{ color: "#e8f4ff", fontSize: 15, fontWeight: 700 }}>{d.nombre}</div>
+                    <div style={{ color: "#1a1a2e", fontSize: 15, fontWeight: 700 }}>{d.nombre}</div>
                     <div style={{ color: "#f59e0b", fontSize: 12 }}>{d.alias}</div>
                   </div>
                   <SemaforoBadge detenido={d} />
                 </div>
-                <div style={{ color: "#c8daea", fontSize: 12, marginTop: 6 }}>{d.delito} · {d.region} · {d.fecha_deteccion}</div>
+                <div style={{ color: "#4a5268", fontSize: 12, marginTop: 6 }}>{d.delito} · {d.region} · {d.fecha_deteccion}</div>
                 {d.fecha_limite_48h && (
-                  <div style={{ color: "#5a7a9a", fontSize: 11, marginTop: 4 }}>⏱ {tiempoRestanteTexto(d.fecha_limite_48h)}</div>
+                  <div style={{ color: "#6b7280", fontSize: 11, marginTop: 4 }}>⏱ {tiempoRestanteTexto(d.fecha_limite_48h)}</div>
                 )}
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginTop: 6 }}>
-                  {d.registrado_por && <div style={{ color: "#5a7a9a", fontSize: 11 }}>Registrado por: {d.registrado_por}</div>}
+                  {d.registrado_por && <div style={{ color: "#6b7280", fontSize: 11 }}>Registrado por: {d.registrado_por}</div>}
                   <BotonMapa latitud={d.latitud} longitud={d.longitud} compacto />
                 </div>
               </div>
@@ -2023,7 +2023,7 @@ export default function App() {
   const [tabApp, setTabApp] = useState("detenidos");
   const [detenidoParaAbrir, setDetenidoParaAbrir] = useState(null);
 
-  if (cargandoSesion) return <div style={{ minHeight: "100vh", background: "#070f1a", display: "flex", alignItems: "center", justifyContent: "center", color: "#5a7a9a" }}>Cargando…</div>;
+  if (cargandoSesion) return <div style={{ minHeight: "100vh", background: "#f4f6f9", display: "flex", alignItems: "center", justifyContent: "center", color: "#6b7280" }}>Cargando…</div>;
   if (!sesion) return <Auth />;
 
   const puedeVerDashboard = perfil && ["coordinador", "regional", "mando"].includes(perfil.rol);
@@ -2034,33 +2034,33 @@ export default function App() {
   };
 
   return (
-    <div style={{ minHeight: "100vh", background: "#070f1a", fontFamily: "'Trebuchet MS', sans-serif", color: "#c8daea" }}>
-      <div style={{ background: "linear-gradient(180deg,#0a1830 0%,#070f1a 100%)", borderBottom: "1px solid #1a3050", padding: "12px 20px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+    <div style={{ minHeight: "100vh", background: "#f4f6f9", fontFamily: "'Trebuchet MS', sans-serif", color: "#4a5268" }}>
+      <div style={{ background: "#001a4d", borderBottom: "3px solid #b69054", padding: "12px 20px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <div style={{ width: 38, height: 38, background: "linear-gradient(135deg,#7f1d1d,#1a4fa0)", borderRadius: 9, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>🛡️</div>
+          <div style={{ width: 38, height: 38, background: "#ffffff", border: "2px solid #b69054", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>🛡️</div>
           <div>
-            <div style={{ color: "#e8f4ff", fontSize: 14, fontWeight: 700 }}>FGE GUERRERO — SISTEMA MINISTERIAL</div>
-            <div style={{ color: "#4a9eff", fontSize: 9, letterSpacing: 2 }}>INDIVIDUALIZACIÓN DE DETENIDOS</div>
+            <div style={{ color: "#ffffff", fontSize: 14, fontWeight: 700 }}>FGE GUERRERO — SISTEMA MINISTERIAL</div>
+            <div style={{ color: "#b69054", fontSize: 9, letterSpacing: 2 }}>INDIVIDUALIZACIÓN DE DETENIDOS</div>
           </div>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           {perfil && (
             <div style={{ textAlign: "right" }}>
-              <div style={{ color: "#e8f4ff", fontSize: 12, fontWeight: 600 }}>{perfil.nombre_completo}</div>
-              <span style={{ background: (rolColor[perfil.rol] || "#5a7a9a") + "22", color: rolColor[perfil.rol] || "#5a7a9a", border: `1px solid ${(rolColor[perfil.rol] || "#5a7a9a")}55`, borderRadius: 4, padding: "1px 8px", fontSize: 10, fontWeight: 700 }}>
+              <div style={{ color: "#ffffff", fontSize: 12, fontWeight: 600 }}>{perfil.nombre_completo}</div>
+              <span style={{ background: (rolColor[perfil.rol] || "#6b7280") + "22", color: rolColor[perfil.rol] || "#6b7280", border: `1px solid ${(rolColor[perfil.rol] || "#6b7280")}55`, borderRadius: 4, padding: "1px 8px", fontSize: 10, fontWeight: 700 }}>
                 {rolLabel[perfil.rol] || perfil.rol}
               </span>
             </div>
           )}
-          <button onClick={cerrarSesion} style={{ background: "#1a0a0a", border: "1px solid #ef444433", borderRadius: 7, padding: "6px 12px", color: "#ef4444", fontSize: 11, fontWeight: 700, cursor: "pointer" }}>SALIR</button>
+          <button onClick={cerrarSesion} style={{ background: "transparent", border: "1px solid rgba(255,255,255,0.4)", borderRadius: 7, padding: "6px 12px", color: "#ffffff", fontSize: 11, fontWeight: 700, cursor: "pointer" }}>SALIR</button>
         </div>
       </div>
 
-      <div style={{ background: "#08111e", borderBottom: "1px solid #1a3050", padding: "0 20px", display: "flex", gap: 4 }}>
-        <button onClick={() => setTabApp("busqueda")} style={{ background: "none", border: "none", borderBottom: tabApp === "busqueda" ? "2px solid #4a9eff" : "2px solid transparent", padding: "12px 14px", color: tabApp === "busqueda" ? "#e8f4ff" : "#5a7a9a", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>🔍 Búsqueda</button>
-        <button onClick={() => setTabApp("detenidos")} style={{ background: "none", border: "none", borderBottom: tabApp === "detenidos" ? "2px solid #4a9eff" : "2px solid transparent", padding: "12px 14px", color: tabApp === "detenidos" ? "#e8f4ff" : "#5a7a9a", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>🚔 Detenidos</button>
+      <div style={{ background: "#eef1f6", borderBottom: "1px solid #d9dee5", padding: "0 20px", display: "flex", gap: 4 }}>
+        <button onClick={() => setTabApp("busqueda")} style={{ background: "none", border: "none", borderBottom: tabApp === "busqueda" ? "2px solid #001a4d" : "2px solid transparent", padding: "12px 14px", color: tabApp === "busqueda" ? "#1a1a2e" : "#6b7280", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>🔍 Búsqueda</button>
+        <button onClick={() => setTabApp("detenidos")} style={{ background: "none", border: "none", borderBottom: tabApp === "detenidos" ? "2px solid #001a4d" : "2px solid transparent", padding: "12px 14px", color: tabApp === "detenidos" ? "#1a1a2e" : "#6b7280", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>🚔 Detenidos</button>
         {puedeVerDashboard && (
-          <button onClick={() => setTabApp("dashboard")} style={{ background: "none", border: "none", borderBottom: tabApp === "dashboard" ? "2px solid #4a9eff" : "2px solid transparent", padding: "12px 14px", color: tabApp === "dashboard" ? "#e8f4ff" : "#5a7a9a", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>📊 Dashboard</button>
+          <button onClick={() => setTabApp("dashboard")} style={{ background: "none", border: "none", borderBottom: tabApp === "dashboard" ? "2px solid #001a4d" : "2px solid transparent", padding: "12px 14px", color: tabApp === "dashboard" ? "#1a1a2e" : "#6b7280", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>📊 Dashboard</button>
         )}
       </div>
 
