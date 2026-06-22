@@ -2240,11 +2240,13 @@ export default function App() {
         {puedeVerDashboard && (
           <button onClick={() => setTabApp("dashboard")} style={{ background: "none", border: "none", borderBottom: tabApp === "dashboard" ? "2px solid #001a4d" : "2px solid transparent", padding: "12px 14px", color: tabApp === "dashboard" ? "#1a1a2e" : "#6b7280", fontSize: 12, fontWeight: 700, cursor: "pointer" }}><span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}><BarChart3 size={14} />Dashboard</span></button>
         )}
+<button onClick={() => setTabApp("historico")} style={{ background: "none", borderBottom: tabApp === "historico" ? "2px solid #001a4d" : "2px solid transparent", padding: "12px 14px", cursor: "pointer", fontWeight: 600, fontSize: 13 }}>Histórico</button>
+        
       </div>
-
       <div style={{ padding: 20, maxWidth: tabApp === "dashboard" ? 1000 : 800, margin: "0 auto" }}>
         {tabApp === "busqueda" && <BusquedaOperativa perfil={perfil} onAbrirDetenido={abrirDesdeListaBusqueda} />}
         {tabApp === "dashboard" && puedeVerDashboard && <DashboardMandos perfil={perfil} />}
+        {tabApp === "historico" && <DashboardHistorico />}
         {tabApp === "detenidos" && <ModuloDetenidos perfil={perfil} detenidoInicial={detenidoParaAbrir} onDetenidoInicialUsado={() => setDetenidoParaAbrir(null)} />}
       </div>
     </div>
