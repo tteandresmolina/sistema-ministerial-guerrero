@@ -2,18 +2,41 @@
 import { useMemo } from 'react';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
-  PieChart, Pie, Cell, AreaChart, Area, CartesianGrid, Legend,
+  PieChart, Pie, Cell, AreaChart, Area, CartesianGrid,
 } from 'recharts';
 import {
   useDetenidosDashboard,
   ROL_LABELS,
 } from '../hooks/useDetenidosDashboard';
+import {
+  BarChart3, Shield, MapPin, Clock, AlertTriangle, Globe,
+  RefreshCw, Filter, Calendar, ChevronDown,
+} from 'lucide-react';
 
-// ─── Paleta ──────────────────────────────────────────────────
-const COLORES_REGION = [
-  '#2563eb','#0891b2','#7c3aed','#db2777',
-  '#ea580c','#65a30d','#d97706','#6366f1',
-];
+// ─── Paleta del sistema ──────────────────────────────────────
+const C = {
+  azulOscuro:   '#001a4d',
+  azulMedio:    '#002b80',
+  azulClaro:    '#e8eef7',
+  dorado:       '#b69054',
+  doradoClaro:  '#f5edd8',
+  blanco:       '#ffffff',
+  fondo:        '#f0f2f5',
+  borde:        '#d9dee5',
+  textoFuerte:  '#1a1a2e',
+  textoNormal:  '#4a5268',
+  textoSuave:   '#8892a4',
+  verde:        '#22c55e',
+  verdeClaro:   '#e1f5ee',
+  rojo:         '#ef4444',
+  rojoClaro:    '#fde8e8',
+  amarillo:     '#f59e0b',
+  amarilloClaro:'#fef3c7',
+  gris:         '#94a3b8',
+  grisClaro:    '#f1f5f9',
+};
+
+const COLORES_REGION = ['#001a4d','#0369a1','#7c3aed','#b69054','#ea580c','#059669','#d97706','#6366f1'];
 
 // ─── Componente principal ────────────────────────────────────
 export default function DashboardHistorico() {
@@ -51,426 +74,417 @@ export default function DashboardHistorico() {
   }, [metricas.porRegion, perfil]);
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* ─── Header ─────────────────────────────────────── */}
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <div>
-              <h1 className="text-xl font-semibold text-gray-900">
-                Dashboard Histórico
-              </h1>
-              {perfil && (
-                <p className="text-sm text-gray-500 mt-0.5">
-                  {perfil.nombre_completo}
-                  <span className="mx-1.5">·</span>
-                  {ROL_LABELS[perfil.rol] || perfil.rol}
-                  {!esRolSuperior && perfil.region && (
-                    <span className="ml-1.5 inline-flex items-center gap-1 text-blue-600 font-medium">
-                      — {perfil.region}
-                      <span className="text-[10px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full font-semibold">
-                        Otras regiones: solo datos generales
-                      </span>
-                    </span>
-                  )}
-                </p>
-              )}
-            </div>
+    <div style={{ minHeight: '100vh', background: C.fondo, fontFamily: "'Segoe UI', system-ui, sans-serif" }}>
 
-            {/* ─── Filtros ─────────────────────────────── */}
-            <div className="flex flex-wrap items-center gap-2">
+      {/* ─── Header ─────────────────────────────────────── */}
+      <div style={{
+        background: C.azulOscuro,
+        padding: '20px 24px',
+        borderRadius: '0 0 12px 12px',
+        marginBottom: 20,
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <BarChart3 size={22} color={C.dorado} strokeWidth={2} />
+              <span style={{ color: C.blanco, fontSize: 18, fontWeight: 700, letterSpacing: 0.5 }}>
+                Dashboard Histórico
+              </span>
+            </div>
+            {perfil && (
+              <div style={{ color: C.gris, fontSize: 12, marginTop: 6, display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                <Shield size={13} color={C.dorado} />
+                <span style={{ color: C.doradoClaro }}>{perfil.nombre_completo}</span>
+                <span style={{ color: C.gris }}>·</span>
+                <span style={{ color: C.dorado, fontWeight: 600 }}>{ROL_LABELS[perfil.rol] || perfil.rol}</span>
+                {!esRolSuperior && perfil.region && (
+                  <>
+                    <span style={{ color: C.gris }}>·</span>
+                    <span style={{ color: C.blanco }}>{perfil.region}</span>
+                    <span style={{
+                      background: 'rgba(182,144,84,0.2)',
+                      color: C.dorado,
+                      fontSize: 10,
+                      padding: '2px 8px',
+                      borderRadius: 10,
+                      fontWeight: 600,
+                    }}>
+                      Otras regiones: datos generales
+                    </span>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* ─── Filtros ─────────────────────────────── */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+            <div style={{ position: 'relative' }}>
+              <Filter size={13} color={C.gris} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)' }} />
               <select
                 value={tipoPeriodo}
                 onChange={(e) => setTipoPeriodo(e.target.value)}
-                className="text-sm border border-gray-300 rounded-lg px-3 py-1.5 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                style={{
+                  fontSize: 12, border: `1px solid rgba(255,255,255,0.15)`, borderRadius: 8,
+                  padding: '7px 12px 7px 30px', background: 'rgba(255,255,255,0.08)', color: C.blanco,
+                  cursor: 'pointer', outline: 'none', appearance: 'none',
+                }}
               >
-                <option value="quincena1">Quincena 1 (1–15)</option>
-                <option value="quincena2">Quincena 2 (16–fin)</option>
-                <option value="mes">Mes completo</option>
-                <option value="anio">Año completo</option>
+                <option value="quincena1" style={{ color: '#000' }}>Quincena 1 (1–15)</option>
+                <option value="quincena2" style={{ color: '#000' }}>Quincena 2 (16–fin)</option>
+                <option value="mes" style={{ color: '#000' }}>Mes completo</option>
+                <option value="anio" style={{ color: '#000' }}>Año completo</option>
               </select>
+            </div>
 
+            <div style={{ position: 'relative' }}>
+              <Calendar size={13} color={C.gris} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)' }} />
               {tipoPeriodo !== 'anio' ? (
                 <input
                   type="month"
                   value={fechaRef}
                   onChange={(e) => setFechaRef(e.target.value)}
-                  className="text-sm border border-gray-300 rounded-lg px-3 py-1.5 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  style={{
+                    fontSize: 12, border: `1px solid rgba(255,255,255,0.15)`, borderRadius: 8,
+                    padding: '7px 12px 7px 30px', background: 'rgba(255,255,255,0.08)', color: C.blanco,
+                    outline: 'none',
+                  }}
                 />
               ) : (
                 <input
                   type="number"
-                  min="2020"
-                  max="2030"
+                  min="2020" max="2030"
                   value={fechaRef.split('-')[0]}
                   onChange={(e) => setFechaRef(`${e.target.value}-01`)}
-                  className="text-sm border border-gray-300 rounded-lg px-3 py-1.5 bg-white w-24 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  style={{
+                    fontSize: 12, border: `1px solid rgba(255,255,255,0.15)`, borderRadius: 8,
+                    padding: '7px 12px 7px 30px', background: 'rgba(255,255,255,0.08)', color: C.blanco,
+                    width: 90, outline: 'none',
+                  }}
                 />
               )}
-
-              <button
-                onClick={recargar}
-                disabled={loading}
-                className="text-sm px-4 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors font-medium"
-              >
-                {loading ? 'Cargando…' : 'Actualizar'}
-              </button>
             </div>
-          </div>
 
-          <div className="mt-2 flex items-center gap-2">
-            <span className="inline-block text-xs font-medium bg-blue-50 text-blue-700 px-2.5 py-1 rounded-full">
-              {rango.label}
-            </span>
-            {!esRolSuperior && (
-              <span className="inline-block text-xs font-medium bg-gray-100 text-gray-600 px-2.5 py-1 rounded-full">
-                Incluye historial de otras regiones
-              </span>
-            )}
+            <button
+              onClick={recargar}
+              disabled={loading}
+              style={{
+                fontSize: 12, padding: '7px 16px', background: C.dorado, color: C.blanco,
+                border: 'none', borderRadius: 8, cursor: loading ? 'wait' : 'pointer',
+                fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6,
+                opacity: loading ? 0.6 : 1, transition: 'opacity 0.2s',
+              }}
+            >
+              <RefreshCw size={13} style={{ animation: loading ? 'spin 1s linear infinite' : 'none' }} />
+              {loading ? 'Cargando…' : 'Actualizar'}
+            </button>
           </div>
         </div>
-      </header>
+
+        {/* Etiqueta del rango */}
+        <div style={{ marginTop: 12, display: 'flex', gap: 8 }}>
+          <span style={{
+            background: 'rgba(182,144,84,0.15)', color: C.dorado,
+            fontSize: 11, fontWeight: 600, padding: '4px 12px', borderRadius: 20,
+          }}>
+            {rango.label}
+          </span>
+          {!esRolSuperior && (
+            <span style={{
+              background: 'rgba(255,255,255,0.08)', color: C.gris,
+              fontSize: 11, padding: '4px 12px', borderRadius: 20,
+            }}>
+              Incluye historial de otras regiones
+            </span>
+          )}
+        </div>
+      </div>
 
       {/* ─── Contenido ──────────────────────────────────── */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-6">
+      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 16px 40px' }}>
+
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+          <div style={{
+            background: C.rojoClaro, border: `1px solid ${C.rojo}33`, color: C.rojo,
+            padding: '12px 16px', borderRadius: 10, fontSize: 13, marginBottom: 16,
+          }}>
             Error al cargar datos: {error}
           </div>
         )}
 
         {/* ─── Tarjetas resumen ───────────────────────── */}
-        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
-          <TarjetaResumen
-            titulo="Total periodo"
-            valor={metricas.total}
-            icono="📋"
-          />
-          <TarjetaResumen
-            titulo="Mi región"
-            valor={metricas.totalMiRegion}
-            icono="📍"
-            subtexto={perfil?.region}
-          />
-          <TarjetaResumen
-            titulo="Otras regiones"
-            valor={metricas.totalOtraRegion}
-            icono="🌐"
-            subtexto="Datos generales"
-          />
-          <TarjetaResumen
-            titulo="Por vencer (12h)"
-            valor={metricas.alertas.porVencer}
-            icono="⏳"
-            variante={metricas.alertas.porVencer > 0 ? 'alerta' : 'normal'}
-            subtexto="Solo mi región"
-          />
-          <TarjetaResumen
-            titulo="48h vencidas"
-            valor={metricas.alertas.vencidos}
-            icono="🚨"
-            variante={metricas.alertas.vencidos > 0 ? 'critico' : 'normal'}
-            subtexto="Solo mi región"
-          />
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 20 }}>
+          <Tarjeta icono={<BarChart3 size={18} color={C.azulOscuro} />} titulo="Total periodo" valor={metricas.total} color={C.azulOscuro} bgIcon={C.azulClaro} />
+          <Tarjeta icono={<MapPin size={18} color={C.dorado} />} titulo="Mi región" valor={metricas.totalMiRegion} color={C.dorado} bgIcon={C.doradoClaro} subtexto={perfil?.region} />
+          <Tarjeta icono={<Globe size={18} color={C.azulMedio} />} titulo="Otras regiones" valor={metricas.totalOtraRegion} color={C.azulMedio} bgIcon={C.azulClaro} subtexto="Datos generales" />
+          <Tarjeta icono={<Clock size={18} color={C.amarillo} />} titulo="Por vencer (12h)" valor={metricas.alertas.porVencer} color={C.amarillo} bgIcon={C.amarilloClaro} variante={metricas.alertas.porVencer > 0 ? 'alerta' : 'normal'} />
+          <Tarjeta icono={<AlertTriangle size={18} color={C.rojo} />} titulo="48h vencidas" valor={metricas.alertas.vencidos} color={C.rojo} bgIcon={C.rojoClaro} variante={metricas.alertas.vencidos > 0 ? 'critico' : 'normal'} />
         </div>
 
         {/* ─── Gráficas principales ───────────────────── */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 12, marginBottom: 20 }}>
           {/* Tendencia temporal */}
-          <div className="lg:col-span-2 bg-white rounded-xl border border-gray-200 p-5">
-            <h2 className="text-sm font-semibold text-gray-700 mb-4">
-              Detenciones por día — todas las regiones visibles
-            </h2>
+          <Panel titulo="Detenciones por día" icono={<BarChart3 size={14} color={C.dorado} />}>
             {metricas.serieTemporal.length > 0 ? (
-              <ResponsiveContainer width="100%" height={260}>
+              <ResponsiveContainer width="100%" height={240}>
                 <AreaChart data={metricas.serieTemporal}>
                   <defs>
                     <linearGradient id="gradArea" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#2563eb" stopOpacity={0.15} />
-                      <stop offset="95%" stopColor="#2563eb" stopOpacity={0} />
+                      <stop offset="5%" stopColor={C.azulOscuro} stopOpacity={0.15} />
+                      <stop offset="95%" stopColor={C.azulOscuro} stopOpacity={0} />
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                  <XAxis
-                    dataKey="fecha"
-                    tick={{ fontSize: 11, fill: '#64748b' }}
-                    tickFormatter={(v) => {
-                      const d = new Date(v + 'T00:00:00');
-                      return `${d.getDate()}/${d.getMonth() + 1}`;
-                    }}
+                  <CartesianGrid strokeDasharray="3 3" stroke={C.grisClaro} />
+                  <XAxis dataKey="fecha" tick={{ fontSize: 10, fill: C.textoSuave }}
+                    tickFormatter={(v) => { const d = new Date(v + 'T00:00:00'); return `${d.getDate()}/${d.getMonth()+1}`; }}
                   />
-                  <YAxis tick={{ fontSize: 11, fill: '#64748b' }} allowDecimals={false} />
-                  <Tooltip
-                    contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid #e2e8f0' }}
-                    labelFormatter={(v) => {
-                      const d = new Date(v + 'T00:00:00');
-                      return d.toLocaleDateString('es-MX', {
-                        weekday: 'short', day: 'numeric', month: 'short',
-                      });
-                    }}
+                  <YAxis tick={{ fontSize: 10, fill: C.textoSuave }} allowDecimals={false} />
+                  <Tooltip contentStyle={{ fontSize: 11, borderRadius: 8, border: `1px solid ${C.borde}` }}
+                    labelFormatter={(v) => { const d = new Date(v+'T00:00:00'); return d.toLocaleDateString('es-MX',{weekday:'short',day:'numeric',month:'short'}); }}
                   />
-                  <Area
-                    type="monotone"
-                    dataKey="cantidad"
-                    stroke="#2563eb"
-                    strokeWidth={2}
-                    fill="url(#gradArea)"
-                    name="Detenciones"
-                  />
+                  <Area type="monotone" dataKey="cantidad" stroke={C.azulOscuro} strokeWidth={2} fill="url(#gradArea)" name="Detenciones" />
                 </AreaChart>
               </ResponsiveContainer>
-            ) : (
-              <EstadoVacio loading={loading} />
-            )}
-          </div>
+            ) : <Vacio loading={loading} />}
+          </Panel>
 
           {/* Pie de estatus */}
-          <div className="bg-white rounded-xl border border-gray-200 p-5">
-            <h2 className="text-sm font-semibold text-gray-700 mb-4">Por estatus</h2>
+          <Panel titulo="Por estatus" icono={<Shield size={14} color={C.dorado} />}>
             {dataPie.length > 0 ? (
               <>
-                <ResponsiveContainer width="100%" height={180}>
+                <ResponsiveContainer width="100%" height={160}>
                   <PieChart>
-                    <Pie
-                      data={dataPie}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={45}
-                      outerRadius={75}
-                      dataKey="value"
-                      strokeWidth={2}
-                      stroke="#fff"
-                    >
-                      {dataPie.map((entry, i) => (
-                        <Cell key={i} fill={entry.color} />
-                      ))}
+                    <Pie data={dataPie} cx="50%" cy="50%" innerRadius={40} outerRadius={65} dataKey="value" strokeWidth={2} stroke={C.blanco}>
+                      {dataPie.map((entry, i) => <Cell key={i} fill={entry.color} />)}
                     </Pie>
-                    <Tooltip contentStyle={{ fontSize: 12, borderRadius: 8 }} />
+                    <Tooltip contentStyle={{ fontSize: 11, borderRadius: 8 }} />
                   </PieChart>
                 </ResponsiveContainer>
-                <div className="mt-3 space-y-1.5">
+                <div style={{ marginTop: 8 }}>
                   {dataPie.map((item, i) => (
-                    <div key={i} className="flex items-center justify-between text-sm">
-                      <span className="flex items-center gap-2">
-                        <span
-                          className="w-2.5 h-2.5 rounded-full"
-                          style={{ backgroundColor: item.color }}
-                        />
-                        <span className="text-gray-600">{item.name}</span>
+                    <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '4px 0', fontSize: 12 }}>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <span style={{ width: 8, height: 8, borderRadius: '50%', background: item.color, display: 'inline-block' }} />
+                        <span style={{ color: C.textoNormal }}>{item.name}</span>
                       </span>
-                      <span className="font-semibold text-gray-900">{item.value}</span>
+                      <span style={{ fontWeight: 700, color: C.textoFuerte }}>{item.value}</span>
                     </div>
                   ))}
                 </div>
               </>
-            ) : (
-              <EstadoVacio loading={loading} />
-            )}
-          </div>
+            ) : <Vacio loading={loading} />}
+          </Panel>
         </div>
 
         {/* ─── Regiones + Top delitos ─────────────────── */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 20 }}>
           {/* Por región */}
-          <div className="bg-white rounded-xl border border-gray-200 p-5">
-            <h2 className="text-sm font-semibold text-gray-700 mb-4">Por región</h2>
+          <Panel titulo="Por región" icono={<MapPin size={14} color={C.dorado} />}>
             {dataRegiones.length > 0 ? (
-              <ResponsiveContainer width="100%" height={280}>
-                <BarChart data={dataRegiones} layout="vertical" margin={{ left: 10 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" horizontal={false} />
-                  <XAxis type="number" tick={{ fontSize: 11, fill: '#64748b' }} allowDecimals={false} />
-                  <YAxis dataKey="name" type="category" tick={{ fontSize: 11, fill: '#64748b' }} width={130} />
-                  <Tooltip contentStyle={{ fontSize: 12, borderRadius: 8 }} />
-                  <Bar dataKey="cantidad" radius={[0, 4, 4, 0]} name="Detenciones">
-                    {dataRegiones.map((entry, i) => (
-                      <Cell
-                        key={i}
-                        fill={entry.esMia ? '#2563eb' : '#94a3b8'}
-                        fillOpacity={entry.esMia ? 1 : 0.6}
-                      />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            ) : (
-              <EstadoVacio loading={loading} />
-            )}
-            {!esRolSuperior && (
-              <div className="mt-3 flex items-center gap-3 text-xs text-gray-500">
-                <span className="flex items-center gap-1.5">
-                  <span className="w-3 h-3 rounded-sm bg-blue-600" /> Mi región (acceso completo)
-                </span>
-                <span className="flex items-center gap-1.5">
-                  <span className="w-3 h-3 rounded-sm bg-gray-400 opacity-60" /> Otras (datos generales)
-                </span>
-              </div>
-            )}
-          </div>
+              <>
+                <ResponsiveContainer width="100%" height={240}>
+                  <BarChart data={dataRegiones} layout="vertical" margin={{ left: 10 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke={C.grisClaro} horizontal={false} />
+                    <XAxis type="number" tick={{ fontSize: 10, fill: C.textoSuave }} allowDecimals={false} />
+                    <YAxis dataKey="name" type="category" tick={{ fontSize: 10, fill: C.textoSuave }} width={120} />
+                    <Tooltip contentStyle={{ fontSize: 11, borderRadius: 8 }} />
+                    <Bar dataKey="cantidad" radius={[0, 4, 4, 0]} name="Detenciones">
+                      {dataRegiones.map((entry, i) => (
+                        <Cell key={i} fill={entry.esMia ? C.azulOscuro : C.gris} fillOpacity={entry.esMia ? 1 : 0.5} />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+                {!esRolSuperior && (
+                  <div style={{ display: 'flex', gap: 16, marginTop: 8, fontSize: 10, color: C.textoSuave }}>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                      <span style={{ width: 10, height: 10, borderRadius: 2, background: C.azulOscuro }} /> Mi región (completo)
+                    </span>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                      <span style={{ width: 10, height: 10, borderRadius: 2, background: C.gris, opacity: 0.5 }} /> Otras (generales)
+                    </span>
+                  </div>
+                )}
+              </>
+            ) : <Vacio loading={loading} />}
+          </Panel>
 
           {/* Top delitos */}
-          <div className="bg-white rounded-xl border border-gray-200 p-5">
-            <h2 className="text-sm font-semibold text-gray-700 mb-4">Delitos más frecuentes</h2>
+          <Panel titulo="Delitos más frecuentes" icono={<AlertTriangle size={14} color={C.dorado} />}>
             {metricas.topDelitos.length > 0 ? (
-              <div className="space-y-3">
+              <div>
                 {metricas.topDelitos.map((d, i) => {
-                  const pct = metricas.total > 0
-                    ? Math.round((d.cantidad / metricas.total) * 100) : 0;
+                  const pct = metricas.total > 0 ? Math.round((d.cantidad / metricas.total) * 100) : 0;
                   return (
-                    <div key={i}>
-                      <div className="flex items-center justify-between text-sm mb-1">
-                        <span className="text-gray-700 truncate pr-4">{d.nombre}</span>
-                        <span className="text-gray-500 whitespace-nowrap">
-                          {d.cantidad} <span className="text-gray-400">({pct}%)</span>
+                    <div key={i} style={{ marginBottom: 10 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 4 }}>
+                        <span style={{ color: C.textoNormal, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '70%' }}>{d.nombre}</span>
+                        <span style={{ color: C.textoSuave, whiteSpace: 'nowrap' }}>
+                          {d.cantidad} <span style={{ color: C.gris }}>({pct}%)</span>
                         </span>
                       </div>
-                      <div className="w-full bg-gray-100 rounded-full h-2">
-                        <div
-                          className="h-2 rounded-full transition-all duration-500"
-                          style={{
-                            width: `${pct}%`,
-                            backgroundColor: COLORES_REGION[i % COLORES_REGION.length],
-                          }}
-                        />
+                      <div style={{ width: '100%', background: C.grisClaro, borderRadius: 10, height: 6 }}>
+                        <div style={{
+                          height: 6, borderRadius: 10, transition: 'width 0.5s',
+                          width: `${pct}%`, background: COLORES_REGION[i % COLORES_REGION.length],
+                        }} />
                       </div>
                     </div>
                   );
                 })}
               </div>
-            ) : (
-              <EstadoVacio loading={loading} />
-            )}
-          </div>
+            ) : <Vacio loading={loading} />}
+          </Panel>
         </div>
 
-        {/* ─── Tabla de últimos detenidos ──────────────── */}
-        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-          <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-gray-700">
-              Últimos registros del periodo
-            </h2>
-            <span className="text-xs text-gray-400">{detenidos.length} registros</span>
-          </div>
-          <div className="overflow-x-auto">
+        {/* ─── Tabla de registros ─────────────────────── */}
+        <Panel titulo={`Últimos registros del periodo`} icono={<Shield size={14} color={C.dorado} />}
+          extra={<span style={{ fontSize: 11, color: C.textoSuave }}>{detenidos.length} registros</span>}>
+          <div style={{ overflowX: 'auto' }}>
             <TablaDetenidos
-              detenidos={detenidos.slice(0, 20)}
+              detenidos={detenidos.slice(0, 25)}
               getEstatus={getEstatus}
               esRolSuperior={esRolSuperior}
               loading={loading}
             />
           </div>
-        </div>
-      </main>
+        </Panel>
+      </div>
+
+      {/* Keyframe para spinner */}
+      <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
     </div>
   );
 }
 
 // ─── Subcomponentes ──────────────────────────────────────────
 
-function TarjetaResumen({ titulo, valor, icono, subtexto, variante = 'normal' }) {
-  const bg = {
-    normal:  'bg-white border-gray-200',
-    alerta:  'bg-amber-50 border-amber-200',
-    critico: 'bg-red-50 border-red-200',
-  };
-  const txt = {
-    normal:  'text-gray-900',
-    alerta:  'text-amber-700',
-    critico: 'text-red-700',
-  };
+function Tarjeta({ icono, titulo, valor, color, bgIcon, subtexto, variante = 'normal' }) {
+  const bordeMap = { normal: C.borde, alerta: '#f59e0b44', critico: '#ef444444' };
+  const bgMap = { normal: C.blanco, alerta: C.amarilloClaro, critico: C.rojoClaro };
   return (
-    <div className={`rounded-xl border p-4 ${bg[variante]}`}>
-      <span className="text-2xl">{icono}</span>
-      <p className={`text-2xl font-bold mt-2 ${txt[variante]}`}>{valor}</p>
-      <p className="text-xs text-gray-500 mt-0.5">{titulo}</p>
-      {subtexto && (
-        <p className="text-[10px] text-gray-400 mt-0.5 truncate">{subtexto}</p>
-      )}
+    <div style={{
+      background: bgMap[variante], border: `1px solid ${bordeMap[variante]}`, borderRadius: 12,
+      padding: 16, display: 'flex', flexDirection: 'column', gap: 8,
+    }}>
+      <div style={{ width: 36, height: 36, borderRadius: 10, background: bgIcon, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        {icono}
+      </div>
+      <div style={{ fontSize: 26, fontWeight: 800, color: color, lineHeight: 1 }}>{valor}</div>
+      <div style={{ fontSize: 11, color: C.textoSuave, fontWeight: 500 }}>{titulo}</div>
+      {subtexto && <div style={{ fontSize: 10, color: C.gris, marginTop: -4 }}>{subtexto}</div>}
+    </div>
+  );
+}
+
+function Panel({ titulo, icono, children, extra }) {
+  return (
+    <div style={{
+      background: C.blanco, border: `1px solid ${C.borde}`, borderRadius: 12,
+      overflow: 'hidden',
+    }}>
+      <div style={{
+        padding: '14px 18px', borderBottom: `1px solid ${C.grisClaro}`,
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          {icono}
+          <span style={{ fontSize: 13, fontWeight: 700, color: C.textoFuerte, letterSpacing: 0.3 }}>{titulo}</span>
+        </div>
+        {extra}
+      </div>
+      <div style={{ padding: 18 }}>
+        {children}
+      </div>
     </div>
   );
 }
 
 function TablaDetenidos({ detenidos, getEstatus, esRolSuperior, loading }) {
-  if (loading) {
-    return <div className="px-5 py-10 text-center text-sm text-gray-400">Cargando…</div>;
-  }
-  if (!detenidos.length) {
-    return <div className="px-5 py-10 text-center text-sm text-gray-400">Sin registros en este periodo</div>;
-  }
+  if (loading) return <div style={{ padding: '40px 0', textAlign: 'center', fontSize: 13, color: C.textoSuave }}>Cargando…</div>;
+  if (!detenidos.length) return <div style={{ padding: '40px 0', textAlign: 'center', fontSize: 13, color: C.textoSuave }}>Sin registros en este periodo</div>;
+
+  const thStyle = {
+    padding: '10px 12px', fontSize: 10, fontWeight: 700, color: C.textoSuave,
+    textTransform: 'uppercase', letterSpacing: 1, textAlign: 'left',
+    borderBottom: `2px solid ${C.grisClaro}`, whiteSpace: 'nowrap',
+    background: C.grisClaro,
+  };
+  const tdBase = { padding: '10px 12px', fontSize: 12, borderBottom: `1px solid ${C.grisClaro}`, verticalAlign: 'middle' };
 
   return (
-    <table className="w-full text-sm">
+    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
       <thead>
-        <tr className="text-left text-xs text-gray-500 uppercase tracking-wider border-b border-gray-100">
-          <th className="px-5 py-3">Nombre</th>
-          <th className="px-5 py-3">Alias</th>
-          <th className="px-5 py-3">Carpeta Inv.</th>
-          <th className="px-5 py-3">Delito</th>
-          <th className="px-5 py-3">Región</th>
-          <th className="px-5 py-3">Fecha</th>
-          <th className="px-5 py-3">Estatus</th>
-          <th className="px-5 py-3">48h</th>
-          <th className="px-5 py-3">Acceso</th>
+        <tr>
+          <th style={thStyle}>Nombre</th>
+          <th style={thStyle}>Alias</th>
+          <th style={thStyle}>Carpeta Inv.</th>
+          <th style={thStyle}>Delito</th>
+          <th style={thStyle}>Región</th>
+          <th style={thStyle}>Fecha</th>
+          <th style={thStyle}>Estatus</th>
+          <th style={thStyle}>48h</th>
+          <th style={thStyle}>Acceso</th>
         </tr>
       </thead>
-      <tbody className="divide-y divide-gray-50">
+      <tbody>
         {detenidos.map((d) => {
           const est = getEstatus(d.estatus_clave);
           const esMia = d.es_mi_region;
           return (
-            <tr
-              key={d.id}
-              className={`transition-colors ${
-                esMia ? 'hover:bg-blue-50/50' : 'hover:bg-gray-50 bg-gray-50/30'
-              }`}
-            >
-              <td className="px-5 py-2.5 font-medium text-gray-900">{d.nombre || '—'}</td>
-              <td className="px-5 py-2.5 text-gray-600">{d.alias || '—'}</td>
-              <td className="px-5 py-2.5 text-gray-600 font-mono text-xs">{d.carpeta_investigacion || '—'}</td>
-              <td className="px-5 py-2.5 text-gray-600 max-w-[200px] truncate">{d.delito || '—'}</td>
-              <td className="px-5 py-2.5">
-                <span className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full ${
-                  esMia
-                    ? 'bg-blue-100 text-blue-700'
-                    : 'bg-gray-100 text-gray-500'
-                }`}>
-                  {esMia && <span className="w-1.5 h-1.5 bg-blue-500 rounded-full" />}
+            <tr key={d.id} style={{ background: esMia ? C.blanco : '#fafbfc' }}>
+              <td style={{ ...tdBase, fontWeight: 600, color: C.textoFuerte }}>{d.nombre || '—'}</td>
+              <td style={{ ...tdBase, color: C.textoNormal }}>{d.alias || '—'}</td>
+              <td style={{ ...tdBase, color: C.textoNormal, fontFamily: 'monospace', fontSize: 11 }}>{d.carpeta_investigacion || '—'}</td>
+              <td style={{ ...tdBase, color: C.textoNormal, maxWidth: 180, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{d.delito || '—'}</td>
+              <td style={tdBase}>
+                <span style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 4,
+                  fontSize: 10, fontWeight: 600, padding: '3px 10px', borderRadius: 20,
+                  background: esMia ? C.azulClaro : C.grisClaro,
+                  color: esMia ? C.azulOscuro : C.textoSuave,
+                  border: esMia ? `1px solid ${C.azulOscuro}22` : `1px solid ${C.borde}`,
+                }}>
+                  {esMia && <span style={{ width: 5, height: 5, borderRadius: '50%', background: C.azulOscuro }} />}
                   {d.region}
                 </span>
               </td>
-              <td className="px-5 py-2.5 text-gray-500 whitespace-nowrap">
+              <td style={{ ...tdBase, color: C.textoSuave, whiteSpace: 'nowrap' }}>
                 {d.fecha_deteccion
-                  ? new Date(d.fecha_deteccion + 'T00:00:00').toLocaleDateString('es-MX', {
-                      day: '2-digit', month: 'short', year: 'numeric',
-                    })
+                  ? new Date(d.fecha_deteccion + 'T00:00:00').toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' })
                   : '—'}
               </td>
-              <td className="px-5 py-2.5">
-                <span
-                  className="inline-block text-xs font-medium px-2 py-0.5 rounded-full"
-                  style={{
-                    backgroundColor: est.color + '20',
-                    color: est.color,
-                  }}
-                >
+              <td style={tdBase}>
+                <span style={{
+                  display: 'inline-block', fontSize: 10, fontWeight: 600,
+                  padding: '3px 10px', borderRadius: 20,
+                  background: est.color + '18', color: est.color,
+                  border: `1px solid ${est.color}33`,
+                }}>
                   {est.nombre}
                 </span>
               </td>
-              <td className="px-5 py-2.5 text-xs text-gray-500">
+              <td style={{ ...tdBase, fontSize: 11, color: C.textoSuave }}>
                 {d.fecha_limite_48h
-                  ? new Date(d.fecha_limite_48h).toLocaleString('es-MX', {
-                      day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit',
-                    })
-                  : (
-                    !esMia && !esRolSuperior
-                      ? <span className="text-gray-300 italic">restringido</span>
-                      : '—'
-                  )}
+                  ? new Date(d.fecha_limite_48h).toLocaleString('es-MX', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })
+                  : (!esMia && !esRolSuperior
+                    ? <span style={{ color: C.gris, fontStyle: 'italic', fontSize: 10 }}>restringido</span>
+                    : '—')
+                }
               </td>
-              <td className="px-5 py-2.5">
+              <td style={tdBase}>
                 {esMia || esRolSuperior ? (
-                  <span className="text-xs text-green-600 font-medium">Completo</span>
+                  <span style={{
+                    fontSize: 10, fontWeight: 700, color: C.verde,
+                    background: C.verdeClaro, padding: '3px 10px', borderRadius: 20,
+                    border: `1px solid ${C.verde}33`,
+                  }}>Completo</span>
                 ) : (
-                  <span className="text-xs text-gray-400">General</span>
+                  <span style={{
+                    fontSize: 10, fontWeight: 600, color: C.textoSuave,
+                    background: C.grisClaro, padding: '3px 10px', borderRadius: 20,
+                    border: `1px solid ${C.borde}`,
+                  }}>General</span>
                 )}
               </td>
             </tr>
@@ -481,9 +495,9 @@ function TablaDetenidos({ detenidos, getEstatus, esRolSuperior, loading }) {
   );
 }
 
-function EstadoVacio({ loading }) {
+function Vacio({ loading }) {
   return (
-    <div className="flex items-center justify-center h-40 text-sm text-gray-400">
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 150, fontSize: 13, color: C.textoSuave }}>
       {loading ? 'Cargando datos…' : 'Sin datos para este periodo'}
     </div>
   );
