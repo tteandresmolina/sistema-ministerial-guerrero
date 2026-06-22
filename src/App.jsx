@@ -8,7 +8,7 @@ import {
   CircleCheck, X, Check, Lock, Link2, Building2, UserCheck,
   Calendar, ImagePlus, Clock, FilePenLine, Camera as CameraIcon, HelpCircle,
 } from "lucide-react";
-
+import DashboardHistorico from './pages/DashboardHistorico';
 // ─── CONSTANTES ───────────────────────────────────────────────────────────────
 const REGIONES = ["Región Centro","Región Montaña","Región Costa Grande","Región Costa Chica","Región Tierra Caliente","Región Acapulco","Región Norte"];
 const COMPLEXIONES = ["Delgada","Regular","Robusta","Obesa"];
