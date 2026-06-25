@@ -9,6 +9,7 @@ import {
   Calendar, ImagePlus, Clock, FilePenLine, Camera as CameraIcon, HelpCircle,
 } from "lucide-react";
 import DashboardHistorico from './pages/DashboardHistorico';
+import Registro911 from './pages/Registro911';
 // ─── CONSTANTES ───────────────────────────────────────────────────────────────
 const REGIONES = ["Región Centro","Región Montaña","Región Costa Grande","Región Costa Chica","Región Tierra Caliente","Región Acapulco","Región Norte"];
 const COMPLEXIONES = ["Delgada","Regular","Robusta","Obesa"];
@@ -2240,7 +2241,9 @@ export default function App() {
         {puedeVerDashboard && (
           <button onClick={() => setTabApp("dashboard")} style={{ background: "none", border: "none", borderBottom: tabApp === "dashboard" ? "2px solid #001a4d" : "2px solid transparent", padding: "12px 14px", color: tabApp === "dashboard" ? "#1a1a2e" : "#6b7280", fontSize: 12, fontWeight: 700, cursor: "pointer" }}><span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}><BarChart3 size={14} />Dashboard</span></button>
         )}
+        <button onClick={() => setTabApp("registro911")} style={{ background: "none", border: "none", borderBottom: tabApp === "registro911" ? "2px solid #001a4d" : "2px solid transparent", padding: "10px 18px", fontWeight: tabApp === "registro911" ? 700 : 500, color: tabApp === "registro911" ? "#001a4d" : "#888", cursor: "pointer", fontSize: 15 }}>Registro 911</button>
 <button onClick={() => setTabApp("historico")} style={{ background: "none", borderBottom: tabApp === "historico" ? "2px solid #001a4d" : "2px solid transparent", padding: "12px 14px", cursor: "pointer", fontWeight: 600, fontSize: 13 }}>Histórico</button>
+        {tabApp === "registro911" && <Registro911 perfil={perfil} />}
         
       </div>
       <div style={{ padding: 20, maxWidth: tabApp === "dashboard" ? 1000 : 800, margin: "0 auto" }}>
