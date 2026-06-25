@@ -2243,13 +2243,14 @@ export default function App() {
         )}
         <button onClick={() => setTabApp("registro911")} style={{ background: "none", border: "none", borderBottom: tabApp === "registro911" ? "2px solid #001a4d" : "2px solid transparent", padding: "10px 18px", fontWeight: tabApp === "registro911" ? 700 : 500, color: tabApp === "registro911" ? "#001a4d" : "#888", cursor: "pointer", fontSize: 15 }}>Registro 911</button>
 <button onClick={() => setTabApp("historico")} style={{ background: "none", borderBottom: tabApp === "historico" ? "2px solid #001a4d" : "2px solid transparent", padding: "12px 14px", cursor: "pointer", fontWeight: 600, fontSize: 13 }}>Histórico</button>
-        {tabApp === "registro911" && <Registro911 perfil={perfil} />}
+
         
       </div>
       <div style={{ padding: 20, maxWidth: tabApp === "dashboard" ? 1000 : 800, margin: "0 auto" }}>
         {tabApp === "busqueda" && <BusquedaOperativa perfil={perfil} onAbrirDetenido={abrirDesdeListaBusqueda} />}
         {tabApp === "dashboard" && puedeVerDashboard && <DashboardMandos perfil={perfil} />}
         {tabApp === "historico" && <DashboardHistorico />}
+        {tabApp === "registro911" && <Registro911 perfil={perfil} />}
         {tabApp === "detenidos" && <ModuloDetenidos perfil={perfil} detenidoInicial={detenidoParaAbrir} onDetenidoInicialUsado={() => setDetenidoParaAbrir(null)} />}
       </div>
     </div>
