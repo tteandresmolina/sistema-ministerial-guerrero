@@ -12,6 +12,7 @@ import DashboardHistorico from './pages/DashboardHistorico';
 import Registro911 from './pages/Registro911';
 import PrimerRespondiente from './pages/PrimerRespondiente';
 import EscenaCrimen from './pages/EscenaCrimen';
+import IndiciosEvidencia from './pages/IndiciosEvidencia';
 // ─── CONSTANTES ───────────────────────────────────────────────────────────────
 const REGIONES = ["Región Centro","Región Montaña","Región Costa Grande","Región Costa Chica","Región Tierra Caliente","Región Acapulco","Región Norte"];
 const COMPLEXIONES = ["Delgada","Regular","Robusta","Obesa"];
@@ -2246,6 +2247,7 @@ export default function App() {
         <button onClick={() => setTabApp("registro911")} style={{ background: "none", border: "none", borderBottom: tabApp === "registro911" ? "2px solid #001a4d" : "2px solid transparent", padding: "10px 18px", fontWeight: tabApp === "registro911" ? 700 : 500, color: tabApp === "registro911" ? "#001a4d" : "#888", cursor: "pointer", fontSize: 15 }}>Registro 911</button>
         <button onClick={() => setTabApp("primerrespondiente")} style={{ background: "none", border: "none", borderBottom: tabApp === "primerrespondiente" ? "2px solid #001a4d" : "2px solid transparent", padding: "10px 18px", fontWeight: tabApp === "primerrespondiente" ? 700 : 500, color: tabApp === "primerrespondiente" ? "#001a4d" : "#888", cursor: "pointer", fontSize: 15 }}>Primer Respondiente</button>
         <button onClick={() => setTabApp("escenacrimen")} style={{ background: "none", border: "none", borderBottom: tabApp === "escenacrimen" ? "2px solid #001a4d" : "2px solid transparent", padding: "10px 18px", fontWeight: tabApp === "escenacrimen" ? 700 : 500, color: tabApp === "escenacrimen" ? "#001a4d" : "#888", cursor: "pointer", fontSize: 15 }}>Escena del Crimen</button>
+        <button onClick={() => setTabApp("indicios")} style={{ background: "none", border: "none", borderBottom: tabApp === "indicios" ? "2px solid #001a4d" : "2px solid transparent", padding: "10px 18px", fontWeight: tabApp === "indicios" ? 700 : 500, color: tabApp === "indicios" ? "#001a4d" : "#888", cursor: "pointer", fontSize: 15 }}>Indicios</button>
 <button onClick={() => setTabApp("historico")} style={{ background: "none", borderBottom: tabApp === "historico" ? "2px solid #001a4d" : "2px solid transparent", padding: "12px 14px", cursor: "pointer", fontWeight: 600, fontSize: 13 }}>Histórico</button>
 
         
@@ -2257,6 +2259,7 @@ export default function App() {
         {tabApp === "registro911" && <Registro911 perfil={perfil} />}
         {tabApp === "primerrespondiente" && <PrimerRespondiente perfil={perfil} />}
         {tabApp === "escenacrimen" && <EscenaCrimen perfil={perfil} />}
+        {tabApp === "indicios" && <IndiciosEvidencia perfil={perfil} />}
         {tabApp === "detenidos" && <ModuloDetenidos perfil={perfil} detenidoInicial={detenidoParaAbrir} onDetenidoInicialUsado={() => setDetenidoParaAbrir(null)} />}
       </div>
     </div>
