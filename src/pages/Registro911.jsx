@@ -2,14 +2,18 @@
 // Tab 1 — Registro 911 (Crime Report Intake)
 // Sistema Ministerial — FGE Guerrero — Módulo 2
 // Fundamento: Modelo Nacional 1.1(a)(ii) — Recepción de denuncias
+// v2 — Mejoras: Detonaciones arma de fuego, Google Maps, Municipios Guerrero,
+//       Formato 24h, Sección fotografías/documentos
 
 import { useState } from 'react';
 import {
   Phone, FileText, MapPin, Clock, AlertTriangle, CheckCircle2,
   Plus, Search, Filter, ChevronDown, ChevronUp, X, Send,
-  Radio, Eye, Shield, RefreshCw, Hash
+  Radio, Eye, Shield, RefreshCw, Hash, ExternalLink, Camera,
+  Upload, Image, Trash2
 } from 'lucide-react';
 import { useRegistros911 } from '../hooks/useRegistros911';
+import { supabase } from '../supabaseClient';
 
 // ═══════════════════════════════════════════════
 // PALETTE
@@ -27,6 +31,93 @@ const COLORS = {
   red: '#dc3545',
   orange: '#fd7e14',
 };
+
+// ═══════════════════════════════════════════════
+// CATÁLOGO DE MUNICIPIOS DE GUERRERO (INEGI Clave 12)
+// ═══════════════════════════════════════════════
+const MUNICIPIOS_GUERRERO = [
+  { clave: '001', nombre: 'Acapulco de Juárez' },
+  { clave: '002', nombre: 'Ahuacuotzingo' },
+  { clave: '003', nombre: 'Ajuchitlán del Progreso' },
+  { clave: '004', nombre: 'Alcozauca de Guerrero' },
+  { clave: '005', nombre: 'Alpoyeca' },
+  { clave: '006', nombre: 'Apaxtla' },
+  { clave: '007', nombre: 'Arcelia' },
+  { clave: '008', nombre: 'Atenango del Río' },
+  { clave: '009', nombre: 'Atlamajalcingo del Monte' },
+  { clave: '010', nombre: 'Atlixtac' },
+  { clave: '011', nombre: 'Atoyac de Álvarez' },
+  { clave: '012', nombre: 'Ayutla de los Libres' },
+  { clave: '013', nombre: 'Azoyú' },
+  { clave: '014', nombre: 'Benito Juárez' },
+  { clave: '015', nombre: 'Buenavista de Cuéllar' },
+  { clave: '016', nombre: 'Coahuayutla de José María Izazaga' },
+  { clave: '017', nombre: 'Cocula' },
+  { clave: '018', nombre: 'Copala' },
+  { clave: '019', nombre: 'Copalillo' },
+  { clave: '020', nombre: 'Copanatoyac' },
+  { clave: '021', nombre: 'Coyuca de Benítez' },
+  { clave: '022', nombre: 'Coyuca de Catalán' },
+  { clave: '023', nombre: 'Cuajinicuilapa' },
+  { clave: '024', nombre: 'Cualác' },
+  { clave: '025', nombre: 'Cuautepec' },
+  { clave: '026', nombre: 'Cuetzala del Progreso' },
+  { clave: '027', nombre: 'Cutzamala de Pinzón' },
+  { clave: '028', nombre: 'Chilapa de Álvarez' },
+  { clave: '029', nombre: 'Chilpancingo de los Bravo' },
+  { clave: '030', nombre: 'Florencio Villarreal' },
+  { clave: '031', nombre: 'General Canuto A. Neri' },
+  { clave: '032', nombre: 'General Heliodoro Castillo' },
+  { clave: '033', nombre: 'Huamuxtitlán' },
+  { clave: '034', nombre: 'Huitzuco de los Figueroa' },
+  { clave: '035', nombre: 'Iguala de la Independencia' },
+  { clave: '036', nombre: 'Igualapa' },
+  { clave: '037', nombre: 'Ixcateopan de Cuauhtémoc' },
+  { clave: '038', nombre: 'Zihuatanejo de Azueta' },
+  { clave: '039', nombre: 'Juan R. Escudero' },
+  { clave: '040', nombre: 'Leonardo Bravo' },
+  { clave: '041', nombre: 'Malinaltepec' },
+  { clave: '042', nombre: 'Mártir de Cuilapan' },
+  { clave: '043', nombre: 'Metlatónoc' },
+  { clave: '044', nombre: 'Mochitlán' },
+  { clave: '045', nombre: 'Olinalá' },
+  { clave: '046', nombre: 'Ometepec' },
+  { clave: '047', nombre: 'Pedro Ascencio Alquisiras' },
+  { clave: '048', nombre: 'Petatlán' },
+  { clave: '049', nombre: 'Pilcaya' },
+  { clave: '050', nombre: 'Pungarabato' },
+  { clave: '051', nombre: 'Quechultenango' },
+  { clave: '052', nombre: 'San Luis Acatlán' },
+  { clave: '053', nombre: 'San Marcos' },
+  { clave: '054', nombre: 'San Miguel Totolapan' },
+  { clave: '055', nombre: 'Taxco de Alarcón' },
+  { clave: '056', nombre: 'Tecoanapa' },
+  { clave: '057', nombre: 'Técpan de Galeana' },
+  { clave: '058', nombre: 'Teloloapan' },
+  { clave: '059', nombre: 'Tepecoacuilco de Trujano' },
+  { clave: '060', nombre: 'Tetipac' },
+  { clave: '061', nombre: 'Tixtla de Guerrero' },
+  { clave: '062', nombre: 'Tlacoachistlahuaca' },
+  { clave: '063', nombre: 'Tlacoapa' },
+  { clave: '064', nombre: 'Tlalchapa' },
+  { clave: '065', nombre: 'Tlalixtaquilla de Maldonado' },
+  { clave: '066', nombre: 'Tlapa de Comonfort' },
+  { clave: '067', nombre: 'Tlapehuala' },
+  { clave: '068', nombre: 'La Unión de Isidoro Montes de Oca' },
+  { clave: '069', nombre: 'Xalpatláhuac' },
+  { clave: '070', nombre: 'Xochihuehuetlán' },
+  { clave: '071', nombre: 'Xochistlahuaca' },
+  { clave: '072', nombre: 'Zapotitlán Tablas' },
+  { clave: '073', nombre: 'Zirándaro' },
+  { clave: '074', nombre: 'Zitlala' },
+  { clave: '075', nombre: 'Eduardo Neri' },
+  { clave: '076', nombre: 'Acatepec' },
+  { clave: '077', nombre: 'Marquelia' },
+  { clave: '078', nombre: 'Cochoapa el Grande' },
+  { clave: '079', nombre: 'José Joaquín de Herrera' },
+  { clave: '080', nombre: 'Juchitán' },
+  { clave: '081', nombre: 'Iliatenco' },
+];
 
 // ═══════════════════════════════════════════════
 // ESTILOS COMUNES
@@ -60,7 +151,6 @@ const styles = {
     color: COLORS.gray,
     margin: '4px 0 0 0',
   },
-  // Stat cards
   statsRow: {
     display: 'grid',
     gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
@@ -95,7 +185,6 @@ const styles = {
     color: COLORS.gray,
     marginTop: '2px',
   },
-  // Buttons
   btnPrimary: {
     backgroundColor: COLORS.darkBlue,
     color: COLORS.white,
@@ -144,7 +233,6 @@ const styles = {
     fontSize: '14px',
     cursor: 'pointer',
   },
-  // Form
   formOverlay: {
     position: 'fixed',
     top: 0,
@@ -253,7 +341,6 @@ const styles = {
     justifyContent: 'flex-end',
     gap: '12px',
   },
-  // Table
   tableContainer: {
     backgroundColor: COLORS.white,
     borderRadius: '12px',
@@ -317,13 +404,11 @@ const styles = {
     fontWeight: '600',
     whiteSpace: 'nowrap',
   },
-  // Empty state
   emptyState: {
     textAlign: 'center',
     padding: '60px 20px',
     color: COLORS.gray,
   },
-  // Detail panel
   detailOverlay: {
     position: 'fixed',
     top: 0,
@@ -411,15 +496,24 @@ const CALIF_INFO = {
   '4': '4 — No evaluable',
 };
 
+// Horas 00–23 para selector de formato 24h obligatorio
+const HORAS_24 = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, '0'));
+const MINUTOS_60 = Array.from({ length: 60 }, (_, i) => String(i).padStart(2, '0'));
+
 function formatDate(dateStr) {
   if (!dateStr) return '—';
   const d = new Date(dateStr + 'T00:00:00');
   return d.toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' });
 }
 
-function formatTime(timeStr) {
+function formatTime24(timeStr) {
   if (!timeStr) return '—';
   return timeStr.substring(0, 5);
+}
+
+function buildGoogleMapsUrl(lat, lng) {
+  if (!lat || !lng) return null;
+  return `https://www.google.com/maps?q=${lat},${lng}`;
 }
 
 // ═══════════════════════════════════════════════
@@ -437,12 +531,17 @@ export default function Registro911({ perfil }) {
   const [filterEstatus, setFilterEstatus] = useState('todos');
   const [saving, setSaving] = useState(false);
   const [mensaje, setMensaje] = useState(null);
+  const [archivos, setArchivos] = useState([]);
+  const [subiendoArchivo, setSubiendoArchivo] = useState(false);
 
-  // Form state
+  const nowHour = String(new Date().getHours()).padStart(2, '0');
+  const nowMin = String(new Date().getMinutes()).padStart(2, '0');
+
   const emptyForm = {
     folio_911: '',
     fecha_reporte: new Date().toISOString().split('T')[0],
-    hora_reporte: new Date().toTimeString().substring(0, 5),
+    hora_reporte_hh: nowHour,
+    hora_reporte_mm: nowMin,
     fuente: '911',
     incidencia_tipo: '',
     incidencia_otro: '',
@@ -450,6 +549,7 @@ export default function Registro911({ perfil }) {
     coordenadas_lat: '',
     coordenadas_lng: '',
     municipio: '',
+    entidad_federativa: 'Guerrero',
     sintesis: '',
     estatus: 'recibido',
     calificacion_fuente: '',
@@ -461,31 +561,102 @@ export default function Registro911({ perfil }) {
     setForm(prev => ({ ...prev, [field]: value }));
   };
 
+  // ── Manejo de archivos (fotos/documentos) ──
+  const handleFileSelect = async (e) => {
+    const files = Array.from(e.target.files);
+    if (files.length === 0) return;
+
+    const maxSize = 5 * 1024 * 1024; // 5MB por archivo (límite Supabase free)
+    const formatosPermitidos = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf', 'video/mp4'];
+
+    for (const file of files) {
+      if (file.size > maxSize) {
+        setMensaje({ tipo: 'error', texto: `"${file.name}" excede el límite de 5MB` });
+        return;
+      }
+      if (!formatosPermitidos.includes(file.type)) {
+        setMensaje({ tipo: 'error', texto: `"${file.name}" — formato no soportado. Use JPG, PNG, PDF o MP4` });
+        return;
+      }
+    }
+
+    setArchivos(prev => [...prev, ...files.map(f => ({
+      file: f,
+      nombre: f.name,
+      tipo: f.type,
+      tamano: f.size,
+      preview: f.type.startsWith('image/') ? URL.createObjectURL(f) : null,
+    }))]);
+  };
+
+  const removeArchivo = (index) => {
+    setArchivos(prev => {
+      const updated = [...prev];
+      if (updated[index].preview) URL.revokeObjectURL(updated[index].preview);
+      updated.splice(index, 1);
+      return updated;
+    });
+  };
+
+  const subirArchivos = async (registroId) => {
+    const urls = [];
+    for (const arch of archivos) {
+      const ext = arch.nombre.split('.').pop();
+      const path = `911/${registroId}/${Date.now()}_${Math.random().toString(36).substr(2, 6)}.${ext}`;
+      const { error: uploadError } = await supabase.storage
+        .from('archivos-911')
+        .upload(path, arch.file);
+      if (!uploadError) {
+        const { data: urlData } = supabase.storage.from('archivos-911').getPublicUrl(path);
+        urls.push({ nombre: arch.nombre, tipo: arch.tipo, tamano: arch.tamano, url: urlData.publicUrl });
+      }
+    }
+    return urls;
+  };
+
   const handleSubmit = async () => {
-    // Validaciones
     if (!form.folio_911.trim()) return setMensaje({ tipo: 'error', texto: 'El folio 911 es obligatorio' });
     if (!form.incidencia_tipo) return setMensaje({ tipo: 'error', texto: 'Selecciona el tipo de incidencia' });
     if (!form.ubicacion_texto.trim()) return setMensaje({ tipo: 'error', texto: 'La ubicación es obligatoria' });
     if (!form.sintesis.trim()) return setMensaje({ tipo: 'error', texto: 'La síntesis del reporte es obligatoria' });
+    if (!form.municipio) return setMensaje({ tipo: 'error', texto: 'Selecciona el municipio' });
 
     setSaving(true);
     setMensaje(null);
 
+    const horaCompleta = `${form.hora_reporte_hh}:${form.hora_reporte_mm}`;
+
     const dataToSave = {
-      ...form,
+      folio_911: form.folio_911,
+      fecha_reporte: form.fecha_reporte,
+      hora_reporte: horaCompleta,
+      fuente: form.fuente,
+      incidencia_tipo: form.incidencia_tipo,
+      incidencia_otro: form.incidencia_tipo === 'otro' ? form.incidencia_otro : null,
+      ubicacion_texto: form.ubicacion_texto,
       coordenadas_lat: form.coordenadas_lat ? parseFloat(form.coordenadas_lat) : null,
       coordenadas_lng: form.coordenadas_lng ? parseFloat(form.coordenadas_lng) : null,
+      municipio: form.municipio,
+      entidad_federativa: form.entidad_federativa,
+      sintesis: form.sintesis,
+      estatus: form.estatus,
       calificacion_fuente: form.calificacion_fuente || null,
       calificacion_info: form.calificacion_info || null,
-      incidencia_otro: form.incidencia_tipo === 'otro' ? form.incidencia_otro : null,
     };
 
     const result = await crearRegistro(dataToSave);
     setSaving(false);
 
     if (result.success) {
+      // Subir archivos si hay
+      if (archivos.length > 0 && result.data?.id) {
+        setSubiendoArchivo(true);
+        await subirArchivos(result.data.id);
+        setSubiendoArchivo(false);
+      }
       setMensaje({ tipo: 'ok', texto: 'Registro 911 creado correctamente' });
       setForm(emptyForm);
+      setArchivos([]);
       setTimeout(() => {
         setShowForm(false);
         setMensaje(null);
@@ -495,7 +666,7 @@ export default function Registro911({ perfil }) {
     }
   };
 
-  // Filtrado de registros
+  // Filtrado
   const registrosFiltrados = registros.filter(r => {
     const matchSearch = searchTerm === '' ||
       r.folio_911?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -506,7 +677,7 @@ export default function Registro911({ perfil }) {
     return matchSearch && matchEstatus;
   });
 
-  // Agrupación por categoría del catálogo
+  // Agrupación por categoría
   const incidenciasPorCategoria = catalogoIncidencias.reduce((acc, inc) => {
     if (!acc[inc.categoria]) acc[inc.categoria] = [];
     acc[inc.categoria].push(inc);
@@ -534,7 +705,7 @@ export default function Registro911({ perfil }) {
           <button style={styles.btnOutline} onClick={refetch}>
             <RefreshCw size={15} /> Actualizar
           </button>
-          <button style={styles.btnPrimary} onClick={() => { setForm(emptyForm); setShowForm(true); setMensaje(null); }}>
+          <button style={styles.btnPrimary} onClick={() => { setForm(emptyForm); setArchivos([]); setShowForm(true); setMensaje(null); }}>
             <Plus size={16} /> Nuevo Reporte
           </button>
         </div>
@@ -647,7 +818,7 @@ export default function Registro911({ perfil }) {
                       </td>
                       <td style={styles.td}>
                         <div style={{ fontSize: '13px' }}>{formatDate(r.fecha_reporte)}</div>
-                        <div style={{ fontSize: '11px', color: COLORS.gray }}>{formatTime(r.hora_reporte)}</div>
+                        <div style={{ fontSize: '11px', color: COLORS.gray }}>{formatTime24(r.hora_reporte)} hrs</div>
                       </td>
                       <td style={styles.td}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -670,7 +841,7 @@ export default function Registro911({ perfil }) {
                           {r.ubicacion_texto}
                         </div>
                         {r.municipio && (
-                          <div style={{ fontSize: '11px', color: COLORS.gray }}>{r.municipio}</div>
+                          <div style={{ fontSize: '11px', color: COLORS.gray }}>{r.municipio}, Guerrero</div>
                         )}
                       </td>
                       <td style={styles.td}>
@@ -699,7 +870,9 @@ export default function Registro911({ perfil }) {
         )}
       </div>
 
-      {/* ── FORM MODAL ── */}
+      {/* ══════════════════════════════════════════
+           FORM MODAL — NUEVO REPORTE
+         ══════════════════════════════════════════ */}
       {showForm && (
         <div style={styles.formOverlay} onClick={() => setShowForm(false)}>
           <div style={styles.formCard} onClick={e => e.stopPropagation()}>
@@ -714,7 +887,7 @@ export default function Registro911({ perfil }) {
 
             <div style={styles.formBody}>
 
-              {/* Sección: Identificación */}
+              {/* ── Identificación ── */}
               <div style={styles.formSection}>
                 <div style={styles.formSectionTitle}>
                   <Hash size={15} /> Identificación del Reporte
@@ -753,22 +926,39 @@ export default function Registro911({ perfil }) {
                       onChange={e => handleChange('fecha_reporte', e.target.value)}
                     />
                   </div>
+                  {/* ── HORA EN FORMATO 24H CON SELECTORES ── */}
                   <div style={styles.formGroup}>
-                    <label style={styles.label}>Hora del reporte <span style={styles.labelRequired}>*</span></label>
-                    <input
-                      style={styles.input}
-                      type="time"
-                      value={form.hora_reporte}
-                      onChange={e => handleChange('hora_reporte', e.target.value)}
-                    />
+                    <label style={styles.label}>Hora del reporte (24h) <span style={styles.labelRequired}>*</span></label>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <select
+                        style={{ ...styles.select, flex: 1, textAlign: 'center' }}
+                        value={form.hora_reporte_hh}
+                        onChange={e => handleChange('hora_reporte_hh', e.target.value)}
+                      >
+                        {HORAS_24.map(h => (
+                          <option key={h} value={h}>{h}</option>
+                        ))}
+                      </select>
+                      <span style={{ fontSize: '18px', fontWeight: '700', color: COLORS.darkBlue }}>:</span>
+                      <select
+                        style={{ ...styles.select, flex: 1, textAlign: 'center' }}
+                        value={form.hora_reporte_mm}
+                        onChange={e => handleChange('hora_reporte_mm', e.target.value)}
+                      >
+                        {MINUTOS_60.map(m => (
+                          <option key={m} value={m}>{m}</option>
+                        ))}
+                      </select>
+                      <span style={{ fontSize: '11px', color: COLORS.gray, marginLeft: '4px' }}>hrs</span>
+                    </div>
                   </div>
                 </div>
               </div>
 
-              {/* Sección: Clasificación */}
+              {/* ── Clasificación ── */}
               <div style={styles.formSection}>
                 <div style={styles.formSectionTitle}>
-                  <AlertTriangle size={15} /> Clasificación
+                  <AlertTriangle size={15} /> Clasificación — Tipo de Incidencia
                 </div>
                 <div style={styles.formGridFull}>
                   <div style={styles.formGroup}>
@@ -805,10 +995,10 @@ export default function Registro911({ perfil }) {
                 </div>
               </div>
 
-              {/* Sección: Ubicación */}
+              {/* ── Ubicación ── */}
               <div style={styles.formSection}>
                 <div style={styles.formSectionTitle}>
-                  <MapPin size={15} /> Ubicación
+                  <MapPin size={15} /> Ubicación del Hecho
                 </div>
                 <div style={styles.formGridFull}>
                   <div style={styles.formGroup}>
@@ -824,15 +1014,29 @@ export default function Registro911({ perfil }) {
                 </div>
                 <div style={{ ...styles.formGrid, marginTop: '10px' }}>
                   <div style={styles.formGroup}>
-                    <label style={styles.label}>Municipio</label>
-                    <input
-                      style={styles.input}
-                      type="text"
-                      placeholder="Ej: Acapulco de Juárez"
+                    <label style={styles.label}>Municipio <span style={styles.labelRequired}>*</span></label>
+                    <select
+                      style={styles.select}
                       value={form.municipio}
                       onChange={e => handleChange('municipio', e.target.value)}
+                    >
+                      <option value="">— Seleccionar municipio —</option>
+                      {MUNICIPIOS_GUERRERO.map(m => (
+                        <option key={m.clave} value={m.nombre}>{m.clave} — {m.nombre}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div style={styles.formGroup}>
+                    <label style={styles.label}>Entidad Federativa</label>
+                    <input
+                      style={{ ...styles.input, backgroundColor: '#f0f0f0' }}
+                      type="text"
+                      value={form.entidad_federativa}
+                      readOnly
                     />
                   </div>
+                </div>
+                <div style={{ ...styles.formGrid, marginTop: '10px' }}>
                   <div style={styles.formGroup}>
                     <label style={styles.label}>Latitud</label>
                     <input
@@ -844,23 +1048,34 @@ export default function Registro911({ perfil }) {
                       onChange={e => handleChange('coordenadas_lat', e.target.value)}
                     />
                   </div>
-                  <div style={{ gridColumn: '2' }}>
-                    <div style={styles.formGroup}>
-                      <label style={styles.label}>Longitud</label>
-                      <input
-                        style={styles.input}
-                        type="number"
-                        step="0.0000001"
-                        placeholder="Ej: -99.8237"
-                        value={form.coordenadas_lng}
-                        onChange={e => handleChange('coordenadas_lng', e.target.value)}
-                      />
-                    </div>
+                  <div style={styles.formGroup}>
+                    <label style={styles.label}>Longitud</label>
+                    <input
+                      style={styles.input}
+                      type="number"
+                      step="0.0000001"
+                      placeholder="Ej: -99.8237"
+                      value={form.coordenadas_lng}
+                      onChange={e => handleChange('coordenadas_lng', e.target.value)}
+                    />
                   </div>
                 </div>
+                {/* Link Google Maps cuando hay coordenadas */}
+                {form.coordenadas_lat && form.coordenadas_lng && (
+                  <div style={{ marginTop: '8px' }}>
+                    <a
+                      href={buildGoogleMapsUrl(form.coordenadas_lat, form.coordenadas_lng)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ fontSize: '12px', color: COLORS.gold, display: 'flex', alignItems: 'center', gap: '4px', textDecoration: 'none' }}
+                    >
+                      <ExternalLink size={13} /> Ver ubicación en Google Maps
+                    </a>
+                  </div>
+                )}
               </div>
 
-              {/* Sección: Síntesis */}
+              {/* ── Síntesis ── */}
               <div style={styles.formSection}>
                 <div style={styles.formSectionTitle}>
                   <FileText size={15} /> Síntesis del Reporte
@@ -879,7 +1094,77 @@ export default function Registro911({ perfil }) {
                 </div>
               </div>
 
-              {/* Sección: Evaluación 4x4 (OSCE) */}
+              {/* ── Fotografías y Documentos ── */}
+              <div style={styles.formSection}>
+                <div style={styles.formSectionTitle}>
+                  <Camera size={15} /> Fotografías y Documentos
+                </div>
+                <p style={{ fontSize: '11px', color: COLORS.gray, margin: '0 0 10px 0' }}>
+                  Formatos: JPG, PNG, PDF, MP4 · Máximo 5MB por archivo
+                </p>
+                <div style={{
+                  border: `2px dashed ${COLORS.lightGray}`,
+                  borderRadius: '10px',
+                  padding: '20px',
+                  textAlign: 'center',
+                  cursor: 'pointer',
+                  backgroundColor: COLORS.bg,
+                  transition: 'border-color 0.2s',
+                }}
+                  onClick={() => document.getElementById('file-input-911').click()}
+                  onDragOver={e => { e.preventDefault(); e.currentTarget.style.borderColor = COLORS.gold; }}
+                  onDragLeave={e => { e.currentTarget.style.borderColor = COLORS.lightGray; }}
+                  onDrop={e => { e.preventDefault(); e.currentTarget.style.borderColor = COLORS.lightGray; handleFileSelect({ target: { files: e.dataTransfer.files } }); }}
+                >
+                  <Upload size={28} color={COLORS.gray} />
+                  <p style={{ fontSize: '13px', color: COLORS.gray, margin: '8px 0 0 0' }}>
+                    Arrastra archivos aquí o haz clic para seleccionar
+                  </p>
+                  <input
+                    id="file-input-911"
+                    type="file"
+                    multiple
+                    accept="image/jpeg,image/png,image/webp,application/pdf,video/mp4"
+                    style={{ display: 'none' }}
+                    onChange={handleFileSelect}
+                  />
+                </div>
+
+                {/* Lista de archivos seleccionados */}
+                {archivos.length > 0 && (
+                  <div style={{ marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {archivos.map((arch, i) => (
+                      <div key={i} style={{
+                        display: 'flex', alignItems: 'center', gap: '10px',
+                        padding: '8px 12px', backgroundColor: COLORS.bg, borderRadius: '8px',
+                        border: `1px solid ${COLORS.lightGray}`,
+                      }}>
+                        {arch.preview ? (
+                          <img src={arch.preview} alt="" style={{ width: '40px', height: '40px', borderRadius: '6px', objectFit: 'cover' }} />
+                        ) : (
+                          <div style={{ width: '40px', height: '40px', borderRadius: '6px', backgroundColor: COLORS.lightGray, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <FileText size={18} color={COLORS.gray} />
+                          </div>
+                        )}
+                        <div style={{ flex: 1 }}>
+                          <div style={{ fontSize: '13px', fontWeight: '600', color: COLORS.darkBlue }}>{arch.nombre}</div>
+                          <div style={{ fontSize: '11px', color: COLORS.gray }}>
+                            {(arch.tamano / 1024).toFixed(0)} KB · {arch.tipo.split('/')[1]?.toUpperCase()}
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => removeArchivo(i)}
+                          style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px' }}
+                        >
+                          <Trash2 size={16} color={COLORS.red} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* ── Evaluación 4x4 ── */}
               <div style={styles.formSection}>
                 <div style={styles.formSectionTitle}>
                   <Shield size={15} /> Evaluación de la Información (Sistema 4x4)
@@ -942,19 +1227,21 @@ export default function Registro911({ perfil }) {
                 Cancelar
               </button>
               <button
-                style={{ ...styles.btnGold, opacity: saving ? 0.6 : 1 }}
+                style={{ ...styles.btnGold, opacity: saving || subiendoArchivo ? 0.6 : 1 }}
                 onClick={handleSubmit}
-                disabled={saving}
+                disabled={saving || subiendoArchivo}
               >
                 <Send size={15} />
-                {saving ? 'Guardando...' : 'Registrar Reporte'}
+                {subiendoArchivo ? 'Subiendo archivos...' : saving ? 'Guardando...' : 'Registrar Reporte'}
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* ── DETAIL PANEL ── */}
+      {/* ══════════════════════════════════════════
+           DETAIL PANEL
+         ══════════════════════════════════════════ */}
       {showDetail && (
         <div style={styles.detailOverlay} onClick={() => setShowDetail(null)}>
           <div style={styles.detailPanel} onClick={e => e.stopPropagation()}>
@@ -993,12 +1280,12 @@ export default function Registro911({ perfil }) {
             {[
               { label: 'Folio 911', value: showDetail.folio_911 },
               { label: 'Fecha', value: formatDate(showDetail.fecha_reporte) },
-              { label: 'Hora', value: formatTime(showDetail.hora_reporte) },
+              { label: 'Hora', value: showDetail.hora_reporte ? formatTime24(showDetail.hora_reporte) + ' hrs' : null },
               { label: 'Fuente', value: (FUENTE_CONFIG[showDetail.fuente] || {}).label || showDetail.fuente },
               { label: 'Incidencia', value: showDetail.catalogo_incidencias?.nombre || showDetail.incidencia_tipo },
               { label: 'Ubicación', value: showDetail.ubicacion_texto },
               { label: 'Municipio', value: showDetail.municipio },
-              { label: 'Coordenadas', value: showDetail.coordenadas_lat && showDetail.coordenadas_lng ? `${showDetail.coordenadas_lat}, ${showDetail.coordenadas_lng}` : null },
+              { label: 'Estado', value: showDetail.entidad_federativa || 'Guerrero' },
               { label: 'Región', value: showDetail.region },
               { label: 'Zona', value: showDetail.zona },
               { label: 'Calif. Fuente', value: showDetail.calificacion_fuente ? CALIF_FUENTE[showDetail.calificacion_fuente] : null },
@@ -1009,6 +1296,38 @@ export default function Registro911({ perfil }) {
                 <span style={styles.detailValue}>{row.value}</span>
               </div>
             ))}
+
+            {/* ── Coordenadas con link a Google Maps ── */}
+            {showDetail.coordenadas_lat && showDetail.coordenadas_lng && (
+              <div style={styles.detailRow}>
+                <span style={styles.detailLabel}>Coordenadas</span>
+                <div style={{ textAlign: 'right', flex: 1 }}>
+                  <div style={{ fontSize: '14px', color: COLORS.darkBlue }}>
+                    {showDetail.coordenadas_lat}, {showDetail.coordenadas_lng}
+                  </div>
+                  <a
+                    href={buildGoogleMapsUrl(showDetail.coordenadas_lat, showDetail.coordenadas_lng)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      marginTop: '4px',
+                      padding: '4px 10px',
+                      backgroundColor: COLORS.lightGold,
+                      color: COLORS.darkBlue,
+                      borderRadius: '6px',
+                      fontSize: '12px',
+                      fontWeight: '600',
+                      textDecoration: 'none',
+                    }}
+                  >
+                    <ExternalLink size={12} /> Abrir en Google Maps
+                  </a>
+                </div>
+              </div>
+            )}
 
             {/* Síntesis */}
             <div style={{ padding: '14px 20px', borderTop: `2px solid ${COLORS.lightGray}` }}>
