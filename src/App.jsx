@@ -2226,7 +2226,7 @@ export default function App() {
           <img src="/logo-fge.png" alt="FGE Guerrero" style={{ width: 42, height: 42, borderRadius: "50%", border: "2px solid #b69054" }} />
           <div>
             <div style={{ color: "#ffffff", fontSize: 14, fontWeight: 700 }}>FGE GUERRERO — SISTEMA MINISTERIAL</div>
-            <div style={{ color: "#b69054", fontSize: 9, letterSpacing: 2 }}>INDIVIDUALIZACIÓN DE DETENIDOS</div>
+            <div style={{ color: "#b69054", fontSize: 9, letterSpacing: 2 }}>Sistema de Información Criminal</div>
           </div>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -2250,7 +2250,7 @@ export default function App() {
         )}
         <button onClick={() => setTabApp("registro911")} style={{ background: "none", border: "none", borderBottom: tabApp === "registro911" ? "2px solid #001a4d" : "2px solid transparent", padding: "10px 18px", fontWeight: tabApp === "registro911" ? 700 : 500, color: tabApp === "registro911" ? "#001a4d" : "#888", cursor: "pointer", fontSize: 15 }}>Registro 911</button>
         <button onClick={() => setTabApp("primerrespondiente")} style={{ background: "none", border: "none", borderBottom: tabApp === "primerrespondiente" ? "2px solid #001a4d" : "2px solid transparent", padding: "10px 18px", fontWeight: tabApp === "primerrespondiente" ? 700 : 500, color: tabApp === "primerrespondiente" ? "#001a4d" : "#888", cursor: "pointer", fontSize: 15 }}>Primer Respondiente</button>
-        <button onClick={() => setTabApp("escenacrimen")} style={{ background: "none", border: "none", borderBottom: tabApp === "escenacrimen" ? "2px solid #001a4d" : "2px solid transparent", padding: "10px 18px", fontWeight: tabApp === "escenacrimen" ? 700 : 500, color: tabApp === "escenacrimen" ? "#001a4d" : "#888", cursor: "pointer", fontSize: 15 }}>Escena del Crimen</button>
+        <button onClick={() => setTabApp("escenacrimen")} style={{ background: "none", border: "none", borderBottom: tabApp === "escenacrimen" ? "2px solid #001a4d" : "2px solid transparent", padding: "10px 18px", fontWeight: tabApp === "escenacrimen" ? 700 : 500, color: tabApp === "escenacrimen" ? "#001a4d" : "#888", cursor: "pointer", fontSize: 15 }}>Procesamiento del Lugar</button>
         <button onClick={() => setTabApp("indicios")} style={{ background: "none", border: "none", borderBottom: tabApp === "indicios" ? "2px solid #001a4d" : "2px solid transparent", padding: "10px 18px", fontWeight: tabApp === "indicios" ? 700 : 500, color: tabApp === "indicios" ? "#001a4d" : "#888", cursor: "pointer", fontSize: 15 }}>Indicios</button>
         <button onClick={() => setTabApp("victimastestigos")} style={{ background: "none", border: "none", borderBottom: tabApp === "victimastestigos" ? "2px solid #001a4d" : "2px solid transparent", padding: "10px 18px", fontWeight: tabApp === "victimastestigos" ? 700 : 500, color: tabApp === "victimastestigos" ? "#001a4d" : "#888", cursor: "pointer", fontSize: 15 }}>Víctimas</button>
         <button onClick={() => setTabApp("expediente")} style={{ background: "none", border: "none", borderBottom: tabApp === "expediente" ? "2px solid #b69054" : "2px solid transparent", padding: "10px 14px", cursor: "pointer", fontWeight: tabApp === "expediente" ? 700 : 500, color: tabApp === "expediente" ? "#001a4d" : "#888", fontSize: 13, display: "flex", alignItems: "center", gap: 5 }}><Briefcase size={15}/> Expediente Policial</button>
