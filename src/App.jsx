@@ -6,7 +6,7 @@ import {
   Search, Siren, BarChart3, ClipboardList, BadgeCheck, Phone, Crosshair,
   Pill, Laptop, Car, Home, Lock as LockIcon, Banknote, ShieldAlert,
   CircleCheck, X, Check, Lock, Link2, Building2, UserCheck, Briefcase,
-  Calendar, ImagePlus, Clock, FilePenLine, Camera as CameraIcon, HelpCircle,
+  Calendar, ImagePlus, Clock, FilePenLine, Camera as CameraIcon, HelpCircle,Calendar, ImagePlus, Clock, FilePenLine, Camera as CameraIcon, HelpCircle, Target,
 } from "lucide-react";
 import DashboardHistorico from './pages/DashboardHistorico';
 import Registro911 from './pages/Registro911';
@@ -16,6 +16,7 @@ import IndiciosEvidencia from './pages/IndiciosEvidencia';
 import VictimasTestigos from './pages/VictimasTestigos';
 import ExpedientePolicial from './pages/ExpedientePolicial';
 import DashboardOperativo from './pages/DashboardOperativo';
+import AnalisisSARA from './pages/AnalisisSARA';
 // ─── CONSTANTES ───────────────────────────────────────────────────────────────
 const REGIONES = ["Región Centro","Región Montaña","Región Costa Grande","Región Costa Chica","Región Tierra Caliente","Región Acapulco","Región Norte"];
 const COMPLEXIONES = ["Delgada","Regular","Robusta","Obesa"];
@@ -2254,6 +2255,7 @@ export default function App() {
         <button onClick={() => setTabApp("victimastestigos")} style={{ background: "none", border: "none", borderBottom: tabApp === "victimastestigos" ? "2px solid #001a4d" : "2px solid transparent", padding: "10px 18px", fontWeight: tabApp === "victimastestigos" ? 700 : 500, color: tabApp === "victimastestigos" ? "#001a4d" : "#888", cursor: "pointer", fontSize: 15 }}>Víctimas</button>
         <button onClick={() => setTabApp("expediente")} style={{ background: "none", border: "none", borderBottom: tabApp === "expediente" ? "2px solid #b69054" : "2px solid transparent", padding: "10px 14px", cursor: "pointer", fontWeight: tabApp === "expediente" ? 700 : 500, color: tabApp === "expediente" ? "#001a4d" : "#888", fontSize: 13, display: "flex", alignItems: "center", gap: 5 }}><Briefcase size={15}/> Expediente Policial</button>
         <button onClick={() => setTabApp("dashoperativo")} style={{ background: "none", border: "none", borderBottom: tabApp === "dashoperativo" ? "2px solid #b69054" : "2px solid transparent", padding: "10px 14px", cursor: "pointer", fontWeight: tabApp === "dashoperativo" ? 700 : 500, color: tabApp === "dashoperativo" ? "#001a4d" : "#888", fontSize: 13, display: "flex", alignItems: "center", gap: 5 }}><BarChart3 size={15}/> Dashboard Op.</button>
+        <button onClick={() => setTabApp("sara")} style={{ background: "none", border: "none", borderBottom: tabApp === "sara" ? "2px solid #b69054" : "2px solid transparent", padding: "10px 14px", cursor: "pointer", fontWeight: tabApp === "sara" ? 700 : 500, color: tabApp === "sara" ? "#001a4d" : "#888", fontSize: 13, display: "flex", alignItems: "center", gap: 5 }}><Target size={15}/> SARA</button>
 <button onClick={() => setTabApp("historico")} style={{ background: "none", borderBottom: tabApp === "historico" ? "2px solid #001a4d" : "2px solid transparent", padding: "12px 14px", cursor: "pointer", fontWeight: 600, fontSize: 13 }}>Histórico</button>
 
         
@@ -2268,6 +2270,7 @@ export default function App() {
         {tabApp === "indicios" && <IndiciosEvidencia perfil={perfil} />}
         {tabApp === "expediente" && <ExpedientePolicial user={perfil} />}
         {tabApp === "dashoperativo" && <DashboardOperativo user={perfil} />}
+        {tabApp === "sara" && <AnalisisSARA user={perfil} />}
         {tabApp === "victimastestigos" && <VictimasTestigos perfil={perfil} />}
         {tabApp === "detenidos" && <ModuloDetenidos perfil={perfil} detenidoInicial={detenidoParaAbrir} onDetenidoInicialUsado={() => setDetenidoParaAbrir(null)} />}
       </div>
