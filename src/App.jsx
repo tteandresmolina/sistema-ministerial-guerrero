@@ -6,7 +6,7 @@ import {
   Search, Siren, BarChart3, ClipboardList, BadgeCheck, Phone, Crosshair,
   Pill, Laptop, Car, Home, Lock as LockIcon, Banknote, ShieldAlert,
   CircleCheck, X, Check, Lock, Link2, Building2, UserCheck, Briefcase,
-  Calendar, ImagePlus, Clock, FilePenLine, Camera as CameraIcon, HelpCircle,Calendar, ImagePlus, Clock, FilePenLine, Camera as CameraIcon, HelpCircle, Target,
+Calendar, ImagePlus, Clock, FilePenLine, Camera as CameraIcon, HelpCircle, Target,
 } from "lucide-react";
 import DashboardHistorico from './pages/DashboardHistorico';
 import Registro911 from './pages/Registro911';
