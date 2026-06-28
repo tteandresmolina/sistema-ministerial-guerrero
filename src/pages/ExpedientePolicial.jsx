@@ -658,7 +658,8 @@ const subTabs = [
         {/* Sub-tab content */}
         {subTab === 'datos' && renderDatosOficio()}
         {subTab === 'personas' && renderPersonasInvestigadas()}
-        {subTab === 'acciones' && renderAccionesInvestigacion()}
+{subTab === 'acciones' && renderAccionesInvestigacion()}
+        {subTab === 'detenidos_ci' && renderDetenidosVinculados()}
         {subTab === 'timeline' && renderTimeline()}
       </div>
     );
