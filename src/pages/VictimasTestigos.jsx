@@ -2,19 +2,67 @@
 // Tab 5 — Víctimas y Testigos
 // Sistema Ministerial — FGE Guerrero — Módulo 2
 // Fundamento: Ley General de Víctimas, Protocolo Nacional PR
+// v2 — Mejoras: C.I. vinculación, no binario, defunción doloso/culposo,
+//       fotos/docs, dirección municipio/estado
 
 import { useState, useEffect } from 'react';
 import {
   Users, User, Shield, AlertTriangle, CheckCircle2, Plus, Search, X, Send,
   RefreshCw, Eye, FileText, Phone, Heart, ShieldAlert, Flag, MapPin, Lock,
+  Camera, Upload, Trash2, Briefcase,
 } from 'lucide-react';
 import { useVictimasTestigos } from '../hooks/useVictimasTestigos';
+import { supabase } from '../supabaseClient';
 
 const C = {
   darkBlue: '#001a4d', gold: '#b69054', lightGold: '#f5ede0',
   white: '#ffffff', bg: '#f4f6fb', gray: '#666666', lightGray: '#e8ecf1',
   green: '#28a745', red: '#dc3545', orange: '#fd7e14', pink: '#ec4899', purple: '#6a1b9a',
 };
+
+const MUNICIPIOS_GUERRERO = [
+  { clave: '001', nombre: 'Acapulco de Juárez' },{ clave: '002', nombre: 'Ahuacuotzingo' },
+  { clave: '003', nombre: 'Ajuchitlán del Progreso' },{ clave: '004', nombre: 'Alcozauca de Guerrero' },
+  { clave: '005', nombre: 'Alpoyeca' },{ clave: '006', nombre: 'Apaxtla' },
+  { clave: '007', nombre: 'Arcelia' },{ clave: '008', nombre: 'Atenango del Río' },
+  { clave: '009', nombre: 'Atlamajalcingo del Monte' },{ clave: '010', nombre: 'Atlixtac' },
+  { clave: '011', nombre: 'Atoyac de Álvarez' },{ clave: '012', nombre: 'Ayutla de los Libres' },
+  { clave: '013', nombre: 'Azoyú' },{ clave: '014', nombre: 'Benito Juárez' },
+  { clave: '015', nombre: 'Buenavista de Cuéllar' },{ clave: '016', nombre: 'Coahuayutla de José María Izazaga' },
+  { clave: '017', nombre: 'Cocula' },{ clave: '018', nombre: 'Copala' },
+  { clave: '019', nombre: 'Copalillo' },{ clave: '020', nombre: 'Copanatoyac' },
+  { clave: '021', nombre: 'Coyuca de Benítez' },{ clave: '022', nombre: 'Coyuca de Catalán' },
+  { clave: '023', nombre: 'Cuajinicuilapa' },{ clave: '024', nombre: 'Cualác' },
+  { clave: '025', nombre: 'Cuautepec' },{ clave: '026', nombre: 'Cuetzala del Progreso' },
+  { clave: '027', nombre: 'Cutzamala de Pinzón' },{ clave: '028', nombre: 'Chilapa de Álvarez' },
+  { clave: '029', nombre: 'Chilpancingo de los Bravo' },{ clave: '030', nombre: 'Florencio Villarreal' },
+  { clave: '031', nombre: 'General Canuto A. Neri' },{ clave: '032', nombre: 'General Heliodoro Castillo' },
+  { clave: '033', nombre: 'Huamuxtitlán' },{ clave: '034', nombre: 'Huitzuco de los Figueroa' },
+  { clave: '035', nombre: 'Iguala de la Independencia' },{ clave: '036', nombre: 'Igualapa' },
+  { clave: '037', nombre: 'Ixcateopan de Cuauhtémoc' },{ clave: '038', nombre: 'Zihuatanejo de Azueta' },
+  { clave: '039', nombre: 'Juan R. Escudero' },{ clave: '040', nombre: 'Leonardo Bravo' },
+  { clave: '041', nombre: 'Malinaltepec' },{ clave: '042', nombre: 'Mártir de Cuilapan' },
+  { clave: '043', nombre: 'Metlatónoc' },{ clave: '044', nombre: 'Mochitlán' },
+  { clave: '045', nombre: 'Olinalá' },{ clave: '046', nombre: 'Ometepec' },
+  { clave: '047', nombre: 'Pedro Ascencio Alquisiras' },{ clave: '048', nombre: 'Petatlán' },
+  { clave: '049', nombre: 'Pilcaya' },{ clave: '050', nombre: 'Pungarabato' },
+  { clave: '051', nombre: 'Quechultenango' },{ clave: '052', nombre: 'San Luis Acatlán' },
+  { clave: '053', nombre: 'San Marcos' },{ clave: '054', nombre: 'San Miguel Totolapan' },
+  { clave: '055', nombre: 'Taxco de Alarcón' },{ clave: '056', nombre: 'Tecoanapa' },
+  { clave: '057', nombre: 'Técpan de Galeana' },{ clave: '058', nombre: 'Teloloapan' },
+  { clave: '059', nombre: 'Tepecoacuilco de Trujano' },{ clave: '060', nombre: 'Tetipac' },
+  { clave: '061', nombre: 'Tixtla de Guerrero' },{ clave: '062', nombre: 'Tlacoachistlahuaca' },
+  { clave: '063', nombre: 'Tlacoapa' },{ clave: '064', nombre: 'Tlalchapa' },
+  { clave: '065', nombre: 'Tlalixtaquilla de Maldonado' },{ clave: '066', nombre: 'Tlapa de Comonfort' },
+  { clave: '067', nombre: 'Tlapehuala' },{ clave: '068', nombre: 'La Unión de Isidoro Montes de Oca' },
+  { clave: '069', nombre: 'Xalpatláhuac' },{ clave: '070', nombre: 'Xochihuehuetlán' },
+  { clave: '071', nombre: 'Xochistlahuaca' },{ clave: '072', nombre: 'Zapotitlán Tablas' },
+  { clave: '073', nombre: 'Zirándaro' },{ clave: '074', nombre: 'Zitlala' },
+  { clave: '075', nombre: 'Eduardo Neri' },{ clave: '076', nombre: 'Acatepec' },
+  { clave: '077', nombre: 'Marquelia' },{ clave: '078', nombre: 'Cochoapa el Grande' },
+  { clave: '079', nombre: 'José Joaquín de Herrera' },{ clave: '080', nombre: 'Juchitán' },
+  { clave: '081', nombre: 'Iliatenco' },
+];
 
 const VULNERABILIDADES = [
   { key: 'es_menor_edad', label: 'Menor de edad', color: '#e65100', icon: '⚠️' },
@@ -32,6 +80,15 @@ const CALIDADES_TESTIGO = [
   { key: 'referencial', label: 'Referencial', desc: 'Tiene conocimiento por terceros' },
   { key: 'de_oidas', label: 'De oídas', desc: 'Escuchó sobre los hechos' },
   { key: 'perito', label: 'Perito', desc: 'Dictamen técnico o científico' },
+];
+
+const ESTADO_SALUD = [
+  { key: 'estable', label: 'Estable', color: C.green },
+  { key: 'lesionada', label: 'Lesionada', color: C.orange },
+  { key: 'grave', label: 'Grave', color: C.red },
+  { key: 'defuncion_doloso', label: 'Defunción — Homicidio doloso', color: '#b71c1c' },
+  { key: 'defuncion_culposo', label: 'Defunción — Homicidio culposo', color: '#880e4f' },
+  { key: 'no_determinado', label: 'No determinado', color: C.gray },
 ];
 
 const st = {
@@ -53,9 +110,9 @@ const st = {
 export default function VictimasTestigos({ perfil }) {
   const { victimas, testigos, escenas, reportes911, loading, stats, crearVictima, crearTestigo, agregarMedida, fetchMedidas, refetch } = useVictimasTestigos(perfil);
 
-  const [vista, setVista] = useState('victimas'); // 'victimas' | 'testigos'
+  const [vista, setVista] = useState('victimas');
   const [showForm, setShowForm] = useState(false);
-  const [formType, setFormType] = useState('victima'); // 'victima' | 'testigo'
+  const [formType, setFormType] = useState('victima');
   const [showDetail, setShowDetail] = useState(null);
   const [detailType, setDetailType] = useState('victima');
   const [medidas, setMedidas] = useState([]);
@@ -63,11 +120,13 @@ export default function VictimasTestigos({ perfil }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [saving, setSaving] = useState(false);
   const [mensaje, setMensaje] = useState(null);
+  const [archivos, setArchivos] = useState([]);
 
-  // Víctima form
   const emptyVictima = {
     escena_crimen_id: '', registro_911_id: '', carpeta_investigacion: '',
-    tipo_agravio: 'identificada', nombre: '', edad: '', sexo: '', domicilio: '', telefono: '',
+    tipo_agravio: 'identificada', nombre: '', edad: '', sexo: '',
+    domicilio: '', municipio_domicilio: '', entidad_federativa_domicilio: 'Guerrero',
+    telefono: '', estado_salud: 'estable',
     es_menor_edad: false, es_mujer: false, es_indigena: false, es_migrante: false,
     es_discapacidad: false, es_adulto_mayor: false, es_lgbti: false, otra_vulnerabilidad: '',
     tiene_lesiones: false, descripcion_lesiones: '', requiere_atencion_medica: false, hospital_canalizada: '',
@@ -77,10 +136,11 @@ export default function VictimasTestigos({ perfil }) {
   const [vForm, setVForm] = useState(emptyVictima);
   const setV = (k, v) => setVForm(p => ({ ...p, [k]: v }));
 
-  // Testigo form
   const emptyTestigo = {
     escena_crimen_id: '', registro_911_id: '', carpeta_investigacion: '',
-    nombre: '', edad: '', sexo: '', domicilio: '', telefono: '', correo_electronico: '',
+    nombre: '', edad: '', sexo: '',
+    domicilio: '', municipio_domicilio: '', entidad_federativa_domicilio: 'Guerrero',
+    telefono: '', correo_electronico: '',
     calidad: 'presencial', relacion_victima: '', relacion_imputado: '',
     tipo_identificacion: '', numero_identificacion: '',
     entrevista_realizada: false, resumen_declaracion: '', disponible_declarar: true,
@@ -89,7 +149,6 @@ export default function VictimasTestigos({ perfil }) {
   const [tForm, setTForm] = useState(emptyTestigo);
   const setT = (k, v) => setTForm(p => ({ ...p, [k]: v }));
 
-  // Medida form
   const emptyMedida = { tipo_medida: '', descripcion: '', institucion_responsable: '' };
   const [mForm, setMForm] = useState(emptyMedida);
 
@@ -99,13 +158,29 @@ export default function VictimasTestigos({ perfil }) {
     }
   }, [showDetail?.id, detailType]);
 
+  // Archivos
+  const handleFileSelect = (e) => {
+    const files = Array.from(e.target.files);
+    const maxSize = 5 * 1024 * 1024;
+    const permitidos = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf', 'video/mp4'];
+    for (const f of files) {
+      if (f.size > maxSize) return setMensaje({ tipo: 'error', texto: `"${f.name}" excede 5MB` });
+      if (!permitidos.includes(f.type)) return setMensaje({ tipo: 'error', texto: `"${f.name}" — formato no soportado` });
+    }
+    setArchivos(prev => [...prev, ...files.map(f => ({
+      file: f, nombre: f.name, tipo: f.type, tamano: f.size,
+      preview: f.type.startsWith('image/') ? URL.createObjectURL(f) : null,
+    }))]);
+  };
+  const removeArchivo = (i) => { setArchivos(prev => { const u = [...prev]; if (u[i].preview) URL.revokeObjectURL(u[i].preview); u.splice(i, 1); return u; }); };
+
   const handleSubmitVictima = async () => {
     if (vForm.tipo_agravio === 'identificada' && !vForm.nombre?.trim()) return setMensaje({ tipo: 'error', texto: 'El nombre de la víctima es obligatorio' });
     setSaving(true); setMensaje(null);
     const data = { ...vForm, edad: vForm.edad ? parseInt(vForm.edad) : null, escena_crimen_id: vForm.escena_crimen_id || null, registro_911_id: vForm.registro_911_id || null };
     const result = await crearVictima(data);
     setSaving(false);
-    if (result.success) { setMensaje({ tipo: 'ok', texto: 'Víctima registrada' }); setVForm(emptyVictima); setTimeout(() => { setShowForm(false); setMensaje(null); }, 1200); }
+    if (result.success) { setMensaje({ tipo: 'ok', texto: 'Víctima registrada' }); setVForm(emptyVictima); setArchivos([]); setTimeout(() => { setShowForm(false); setMensaje(null); }, 1200); }
     else setMensaje({ tipo: 'error', texto: result.error });
   };
 
@@ -115,7 +190,7 @@ export default function VictimasTestigos({ perfil }) {
     const data = { ...tForm, edad: tForm.edad ? parseInt(tForm.edad) : null, escena_crimen_id: tForm.escena_crimen_id || null, registro_911_id: tForm.registro_911_id || null };
     const result = await crearTestigo(data);
     setSaving(false);
-    if (result.success) { setMensaje({ tipo: 'ok', texto: 'Testigo registrado' }); setTForm(emptyTestigo); setTimeout(() => { setShowForm(false); setMensaje(null); }, 1200); }
+    if (result.success) { setMensaje({ tipo: 'ok', texto: 'Testigo registrado' }); setTForm(emptyTestigo); setArchivos([]); setTimeout(() => { setShowForm(false); setMensaje(null); }, 1200); }
     else setMensaje({ tipo: 'error', texto: result.error });
   };
 
@@ -128,8 +203,63 @@ export default function VictimasTestigos({ perfil }) {
 
   const listaActual = vista === 'victimas' ? victimas : testigos;
   const filtrada = listaActual.filter(i => { if (!searchTerm) return true; const q = searchTerm.toLowerCase(); return (i.nombre || '').toLowerCase().includes(q) || (i.carpeta_investigacion || '').toLowerCase().includes(q); });
-
   const hayVulnerabilidad = (v) => VULNERABILIDADES.some(vul => v[vul.key]);
+
+  // Componente de vinculación reutilizable
+  const SeccionVinculacion = ({ form, setField }) => (
+    <div style={{ marginBottom: 20 }}>
+      <div style={st.sTitle}><Briefcase size={15} /> Vinculación y Carpeta de Investigación</div>
+      <div style={{ padding: 14, backgroundColor: C.lightGold, borderRadius: 10, border: `1px solid ${C.gold}40`, marginBottom: 14 }}>
+        <label style={{ ...st.label, color: C.gold, fontSize: 13 }}>
+          <Briefcase size={14} style={{ marginRight: 6, verticalAlign: 'middle' }} />
+          Carpeta de Investigación (C.I.)
+        </label>
+        <p style={{ fontSize: 11, color: C.gray, margin: '4px 0 8px 0' }}>20 dígitos asignados por el Ministerio Público. Vincula víctimas y testigos al expediente.</p>
+        <input style={{ ...st.input, fontFamily: 'monospace', fontSize: 15, letterSpacing: 1, textAlign: 'center' }} maxLength={25} placeholder="Ej: 12030290300463130025" value={form.carpeta_investigacion} onChange={e => setField('carpeta_investigacion', e.target.value)} />
+      </div>
+      <div style={st.grid2}>
+        <div style={st.fg}>
+          <label style={st.label}>Vincular a escena (opcional)</label>
+          <select style={st.select} value={form.escena_crimen_id} onChange={e => setField('escena_crimen_id', e.target.value)}>
+            <option value="">— Sin vincular —</option>
+            {escenas.map(esc => <option key={esc.id} value={esc.id}>{esc.registros_911?.folio_911 || 'Sin folio'} — {(esc.ubicacion_texto || '').substring(0, 30)}</option>)}
+          </select>
+        </div>
+        <div style={st.fg}>
+          <label style={st.label}>Vincular a reporte 911 (opcional)</label>
+          <select style={st.select} value={form.registro_911_id} onChange={e => setField('registro_911_id', e.target.value)}>
+            <option value="">— Sin vincular —</option>
+            {reportes911.map(r => <option key={r.id} value={r.id}>{r.folio_911}</option>)}
+          </select>
+        </div>
+      </div>
+    </div>
+  );
+
+  // Componente de archivos reutilizable
+  const SeccionArchivos = () => (
+    <div style={{ marginBottom: 20 }}>
+      <div style={st.sTitle}><Camera size={15} /> Fotografías, Videos y Documentos</div>
+      <p style={{ fontSize: 11, color: C.gray, marginBottom: 10 }}>Formatos: JPG, PNG, PDF, MP4 · Máximo 5MB por archivo</p>
+      <div style={{ border: `2px dashed ${C.lightGray}`, borderRadius: 10, padding: 20, textAlign: 'center', cursor: 'pointer', backgroundColor: C.bg }}
+        onClick={() => document.getElementById('file-input-vt').click()}>
+        <Upload size={24} color={C.gray} />
+        <p style={{ fontSize: 12, color: C.gray, margin: '6px 0 0 0' }}>Arrastra o haz clic para seleccionar</p>
+        <input id="file-input-vt" type="file" multiple accept="image/jpeg,image/png,image/webp,application/pdf,video/mp4" style={{ display: 'none' }} onChange={handleFileSelect} />
+      </div>
+      {archivos.length > 0 && (
+        <div style={{ marginTop: 10, display: 'flex', flexDirection: 'column', gap: 6 }}>
+          {archivos.map((a, i) => (
+            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '6px 10px', backgroundColor: C.bg, borderRadius: 8, border: `1px solid ${C.lightGray}` }}>
+              {a.preview ? <img src={a.preview} alt="" style={{ width: 36, height: 36, borderRadius: 6, objectFit: 'cover' }} /> : <FileText size={16} color={C.gray} />}
+              <div style={{ flex: 1 }}><div style={{ fontSize: 12, fontWeight: 600 }}>{a.nombre}</div><div style={{ fontSize: 10, color: C.gray }}>{(a.tamano / 1024).toFixed(0)} KB</div></div>
+              <button onClick={() => removeArchivo(i)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><Trash2 size={14} color={C.red} /></button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
 
   return (
     <div style={{ padding: 24, fontFamily: 'Segoe UI, Arial, sans-serif', backgroundColor: C.bg, minHeight: '100vh' }}>
@@ -144,10 +274,10 @@ export default function VictimasTestigos({ perfil }) {
         </div>
         <div style={{ display: 'flex', gap: 10 }}>
           <button style={st.btnOutline} onClick={refetch}><RefreshCw size={15} /></button>
-          <button style={st.btn(C.pink, C.white)} onClick={() => { setFormType('victima'); setVForm(emptyVictima); setShowForm(true); setMensaje(null); }}>
+          <button style={st.btn(C.pink, C.white)} onClick={() => { setFormType('victima'); setVForm(emptyVictima); setArchivos([]); setShowForm(true); setMensaje(null); }}>
             <Plus size={16} /> Víctima
           </button>
-          <button style={st.btn(C.darkBlue, C.white)} onClick={() => { setFormType('testigo'); setTForm(emptyTestigo); setShowForm(true); setMensaje(null); }}>
+          <button style={st.btn(C.darkBlue, C.white)} onClick={() => { setFormType('testigo'); setTForm(emptyTestigo); setArchivos([]); setShowForm(true); setMensaje(null); }}>
             <Plus size={16} /> Testigo
           </button>
         </div>
@@ -182,7 +312,7 @@ export default function VictimasTestigos({ perfil }) {
       <div style={{ backgroundColor: C.white, borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.08)', overflow: 'hidden' }}>
         <div style={{ padding: '16px 20px', display: 'flex', alignItems: 'center', gap: 8, borderBottom: `1px solid ${C.lightGray}` }}>
           <Search size={16} color={C.gray} />
-          <input type="text" placeholder="Buscar por nombre, carpeta..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} style={{ border: 'none', outline: 'none', fontSize: 14, backgroundColor: 'transparent', flex: 1, fontFamily: 'inherit' }} />
+          <input type="text" placeholder="Buscar por nombre, C.I...." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} style={{ border: 'none', outline: 'none', fontSize: 14, backgroundColor: 'transparent', flex: 1, fontFamily: 'inherit' }} />
           {searchTerm && <X size={14} color={C.gray} style={{ cursor: 'pointer' }} onClick={() => setSearchTerm('')} />}
         </div>
 
@@ -198,9 +328,9 @@ export default function VictimasTestigos({ perfil }) {
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead><tr>
                 <th style={st.th}>Nombre</th>
-                {vista === 'victimas' && <th style={st.th}>Agravio</th>}
+                {vista === 'victimas' && <th style={st.th}>Estado</th>}
                 {vista === 'testigos' && <th style={st.th}>Calidad</th>}
-                <th style={st.th}>Carpeta</th>
+                <th style={st.th}>C.I.</th>
                 <th style={st.th}>{vista === 'victimas' ? 'Vulnerabilidad' : 'Disponible'}</th>
                 <th style={st.th}>Acciones</th>
               </tr></thead>
@@ -212,19 +342,19 @@ export default function VictimasTestigos({ perfil }) {
                     onClick={() => { setShowDetail(r); setDetailType(vista === 'victimas' ? 'victima' : 'testigo'); }}>
                     <td style={st.td}>
                       <div style={{ fontWeight: 600 }}>{r.nombre || (r.tipo_agravio === 'sociedad' ? 'La sociedad' : 'Quien resulte')}</div>
-                      {r.edad && <span style={{ fontSize: 11, color: C.gray }}>{r.edad} años</span>}
+                      {r.edad && <span style={{ fontSize: 11, color: C.gray }}>{r.edad} años · {r.sexo || '—'}</span>}
                     </td>
-                    {vista === 'victimas' && <td style={st.td}>{r.tipo_agravio === 'identificada' ? 'Persona identificada' : r.tipo_agravio === 'sociedad' ? 'La sociedad' : 'Quien resulte'}</td>}
+                    {vista === 'victimas' && (
+                      <td style={st.td}>
+                        {(() => { const es = ESTADO_SALUD.find(e => e.key === r.estado_salud); return es ? <span style={st.badge(es.color + '18', es.color)}>{es.label}</span> : <span style={{ fontSize: 11, color: C.gray }}>{r.tipo_agravio}</span>; })()}
+                      </td>
+                    )}
                     {vista === 'testigos' && <td style={st.td}><span style={st.badge(C.darkBlue + '15', C.darkBlue)}>{CALIDADES_TESTIGO.find(c => c.key === r.calidad)?.label || r.calidad}</span></td>}
                     <td style={{ ...st.td, fontFamily: 'monospace', fontSize: 11 }}>{r.carpeta_investigacion || '—'}</td>
                     {vista === 'victimas' && (
                       <td style={st.td}>
                         {hayVulnerabilidad(r) ? (
-                          <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
-                            {VULNERABILIDADES.filter(v => r[v.key]).map(v => (
-                              <span key={v.key} style={{ fontSize: 10 }}>{v.icon}</span>
-                            ))}
-                          </div>
+                          <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>{VULNERABILIDADES.filter(v => r[v.key]).map(v => <span key={v.key} style={{ fontSize: 10 }}>{v.icon}</span>)}</div>
                         ) : <span style={{ color: C.gray, fontSize: 11 }}>—</span>}
                       </td>
                     )}
@@ -257,23 +387,8 @@ export default function VictimasTestigos({ perfil }) {
 
             <div style={{ padding: 24 }}>
 
-              {/* Vinculación (ambos) */}
-              <div style={{ marginBottom: 20 }}>
-                <div style={st.sTitle}><FileText size={15} /> Vinculación</div>
-                <div style={st.grid2}>
-                  <div style={st.fg}>
-                    <label style={st.label}>Vincular a escena</label>
-                    <select style={st.select} value={formType === 'victima' ? vForm.escena_crimen_id : tForm.escena_crimen_id} onChange={e => formType === 'victima' ? setV('escena_crimen_id', e.target.value) : setT('escena_crimen_id', e.target.value)}>
-                      <option value="">— Sin vincular —</option>
-                      {escenas.map(esc => <option key={esc.id} value={esc.id}>{esc.registros_911?.folio_911 || 'Sin folio'} — {(esc.ubicacion_texto || '').substring(0, 30)}</option>)}
-                    </select>
-                  </div>
-                  <div style={st.fg}>
-                    <label style={st.label}>Carpeta de investigación</label>
-                    <input style={{ ...st.input, fontFamily: 'monospace' }} placeholder="Asignada por MP" value={formType === 'victima' ? vForm.carpeta_investigacion : tForm.carpeta_investigacion} onChange={e => formType === 'victima' ? setV('carpeta_investigacion', e.target.value) : setT('carpeta_investigacion', e.target.value)} />
-                  </div>
-                </div>
-              </div>
+              {/* Vinculación con C.I. prominente */}
+              <SeccionVinculacion form={formType === 'victima' ? vForm : tForm} setField={formType === 'victima' ? setV : setT} />
 
               {/* ─── VÍCTIMA FORM ─── */}
               {formType === 'victima' && (
@@ -296,9 +411,31 @@ export default function VictimasTestigos({ perfil }) {
                         <div style={st.grid2}>
                           <div style={st.fg}><label style={st.label}>Nombre completo <span style={{ color: C.red }}>*</span></label><input style={st.input} value={vForm.nombre} onChange={e => setV('nombre', e.target.value)} /></div>
                           <div style={st.fg}><label style={st.label}>Edad</label><input type="number" style={st.input} value={vForm.edad} onChange={e => setV('edad', e.target.value)} /></div>
-                          <div style={st.fg}><label style={st.label}>Sexo</label><select style={st.select} value={vForm.sexo} onChange={e => setV('sexo', e.target.value)}><option value="">—</option><option value="Femenino">Femenino</option><option value="Masculino">Masculino</option></select></div>
+                          <div style={st.fg}>
+                            <label style={st.label}>Sexo</label>
+                            <select style={st.select} value={vForm.sexo} onChange={e => setV('sexo', e.target.value)}>
+                              <option value="">—</option>
+                              <option value="Femenino">Femenino</option>
+                              <option value="Masculino">Masculino</option>
+                              <option value="No binario">No binario</option>
+                            </select>
+                          </div>
                           <div style={st.fg}><label style={st.label}>Teléfono</label><input style={st.input} value={vForm.telefono} onChange={e => setV('telefono', e.target.value)} /></div>
-                          <div style={{ ...st.fg, gridColumn: '1 / -1' }}><label style={st.label}>Domicilio</label><input style={st.input} value={vForm.domicilio} onChange={e => setV('domicilio', e.target.value)} /></div>
+                        </div>
+                        {/* Dirección con municipio y estado */}
+                        <div style={{ ...st.grid2, marginTop: 10 }}>
+                          <div style={{ ...st.fg, gridColumn: '1 / -1' }}><label style={st.label}>Domicilio (calle, número, colonia)</label><input style={st.input} placeholder="Dirección de la víctima" value={vForm.domicilio} onChange={e => setV('domicilio', e.target.value)} /></div>
+                          <div style={st.fg}>
+                            <label style={st.label}>Municipio</label>
+                            <select style={st.select} value={vForm.municipio_domicilio} onChange={e => setV('municipio_domicilio', e.target.value)}>
+                              <option value="">— Seleccionar —</option>
+                              {MUNICIPIOS_GUERRERO.map(m => <option key={m.clave} value={m.nombre}>{m.clave} — {m.nombre}</option>)}
+                            </select>
+                          </div>
+                          <div style={st.fg}>
+                            <label style={st.label}>Entidad Federativa</label>
+                            <input style={{ ...st.input, backgroundColor: '#f0f0f0' }} value={vForm.entidad_federativa_domicilio} readOnly />
+                          </div>
                         </div>
                       </div>
 
@@ -314,9 +451,22 @@ export default function VictimasTestigos({ perfil }) {
                         </div>
                       </div>
 
+                      {/* Estado de salud — con defunción */}
                       <div style={{ marginBottom: 20 }}>
                         <div style={st.sTitle}><ShieldAlert size={15} /> Estado de Salud</div>
-                        <div style={{ display: 'flex', gap: 12, marginBottom: 10 }}>
+                        <div style={st.fg}>
+                          <label style={st.label}>Estado de la víctima</label>
+                          <select style={st.select} value={vForm.estado_salud} onChange={e => setV('estado_salud', e.target.value)}>
+                            {ESTADO_SALUD.map(es => <option key={es.key} value={es.key}>{es.label}</option>)}
+                          </select>
+                        </div>
+                        {(vForm.estado_salud === 'defuncion_doloso' || vForm.estado_salud === 'defuncion_culposo') && (
+                          <div style={{ marginTop: 10, padding: 12, backgroundColor: '#ffebee', borderRadius: 8, border: `1px solid ${C.red}30` }}>
+                            <div style={{ fontSize: 12, fontWeight: 700, color: '#b71c1c' }}>⚠ Víctima con defunción registrada</div>
+                            <div style={{ fontSize: 11, color: '#795548', marginTop: 4 }}>Se activará protocolo de cadáver. Verificar protocolo de feminicidio si aplica.</div>
+                          </div>
+                        )}
+                        <div style={{ display: 'flex', gap: 12, marginTop: 12 }}>
                           {[{ k: 'tiene_lesiones', l: 'Presenta lesiones', c: C.red }, { k: 'requiere_atencion_medica', l: 'Requiere atención médica', c: C.orange }].map(opt => (
                             <div key={opt.k} style={st.chk(vForm[opt.k], opt.c)} onClick={() => setV(opt.k, !vForm[opt.k])}>
                               <input type="checkbox" checked={vForm[opt.k]} readOnly style={{ width: 14, height: 14 }} />
@@ -324,7 +474,7 @@ export default function VictimasTestigos({ perfil }) {
                             </div>
                           ))}
                         </div>
-                        {vForm.tiene_lesiones && <div style={st.fg}><label style={st.label}>Descripción de lesiones</label><textarea style={st.textarea} value={vForm.descripcion_lesiones} onChange={e => setV('descripcion_lesiones', e.target.value)} rows={2} /></div>}
+                        {vForm.tiene_lesiones && <div style={{ ...st.fg, marginTop: 10 }}><label style={st.label}>Descripción de lesiones</label><textarea style={st.textarea} value={vForm.descripcion_lesiones} onChange={e => setV('descripcion_lesiones', e.target.value)} rows={2} /></div>}
                       </div>
 
                       <div style={{ marginBottom: 20 }}>
@@ -340,7 +490,6 @@ export default function VictimasTestigos({ perfil }) {
                       </div>
                     </>
                   )}
-
                   <div style={st.fg}><label style={st.label}>Descripción del agravio</label><textarea style={st.textarea} placeholder="Descripción de lo que sufrió la víctima..." value={vForm.descripcion_agravio} onChange={e => setV('descripcion_agravio', e.target.value)} rows={2} /></div>
                 </>
               )}
@@ -353,9 +502,32 @@ export default function VictimasTestigos({ perfil }) {
                     <div style={st.grid2}>
                       <div style={st.fg}><label style={st.label}>Nombre completo <span style={{ color: C.red }}>*</span></label><input style={st.input} value={tForm.nombre} onChange={e => setT('nombre', e.target.value)} /></div>
                       <div style={st.fg}><label style={st.label}>Edad</label><input type="number" style={st.input} value={tForm.edad} onChange={e => setT('edad', e.target.value)} /></div>
+                      <div style={st.fg}>
+                        <label style={st.label}>Sexo</label>
+                        <select style={st.select} value={tForm.sexo} onChange={e => setT('sexo', e.target.value)}>
+                          <option value="">—</option>
+                          <option value="Femenino">Femenino</option>
+                          <option value="Masculino">Masculino</option>
+                          <option value="No binario">No binario</option>
+                        </select>
+                      </div>
                       <div style={st.fg}><label style={st.label}>Teléfono</label><input style={st.input} value={tForm.telefono} onChange={e => setT('telefono', e.target.value)} /></div>
                       <div style={st.fg}><label style={st.label}>Correo</label><input style={st.input} value={tForm.correo_electronico} onChange={e => setT('correo_electronico', e.target.value)} /></div>
-                      <div style={{ ...st.fg, gridColumn: '1 / -1' }}><label style={st.label}>Domicilio</label><input style={st.input} value={tForm.domicilio} onChange={e => setT('domicilio', e.target.value)} /></div>
+                    </div>
+                    {/* Dirección testigo con municipio/estado */}
+                    <div style={{ ...st.grid2, marginTop: 10 }}>
+                      <div style={{ ...st.fg, gridColumn: '1 / -1' }}><label style={st.label}>Domicilio (calle, número, colonia)</label><input style={st.input} placeholder="Dirección del testigo" value={tForm.domicilio} onChange={e => setT('domicilio', e.target.value)} /></div>
+                      <div style={st.fg}>
+                        <label style={st.label}>Municipio</label>
+                        <select style={st.select} value={tForm.municipio_domicilio} onChange={e => setT('municipio_domicilio', e.target.value)}>
+                          <option value="">— Seleccionar —</option>
+                          {MUNICIPIOS_GUERRERO.map(m => <option key={m.clave} value={m.nombre}>{m.clave} — {m.nombre}</option>)}
+                        </select>
+                      </div>
+                      <div style={st.fg}>
+                        <label style={st.label}>Entidad Federativa</label>
+                        <input style={{ ...st.input, backgroundColor: '#f0f0f0' }} value={tForm.entidad_federativa_domicilio} readOnly />
+                      </div>
                     </div>
                   </div>
 
@@ -387,6 +559,9 @@ export default function VictimasTestigos({ perfil }) {
                 </>
               )}
 
+              {/* Archivos — ambos */}
+              <SeccionArchivos />
+
               {mensaje && (
                 <div style={{ padding: '10px 14px', borderRadius: 8, backgroundColor: mensaje.tipo === 'ok' ? '#e8f5e9' : '#ffebee', color: mensaje.tipo === 'ok' ? '#1b5e20' : '#b71c1c', fontSize: 13, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 8, marginTop: 8 }}>
                   {mensaje.tipo === 'ok' ? <CheckCircle2 size={16} /> : <AlertTriangle size={16} />} {mensaje.texto}
@@ -417,23 +592,22 @@ export default function VictimasTestigos({ perfil }) {
               <X size={20} style={{ cursor: 'pointer' }} onClick={() => { setShowDetail(null); setShowMedForm(false); }} />
             </div>
 
-            {/* Vulnerability flags */}
             {detailType === 'victima' && hayVulnerabilidad(showDetail) && (
               <div style={{ padding: '10px 20px', backgroundColor: '#fff3e0', borderBottom: `1px solid ${C.orange}30`, display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                {VULNERABILIDADES.filter(v => showDetail[v.key]).map(v => (
-                  <span key={v.key} style={st.badge(v.color + '20', v.color)}>{v.icon} {v.label}</span>
-                ))}
+                {VULNERABILIDADES.filter(v => showDetail[v.key]).map(v => <span key={v.key} style={st.badge(v.color + '20', v.color)}>{v.icon} {v.label}</span>)}
               </div>
             )}
 
-            {/* Detail rows */}
             {[
-              { label: 'Carpeta', value: showDetail.carpeta_investigacion },
+              { label: 'C.I.', value: showDetail.carpeta_investigacion },
               { label: 'Edad', value: showDetail.edad ? `${showDetail.edad} años` : null },
               { label: 'Sexo', value: showDetail.sexo },
               { label: 'Teléfono', value: showDetail.telefono },
               { label: 'Domicilio', value: showDetail.domicilio },
+              { label: 'Municipio', value: showDetail.municipio_domicilio },
+              { label: 'Estado', value: showDetail.entidad_federativa_domicilio },
               ...(detailType === 'victima' ? [
+                { label: 'Estado salud', value: (() => { const es = ESTADO_SALUD.find(e => e.key === showDetail.estado_salud); return es ? es.label : showDetail.estado_salud; })() },
                 { label: 'Lesiones', value: showDetail.tiene_lesiones ? '⚠️ Sí' : 'No' },
                 { label: 'Desc. lesiones', value: showDetail.descripcion_lesiones },
                 { label: 'Atención médica', value: showDetail.requiere_atencion_medica ? '🏥 Requerida' : null },
@@ -453,7 +627,6 @@ export default function VictimasTestigos({ perfil }) {
               </div>
             ))}
 
-            {/* MEDIDAS DE PROTECCIÓN (solo víctimas) */}
             {detailType === 'victima' && (
               <div style={{ padding: '16px 20px', borderTop: `2px solid ${C.gold}` }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
@@ -478,7 +651,7 @@ export default function VictimasTestigos({ perfil }) {
                 )}
 
                 {medidas.length === 0 ? (
-                  <div style={{ color: C.red, fontSize: 12, textAlign: 'center', padding: 16, backgroundColor: '#ffebee', borderRadius: 8 }}>⚠ Sin medidas de protección registradas — es obligatorio documentarlas.</div>
+                  <div style={{ color: C.red, fontSize: 12, textAlign: 'center', padding: 16, backgroundColor: '#ffebee', borderRadius: 8 }}>⚠ Sin medidas de protección registradas.</div>
                 ) : (
                   medidas.map(m => (
                     <div key={m.id} style={{ backgroundColor: C.bg, borderRadius: 8, padding: 12, marginBottom: 8, border: `1px solid ${C.lightGray}` }}>
@@ -488,7 +661,6 @@ export default function VictimasTestigos({ perfil }) {
                       </div>
                       <div style={{ fontSize: 13, color: C.darkBlue, marginTop: 6 }}>{m.descripcion}</div>
                       {m.institucion_responsable && <div style={{ fontSize: 11, color: C.gray, marginTop: 4 }}>Responsable: {m.institucion_responsable}</div>}
-                      <div style={{ fontSize: 10, color: C.gray, marginTop: 4 }}>{new Date(m.creado_en).toLocaleString('es-MX', { dateStyle: 'short', timeStyle: 'short' })}</div>
                     </div>
                   ))
                 )}
