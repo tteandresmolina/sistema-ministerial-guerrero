@@ -1847,7 +1847,51 @@ function FichaBasicaRestringida({ detenido, perfil, onVolver }) {
 }
 
 
-
+function ExpedienteVinculado({ carpeta }) {
+  const [oficios, setOficios] = useState([]);
+  const [cargando, setCargando] = useState(true);
+  const [expandido, setExpandido] = useState(false);
+  useEffect(() => {
+    supabase.from('oficios_investigacion').select('*').eq('carpeta_investigacion', carpeta).order('created_at', { ascending: false })
+      .then(({ data }) => { setOficios(data || []); setCargando(false); });
+  }, [carpeta]);
+  if (cargando) return <div style={{ textAlign: 'center', padding: 20, color: '#6b7280' }}>Buscando expediente...</div>;
+  if (oficios.length === 0) return null;
+  return (
+    <div style={{ background: '#f5ede0', border: '1px solid #b6905440', borderRadius: 10, padding: 16, marginBottom: 16 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }} onClick={() => setExpandido(!expandido)}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <Briefcase size={18} color="#b69054" />
+          <span style={{ fontWeight: 700, fontSize: 14, color: '#001a4d' }}>Expediente Policial Vinculado ({oficios.length} oficio{oficios.length > 1 ? 's' : ''})</span>
+        </div>
+        <span style={{ fontSize: 12, color: '#b69054', fontWeight: 700 }}>{expandido ? '▲ Cerrar' : '▼ Ver expediente'}</span>
+      </div>
+      <div style={{ fontSize: 11, color: '#666', marginTop: 4, fontFamily: 'monospace' }}>C.I. {carpeta}</div>
+      {expandido && (
+        <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {oficios.map(o => (
+            <div key={o.id} style={{ background: '#ffffff', borderRadius: 8, padding: 14, border: '1px solid #e8ecf1' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <div>
+                  <div style={{ fontWeight: 700, fontSize: 13, color: '#001a4d' }}>Oficio #{o.numero_oficio} — {o.delito}</div>
+                  <div style={{ fontSize: 12, color: '#666', marginTop: 4 }}>{o.asunto || 'Se solicita investigación'}</div>
+                  <div style={{ fontSize: 11, color: '#666', marginTop: 4 }}>MP: {o.nombre_mp_emisor || '—'} · Unidad: {o.unidad_emisora || '—'}</div>
+                  {o.lugar_hechos && <div style={{ fontSize: 11, color: '#666', marginTop: 2 }}>Lugar: {o.lugar_hechos}{o.municipio ? ', ' + o.municipio : ''}</div>}
+                  {o.agente_recibe && <div style={{ fontSize: 11, color: '#666', marginTop: 2 }}>Recibe: {o.agente_recibe}</div>}
+                </div>
+                <div style={{ textAlign: 'right' }}>
+                  <div style={{ padding: '3px 10px', borderRadius: 12, fontSize: 10, fontWeight: 700, background: o.estatus === 'cumplimentado' ? '#e8f5e9' : o.estatus === 'vencido' ? '#ffebee' : '#fff3e0', color: o.estatus === 'cumplimentado' ? '#2e7d32' : o.estatus === 'vencido' ? '#b71c1c' : '#e65100', display: 'inline-block', textTransform: 'uppercase' }}>{o.estatus || 'recibido'}</div>
+                  <div style={{ fontSize: 11, color: '#9ca3af', marginTop: 4 }}>{o.fecha_emision || '—'}</div>
+                  {o.prioridad && o.prioridad !== 'normal' && <div style={{ fontSize: 10, color: '#dc3545', fontWeight: 700, marginTop: 2 }}>{o.prioridad.toUpperCase()}</div>}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 function ModuloDetenidos({ perfil, detenidoInicial, onDetenidoInicialUsado }) {
   const [form, setForm] = useState(initialForm);
   const [guardando, setGuardando] = useState(false);
@@ -2005,7 +2049,9 @@ function ModuloDetenidos({ perfil, detenidoInicial, onDetenidoInicialUsado }) {
           const { data } = await supabase.from("detenidos").select("*").eq("id", detenidoActivo.id).single();
           if (data) setDetenidoActivo(data);
         }} />
-
+{detenidoActivo.carpeta_investigacion && (
+          <ExpedienteVinculado carpeta={detenidoActivo.carpeta_investigacion} />
+        )}
         <Seccion titulo="Fotografías del Detenido" color="#001a4d" icon={Camera}>
           <div style={{ gridColumn: "1 / -1", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
             {FOTO_SLOTS.map((slot) => (
