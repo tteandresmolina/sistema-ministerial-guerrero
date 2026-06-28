@@ -76,7 +76,10 @@ export default function ExpedientePolicial({ user }) {
     nombre_mp_emisor: '', dirigido_a: '', delito: '', asunto: '',
     descripcion_hechos: '', nombre_victima: '', nombre_imputado: '',
     lugar_hechos: '', folio_911: '', prioridad: 'normal',
-    termino_horas: '', fecha_emision: new Date().toISOString().split('T')[0]
+    termino_horas: '', fecha_emision: new Date().toISOString().split('T')[0],
+    municipio: '', entidad_federativa: 'Guerrero',
+    coordenadas_lat: '', coordenadas_lng: '', referencias_lugar: '',
+    agente_recibe: ''
   };
   const [formOficio, setFormOficio] = useState(emptyOficio);
 
