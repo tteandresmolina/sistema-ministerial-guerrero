@@ -602,8 +602,10 @@ const renderFormularioOficio = () => (
           <button style={btnPrimary} onClick={handleGuardarOficio} disabled={loading}>
             <FileText size={15} /> {loading ? 'Guardando...' : 'Registrar Oficio'}
           </button>
-        </div>
-
+ </div>
+      </div>
+    </div>
+  );
   // ============================================================================
   // RENDER: DETALLE DEL EXPEDIENTE
   // ============================================================================
