@@ -576,15 +576,33 @@ const renderFormularioOficio = () => (
           </div>
         </div>
 
+{/* Anexo: Oficio físico escaneado */}
+        <div style={{ borderTop: '2px solid #e8ecf1', paddingTop: 14, marginTop: 18 }}>
+          <div style={{ fontWeight: 700, color: COLORS.gold, fontSize: 13, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
+            <FileText size={14} /> ANEXO — OFICIO DE INVESTIGACIÓN ESCANEADO
+          </div>
+          <p style={{ fontSize: 11, color: '#666', marginBottom: 10 }}>Sube el oficio del MP debidamente acusado con sellos y firmas. Formatos: PDF, JPG, PNG · Máximo 5MB</p>
+          <div style={{ border: '2px dashed #c7cfe0', borderRadius: 10, padding: 20, textAlign: 'center', cursor: 'pointer', background: COLORS.bg }}
+            onClick={() => document.getElementById('file-oficio').click()}>
+            <FileText size={24} color="#999" />
+            <p style={{ fontSize: 12, color: '#999', margin: '6px 0 0 0' }}>Clic para seleccionar archivo</p>
+            <input id="file-oficio" type="file" accept="image/jpeg,image/png,application/pdf" style={{ display: 'none' }}
+              onChange={e => { const f = e.target.files[0]; if (f) setFormOficio({ ...formOficio, _archivoOficio: f }); }} />
+          </div>
+          {formOficio._archivoOficio && (
+            <div style={{ marginTop: 8, padding: '8px 12px', background: '#f0fdf4', borderRadius: 8, border: '1px solid #22c55e44', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <span style={{ fontSize: 12, color: '#085041' }}>{formOficio._archivoOficio.name} ({(formOficio._archivoOficio.size / 1024).toFixed(0)} KB)</span>
+              <button onClick={() => setFormOficio({ ...formOficio, _archivoOficio: null })} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#dc3545', fontSize: 12 }}>✕</button>
+            </div>
+          )}
+        </div>
+
         <div style={{ display: 'flex', gap: 10, marginTop: 18, justifyContent: 'flex-end' }}>
           <button style={btnSecondary} onClick={() => setVista('listado')}>Cancelar</button>
           <button style={btnPrimary} onClick={handleGuardarOficio} disabled={loading}>
             <FileText size={15} /> {loading ? 'Guardando...' : 'Registrar Oficio'}
           </button>
         </div>
-      </div>
-    </div>
-  );
 
   // ============================================================================
   // RENDER: DETALLE DEL EXPEDIENTE
