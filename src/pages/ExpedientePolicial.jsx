@@ -10,7 +10,7 @@ import {
   ChevronDown, ChevronUp, RefreshCw, Bookmark, Flag, FileSearch
 } from 'lucide-react';
 import { useExpedientePolicial } from '../hooks/useExpedientePolicial';
-
+import { supabase } from '../supabaseClient';
 // ============================================================================
 // ESTILOS BASE
 // ============================================================================
