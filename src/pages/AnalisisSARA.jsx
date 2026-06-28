@@ -9,7 +9,7 @@ import {
   Filter, Eye, Briefcase, Flag, ChevronDown
 } from 'lucide-react';
 import { useAnalisisSARA } from '../hooks/useAnalisisSARA';
-
+import MapaCalor from './MapaCalor';
 const COLORS = { primary: '#001a4d', gold: '#b69054', white: '#ffffff' };
 
 const cardStyle = {
