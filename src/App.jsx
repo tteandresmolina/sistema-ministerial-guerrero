@@ -2226,7 +2226,7 @@ export default function App() {
           <img src="/logo-fge.png" alt="FGE Guerrero" style={{ width: 42, height: 42, borderRadius: "50%", border: "2px solid #b69054" }} />
           <div>
             <div style={{ color: "#ffffff", fontSize: 14, fontWeight: 700 }}>FGE GUERRERO — SISTEMA MINISTERIAL</div>
-            <div style={{ color: "#b69054", fontSize: 9, letterSpacing: 2 }}>Sistema de Información Criminal</div>
+<div style={{ color: "#b69054", fontSize: 9, letterSpacing: 2 }}>{["registro911","primerrespondiente","escenacrimen","indicios","victimastestigos","expediente"].includes(tabApp) ? "EXPEDIENTE DE INVESTIGACIÓN POLICIAL" : ["busqueda","detenidos"].includes(tabApp) ? "INDIVIDUALIZACIÓN DE DETENIDOS" : "ANÁLISIS E INTELIGENCIA CRIMINAL"}</div>
           </div>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
