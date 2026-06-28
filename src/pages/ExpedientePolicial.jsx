@@ -286,7 +286,7 @@ export default function ExpedientePolicial({ user }) {
           <FileText size={18} style={{ verticalAlign: 'middle', marginRight: 6 }} />
           Oficios de Investigación ({oficios.length})
         </h3>
-        {['direccion_general','coordinador_regional','coordinador_zona'].includes(user?.rol) && (
+        {['direccion_general','director_general','coordinador_regional','coordinador_zona','coordinador_grupo'].includes(user?.rol) && (
           <button style={btnPrimary} onClick={() => { setFormOficio(emptyOficio); setVista('nuevo_oficio'); }}>
             <Plus size={15} /> Registrar Oficio
           </button>
