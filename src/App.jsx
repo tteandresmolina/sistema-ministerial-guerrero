@@ -1947,7 +1947,15 @@ function ModuloDetenidos({ perfil, detenidoInicial, onDetenidoInicialUsado }) {
 
   useEffect(() => { if (vista === "lista") cargarDetenidos(); }, [vista]);
   useEffect(() => { if (detenidoActivo) cargarArchivos(detenidoActivo.id); }, [detenidoActivo]);
-
+const [antecedentes, setAntecedentes] = useState([]);
+  useEffect(() => {
+    if (!detenidoActivo?.nombre) { setAntecedentes([]); return; }
+    const palabras = detenidoActivo.nombre.trim().split(/\s+/).filter(p => p.length > 2);
+    if (palabras.length < 2) { setAntecedentes([]); return; }
+    supabase.from("detenidos").select("id, nombre, alias, delito, carpeta_investigacion, fecha_deteccion, region")
+      .neq("id", detenidoActivo.id).ilike("nombre", `%${palabras[0]}%`).ilike("nombre", `%${palabras[palabras.length - 1]}%`)
+      .then(({ data }) => setAntecedentes(data || []));
+  }, [detenidoActivo?.id]);
   const guardar = async () => {
     if (!form.nombre || !form.delito) { setMensaje({ tipo: "error", texto: "Nombre y delito son obligatorios." }); return; }
     setGuardando(true); setMensaje(null);
@@ -2049,6 +2057,22 @@ function ModuloDetenidos({ perfil, detenidoInicial, onDetenidoInicialUsado }) {
           const { data } = await supabase.from("detenidos").select("*").eq("id", detenidoActivo.id).single();
           if (data) setDetenidoActivo(data);
         }} />
+        {antecedentes.length > 0 && (
+          <div style={{ background: "#ffebee", border: "2px solid #ef444460", borderRadius: 10, padding: 14, marginBottom: 16, display: "flex", alignItems: "flex-start", gap: 10 }}>
+            <ShieldAlert size={22} color="#dc3545" style={{ flexShrink: 0, marginTop: 2 }} />
+            <div>
+              <div style={{ fontWeight: 700, fontSize: 14, color: "#b71c1c" }}>⚠ ALERTA — {antecedentes.length} registro{antecedentes.length > 1 ? "s" : ""} previo{antecedentes.length > 1 ? "s" : ""} detectado{antecedentes.length > 1 ? "s" : ""}</div>
+              <div style={{ fontSize: 12, color: "#795548", marginTop: 4 }}>El sistema identificó coincidencias por nombre en otras carpetas de investigación.</div>
+              {antecedentes.map(a => (
+                <div key={a.id} style={{ marginTop: 8, padding: "8px 12px", background: "#ffffff", borderRadius: 8, border: "1px solid #ef444430" }}>
+                  <div style={{ fontWeight: 700, fontSize: 13, color: "#001a4d" }}>{a.nombre} {a.alias ? `(${a.alias})` : ""}</div>
+                  <div style={{ fontSize: 11, color: "#666", marginTop: 2 }}>{a.delito} · {a.region} · {a.fecha_deteccion || "—"}</div>
+                  {a.carpeta_investigacion && <div style={{ fontSize: 11, color: "#b71c1c", fontFamily: "monospace", marginTop: 2 }}>C.I. {a.carpeta_investigacion}</div>}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 {detenidoActivo.carpeta_investigacion && (
           <ExpedienteVinculado carpeta={detenidoActivo.carpeta_investigacion} />
         )}
