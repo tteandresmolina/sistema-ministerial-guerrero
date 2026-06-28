@@ -2140,7 +2140,7 @@ function ModuloDetenidos({ perfil, detenidoInicial, onDetenidoInicialUsado }) {
             </div>
           )}
           <input value={busqueda} onChange={(e) => setBusqueda(e.target.value)} placeholder="Buscar por nombre, alias, delito…"
-            style={{ background: "#f4f6fb", border: "1px solid #e8ecf1", borderRadius: 8, padding: "10px 14px", color: "#001a4d", fontSize: 14, width: "100%", outline: "none", boxSizing: "border-box", marginBottom: 14, fontFamily: "inherit" }}
+            style={{ background: "#f4f6fb", border: "1px solid #e8ecf1", borderRadius: 8, padding: "10px 14px", color: "#001a4d", fontSize: 14, width: "100%", outline: "none", boxSizing: "border-box", marginBottom: 14, fontFamily: "inherit" }} />
           {cargando ? (
             <div style={{ textAlign: "center", padding: 40, color: "#6b7280" }}>Cargando desde Supabase…</div>
           ) : listaFiltrada.length === 0 ? (
