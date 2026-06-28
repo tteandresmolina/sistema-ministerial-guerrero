@@ -2147,7 +2147,7 @@ function ModuloDetenidos({ perfil, detenidoInicial, onDetenidoInicialUsado }) {
             <div style={{ textAlign: "center", padding: 40, color: "#6b7280" }}>No hay detenidos registrados aún.</div>
           ) : (
             listaFiltrada.map((d) => (
-              style={{ background: "#ffffff", border: "1px solid #e8ecf1", borderRadius: 12, padding: 14, marginBottom: 10, cursor: "pointer", boxShadow: "0 1px 4px rgba(0,0,0,0.08)" }}>
+              <div key={d.id} onClick={() => setDetenidoActivo(d)} style={{ background: "#ffffff", border: "1px solid #e8ecf1", borderRadius: 12, padding: 14, marginBottom: 10, cursor: "pointer", boxShadow: "0 1px 4px rgba(0,0,0,0.08)" }}>
                 <div style={{ display: "flex", gap: 12 }}>
                   {d._fotoFrente ? (
                     <img src={d._fotoFrente} alt={d.nombre} style={{ width: 52, height: 52, objectFit: "cover", borderRadius: 8, border: "1px solid #c3cbd6", flexShrink: 0 }} />
