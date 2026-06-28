@@ -86,7 +86,8 @@ export default function ExpedientePolicial({ user }) {
     descripcion_fisica: '', domicilio_conocido: '', telefono: '',
     estatus: 'sospechoso', tipo_identificacion: 'investigacion',
     rol_en_hechos: 'por_determinar', evidencia_vinculante: '',
-    ultimo_avistamiento: '', observaciones: ''
+    ultimo_avistamiento: '', observaciones: '',
+    ultimo_avistamiento_fecha: '', ultimo_avistamiento_lugar: '', ultimo_avistamiento_descripcion: ''
   };
   const [formPersona, setFormPersona] = useState(emptyPersona);
 
