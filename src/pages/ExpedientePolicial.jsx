@@ -591,7 +591,6 @@ export default function ExpedientePolicial({ user }) {
         </button>
       </div>
 
-      {/* Form */}
       {showFormPersona && (
         <div style={{ ...cardStyle, background: '#fffbeb', borderLeft: '4px solid ' + COLORS.gold }}>
           <div style={{ fontWeight: 700, color: COLORS.primary, marginBottom: 10, fontSize: 14 }}>
@@ -613,6 +612,7 @@ export default function ExpedientePolicial({ user }) {
               <select style={selectStyle} value={formPersona.sexo} onChange={e => setFormPersona({ ...formPersona, sexo: e.target.value })}>
                 <option value="masculino">Masculino</option>
                 <option value="femenino">Femenino</option>
+                <option value="no_binario">No binario</option>
                 <option value="no_especificado">No especificado</option>
               </select>
             </div>
@@ -671,6 +671,27 @@ export default function ExpedientePolicial({ user }) {
               <textarea style={textareaStyle} placeholder="Describe la evidencia que vincula a esta persona..."
                 value={formPersona.evidencia_vinculante} onChange={e => setFormPersona({ ...formPersona, evidencia_vinculante: e.target.value })} />
             </div>
+
+            {/* Último avistamiento */}
+            <div style={{ gridColumn: '1 / -1', borderTop: '2px solid #e8ecf1', paddingTop: 12, marginTop: 4 }}>
+              <div style={{ fontWeight: 700, color: COLORS.gold, fontSize: 13, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
+                <MapPin size={14} /> ÚLTIMO AVISTAMIENTO
+              </div>
+            </div>
+            <div>
+              <label style={labelStyle}>Fecha del avistamiento</label>
+              <input style={inputStyle} type="date" value={formPersona.ultimo_avistamiento_fecha} onChange={e => setFormPersona({ ...formPersona, ultimo_avistamiento_fecha: e.target.value })} />
+            </div>
+            <div>
+              <label style={labelStyle}>Lugar del avistamiento</label>
+              <input style={inputStyle} placeholder="Colonia, calle, municipio..."
+                value={formPersona.ultimo_avistamiento_lugar} onChange={e => setFormPersona({ ...formPersona, ultimo_avistamiento_lugar: e.target.value })} />
+            </div>
+            <div style={{ gridColumn: '1 / -1' }}>
+              <label style={labelStyle}>Descripción / Circunstancias</label>
+              <textarea style={textareaStyle} placeholder="Cómo fue visto, con quién, en qué vehículo, actividad..."
+                value={formPersona.ultimo_avistamiento_descripcion} onChange={e => setFormPersona({ ...formPersona, ultimo_avistamiento_descripcion: e.target.value })} />
+            </div>
           </div>
           <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 12 }}>
             <button style={btnPrimary} onClick={handleGuardarPersona} disabled={loading}>
@@ -680,7 +701,6 @@ export default function ExpedientePolicial({ user }) {
         </div>
       )}
 
-      {/* Lista */}
       {personas.length === 0 ? (
         <div style={{ ...cardStyle, textAlign: 'center', padding: 30, color: '#9ca3af' }}>
           No hay personas investigadas registradas en esta carpeta
@@ -689,23 +709,43 @@ export default function ExpedientePolicial({ user }) {
         personas.map(p => (
           <div key={p.id} style={{ ...cardStyle, borderLeft: `4px solid ${getEstatusPersonaColor(p.estatus)}` }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-              <div>
+              <div style={{ flex: 1 }}>
                 <div style={{ fontWeight: 700, fontSize: 14, color: COLORS.primary, marginBottom: 4 }}>
                   {p.nombre_completo || p.alias || 'No identificado'}
                   {p.alias && p.nombre_completo && <span style={{ fontWeight: 400, color: '#6b7280' }}> alias "{p.alias}"</span>}
                 </div>
-                <div style={{ fontSize: 12, color: '#6b7280', marginBottom: 4 }}>
+                <div style={{ fontSize: 12, color: '#6b7280', marginBottom: 4, display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                   <span style={badge(getEstatusPersonaColor(p.estatus))}>{p.estatus}</span>
-                  <span style={{ marginLeft: 8 }}>Rol: {(p.rol_en_hechos || 'por_determinar').replace(/_/g, ' ')}</span>
-                  <span style={{ marginLeft: 8 }}>ID: {(p.tipo_identificacion || '—').replace(/_/g, ' ')}</span>
+                  <span>Rol: {(p.rol_en_hechos || 'por_determinar').replace(/_/g, ' ')}</span>
+                  <span>ID: {(p.tipo_identificacion || '—').replace(/_/g, ' ')}</span>
                 </div>
                 {p.descripcion_fisica && <div style={{ fontSize: 12, color: '#374151', marginTop: 4 }}>{p.descripcion_fisica}</div>}
                 {p.evidencia_vinculante && <div style={{ fontSize: 12, color: '#374151', marginTop: 4, fontStyle: 'italic' }}>Evidencia: {p.evidencia_vinculante}</div>}
+                {(p.ultimo_avistamiento_fecha || p.ultimo_avistamiento_lugar) && (
+                  <div style={{ fontSize: 12, color: '#92400e', marginTop: 6, padding: '6px 10px', background: '#fffbeb', borderRadius: 6, border: '1px solid #fbbf2440', display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <MapPin size={12} />
+                    <span style={{ fontWeight: 600 }}>Último avistamiento:</span>
+                    {p.ultimo_avistamiento_fecha && <span>{p.ultimo_avistamiento_fecha}</span>}
+                    {p.ultimo_avistamiento_lugar && <span>— {p.ultimo_avistamiento_lugar}</span>}
+                    {p.ultimo_avistamiento_descripcion && <span style={{ fontStyle: 'italic' }}>({p.ultimo_avistamiento_descripcion})</span>}
+                  </div>
+                )}
               </div>
-              <div style={{ textAlign: 'right', fontSize: 11, color: '#9ca3af' }}>
-                {p.sexo !== 'no_especificado' && <div>{p.sexo === 'masculino' ? '♂' : '♀'} {p.edad_aparente && `~${p.edad_aparente} años`}</div>}
+              <div style={{ textAlign: 'right', fontSize: 11, color: '#9ca3af', minWidth: 80 }}>
+                {p.sexo !== 'no_especificado' && <div>{p.sexo === 'masculino' ? '♂' : p.sexo === 'femenino' ? '♀' : '⚧'} {p.edad_aparente && `~${p.edad_aparente} años`}</div>}
                 <div>{formatFecha(p.created_at)}</div>
               </div>
+            </div>
+
+            {/* Cambiar estatus */}
+            <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid #e8ecf1', display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+              <span style={{ fontSize: 11, color: '#6b7280', fontWeight: 600 }}>Cambiar estatus:</span>
+              {['sospechoso', 'identificado', 'localizado', 'detenido', 'profugo', 'descartado'].filter(s => s !== p.estatus).map(s => (
+                <button key={s} onClick={() => handleCambiarEstatusPersona(p, s)}
+                  style={{ padding: '3px 10px', borderRadius: 12, fontSize: 10, fontWeight: 700, cursor: 'pointer', border: `1px solid ${getEstatusPersonaColor(s)}30`, background: getEstatusPersonaColor(s) + '15', color: getEstatusPersonaColor(s), textTransform: 'uppercase' }}>
+                  {s}
+                </button>
+              ))}
             </div>
           </div>
         ))
