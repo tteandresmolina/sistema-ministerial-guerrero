@@ -2035,10 +2035,9 @@ function ModuloDetenidos({ perfil, detenidoInicial, onDetenidoInicialUsado }) {
   }
 
   return (
-    <div>
-      <div style={{ display: "flex", gap: 6, marginBottom: 18, background: "#eef1f6", borderRadius: 10, padding: 6, width: "fit-content" }}>
-        <button onClick={() => setVista("nuevo")} style={{ background: vista === "nuevo" ? "#c3cbd6" : "none", border: "none", borderRadius: 8, padding: "8px 16px", color: vista === "nuevo" ? "#1a1a2e" : "#6b7280", fontSize: 12, fontWeight: 700, cursor: "pointer" }}><span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}><User size={14} />Nuevo Detenido</span></button>
-        <button onClick={() => setVista("lista")} style={{ background: vista === "lista" ? "#c3cbd6" : "none", border: "none", borderRadius: 8, padding: "8px 16px", color: vista === "lista" ? "#1a1a2e" : "#6b7280", fontSize: 12, fontWeight: 700, cursor: "pointer" }}><span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}><ClipboardList size={14} />Consultar Base</span></button>
+   <div style={{ display: "flex", gap: 6, marginBottom: 18 }}>
+        <button onClick={() => setVista("nuevo")} style={{ padding: "10px 20px", borderRadius: 8, cursor: "pointer", display: "flex", alignItems: "center", gap: 8, border: vista === "nuevo" ? "2px solid #b69054" : "1px solid #e8ecf1", background: vista === "nuevo" ? "#f5ede0" : "#ffffff", color: vista === "nuevo" ? "#001a4d" : "#666666", fontSize: 14, fontWeight: 700 }}><User size={16} /> Nuevo Detenido</button>
+        <button onClick={() => setVista("lista")} style={{ padding: "10px 20px", borderRadius: 8, cursor: "pointer", display: "flex", alignItems: "center", gap: 8, border: vista === "lista" ? "2px solid #b69054" : "1px solid #e8ecf1", background: vista === "lista" ? "#f5ede0" : "#ffffff", color: vista === "lista" ? "#001a4d" : "#666666", fontSize: 14, fontWeight: 700 }}><ClipboardList size={16} /> Consultar Base</button>
       </div>
 
       {vista === "nuevo" && (
