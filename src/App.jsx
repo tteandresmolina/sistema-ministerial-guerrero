@@ -2112,7 +2112,7 @@ function ModuloDetenidos({ perfil, detenidoInicial, onDetenidoInicialUsado }) {
             </div>
           )}
 
-          <button onClick={guardar} disabled={guardando} style={{ width: "100%", background: guardando ? "#d9dee5" : "linear-gradient(135deg,#001a4d,#001237)", border: "none", borderRadius: 9, padding: 14, color: "#ffffff", fontSize: 14, fontWeight: 700, cursor: guardando ? "default" : "pointer", letterSpacing: 1 }}>
+          style={{ width: "100%", background: guardando ? "#d9dee5" : "#001a4d", border: "none", borderRadius: 8, padding: 14, color: "#ffffff", fontSize: 14, fontWeight: 700, cursor: guardando ? "default" : "pointer", letterSpacing: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
             {guardando ? "GUARDANDO…" : "GUARDAR DETENIDO Y CONTINUAR"}
           </button>
         </>
