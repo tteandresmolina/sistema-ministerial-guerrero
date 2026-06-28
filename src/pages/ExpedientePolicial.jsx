@@ -898,6 +898,60 @@ const subTabs = [
   );
 
   // === SUB: ACCIONES DE INVESTIGACIÓN ===
+  const [detenidosVinculados, setDetenidosVinculados] = useState([]);
+  const [cargandoDetenidos, setCargandoDetenidos] = useState(false);
+  const cargarDetenidosVinculados = async (ci) => {
+    if (!ci) return;
+    setCargandoDetenidos(true);
+    const { data } = await supabase.from('detenidos').select('*').eq('carpeta_investigacion', ci).order('creado_en', { ascending: false });
+    setDetenidosVinculados(data || []);
+    setCargandoDetenidos(false);
+  };
+  const renderDetenidosVinculados = () => {
+    const ci = oficioSeleccionado?.carpeta_investigacion;
+    if (!ci) return <div style={{ ...cardStyle, textAlign: 'center', padding: 30, color: '#9ca3af' }}>Este oficio no tiene C.I. asignada</div>;
+    if (detenidosVinculados.length === 0 && !cargandoDetenidos) { cargarDetenidosVinculados(ci); }
+    return (
+      <div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+          <span style={{ fontWeight: 700, color: COLORS.primary, fontSize: 14 }}>
+            Detenidos vinculados a C.I. {ci} ({detenidosVinculados.length})
+          </span>
+          <button style={{ ...btnSecondary, padding: '6px 12px', fontSize: 12 }} onClick={() => cargarDetenidosVinculados(ci)}>
+            <RefreshCw size={13} /> Actualizar
+          </button>
+        </div>
+        {cargandoDetenidos ? (
+          <div style={{ textAlign: 'center', padding: 30, color: '#9ca3af' }}>Buscando detenidos...</div>
+        ) : detenidosVinculados.length === 0 ? (
+          <div style={{ ...cardStyle, textAlign: 'center', padding: 30, color: '#9ca3af' }}>
+            No hay detenidos registrados con esta Carpeta de Investigación
+            <div style={{ marginTop: 10, fontSize: 12, color: '#6b7280' }}>Cuando se registre un detenido con C.I. <span style={{ fontFamily: 'monospace', fontWeight: 700 }}>{ci}</span> en el Módulo de Detenidos, aparecerá aquí automáticamente.</div>
+          </div>
+        ) : (
+          detenidosVinculados.map(d => (
+            <div key={d.id} style={{ ...cardStyle, borderLeft: '4px solid ' + COLORS.gold }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <div>
+                  <div style={{ fontWeight: 700, fontSize: 15, color: COLORS.primary }}>{d.nombre}</div>
+                  {d.alias && <div style={{ fontSize: 12, color: '#f59e0b' }}>Alias: {d.alias}</div>}
+                  <div style={{ fontSize: 12, color: '#6b7280', marginTop: 4 }}>{d.delito} · {d.region}</div>
+                  {d.rnd && <div style={{ fontSize: 11, color: '#6b7280', fontFamily: 'monospace', marginTop: 4 }}>R.N.D.: {d.rnd}</div>}
+                  <div style={{ fontSize: 11, color: '#6b7280', marginTop: 4 }}>Tipo detención: {d.tipo_deteccion || '—'} · Sexo: {d.sexo || '—'}</div>
+                  {d.lugar_deteccion && <div style={{ fontSize: 11, color: '#6b7280', marginTop: 2 }}>Lugar: {d.lugar_deteccion}</div>}
+                </div>
+                <div style={{ textAlign: 'right', fontSize: 11, color: '#9ca3af' }}>
+                  <div>{d.fecha_deteccion || '—'}</div>
+                  <div style={{ marginTop: 4 }}>{d.registrado_por}</div>
+                  {d.estatus_clave && <div style={{ marginTop: 6, padding: '3px 10px', borderRadius: 12, fontSize: 10, fontWeight: 700, background: d.estatus_clave === 'finalizado' ? '#e8f5e9' : '#fff3e0', color: d.estatus_clave === 'finalizado' ? '#2e7d32' : '#e65100', display: 'inline-block' }}>{d.estatus_clave}</div>}
+                </div>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+    );
+  };
 const renderAccionesInvestigacion = () => (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
