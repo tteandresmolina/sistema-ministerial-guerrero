@@ -132,7 +132,10 @@ export default function ExpedientePolicial({ user }) {
       ...formPersona,
       carpeta_investigacion: oficioSeleccionado.carpeta_investigacion,
       oficio_id: oficioSeleccionado.id,
-      edad_aparente: formPersona.edad_aparente ? parseInt(formPersona.edad_aparente) : null
+      edad_aparente: formPersona.edad_aparente ? parseInt(formPersona.edad_aparente) : null,
+      ultimo_avistamiento_fecha: formPersona.ultimo_avistamiento_fecha || null,
+      ultimo_avistamiento_lugar: formPersona.ultimo_avistamiento_lugar || null,
+      ultimo_avistamiento_descripcion: formPersona.ultimo_avistamiento_descripcion || null
     };
     const result = await crearPersona(payload);
     if (result) {
@@ -140,23 +143,8 @@ export default function ExpedientePolicial({ user }) {
       setShowFormPersona(false);
     }
   };
-
-  const handleGuardarAccion = async () => {
-    if (!formAccion.descripcion_actuacion || !formAccion.lugar_intervencion) {
-      setError('Descripción y Lugar son obligatorios');
-      return;
-    }
-    const payload = {
-      ...formAccion,
-      carpeta_investigacion: oficioSeleccionado.carpeta_investigacion,
-      oficio_id: oficioSeleccionado.id,
-      instruccion_numero: formAccion.instruccion_numero ? parseInt(formAccion.instruccion_numero) : null
-    };
-    const result = await crearAccion(payload);
-    if (result) {
-      setFormAccion(emptyAccion);
-      setShowFormAccion(false);
-    }
+  const handleCambiarEstatusPersona = async (persona, nuevoEstatus) => {
+    await actualizarPersona(persona.id, { estatus: nuevoEstatus });
   };
 
   // === CATÁLOGOS ===
