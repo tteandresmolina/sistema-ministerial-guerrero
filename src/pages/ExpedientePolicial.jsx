@@ -95,11 +95,12 @@ export default function ExpedientePolicial({ user }) {
   const [formPersona, setFormPersona] = useState(emptyPersona);
 
   // === FORM: ACCIÓN DE INVESTIGACIÓN ===
-  const emptyAccion = {
+const emptyAccion = {
     tipo_accion: 'inspeccion_ocular', lugar_intervencion: '',
     tecnica_metodologia: '', descripcion_actuacion: '', resultados: '',
     instruccion_numero: '', cumple_instruccion: false
   };
+  const [archivosAccion, setArchivosAccion] = useState([]);
   const [formAccion, setFormAccion] = useState(emptyAccion);
 
   // === HANDLERS ===
