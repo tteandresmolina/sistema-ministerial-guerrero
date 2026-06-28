@@ -52,7 +52,7 @@ export default function AnalisisSARA({ user }) {
 
   const [vista, setVista] = useState('listado');
   const [proyectoActivo, setProyectoActivo] = useState(null);
-
+const [showMapa, setShowMapa] = useState(false);
   const emptyProyecto = {
     titulo: '', descripcion: '', categoria_delito: '', zona_geografica: '',
     prioridad: 'media', scanning_problema: ''
@@ -629,6 +629,14 @@ export default function AnalisisSARA({ user }) {
           <button onClick={() => setError(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#dc2626' }}>✕</button>
         </div>
       )}
+
+{/* Mapa de Calor */}
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 10 }}>
+        <button onClick={() => setShowMapa(!showMapa)} style={{ ...btnSecondary, padding: '8px 16px', fontSize: 13 }}>
+          <MapPin size={15} /> {showMapa ? 'Ocultar Mapa de Calor' : 'Mapa de Calor'}
+        </button>
+      </div>
+      {showMapa && <MapaCalor />}
 
       {vista === 'listado' && renderListado()}
       {vista === 'nuevo' && renderFormNuevo()}
