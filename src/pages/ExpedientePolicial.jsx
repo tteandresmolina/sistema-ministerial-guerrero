@@ -143,8 +143,23 @@ export default function ExpedientePolicial({ user }) {
       setShowFormPersona(false);
     }
   };
-  const handleCambiarEstatusPersona = async (persona, nuevoEstatus) => {
-    await actualizarPersona(persona.id, { estatus: nuevoEstatus });
+  const handleGuardarAccion = async () => {
+    if (!formAccion.tipo_accion || !formAccion.descripcion_actuacion) {
+      setError('Tipo de acción y descripción son obligatorios');
+      return;
+    }
+    const payload = {
+      ...formAccion,
+      carpeta_investigacion: oficioSeleccionado.carpeta_investigacion,
+      oficio_id: oficioSeleccionado.id,
+      instruccion_numero: formAccion.instruccion_numero ? parseInt(formAccion.instruccion_numero) : null,
+      nombre_agente: user?.nombre_completo || ''
+    };
+    const result = await crearAccion(payload);
+    if (result) {
+      setFormAccion(emptyAccion);
+      setShowFormAccion(false);
+    }
   };
 
   // === CATÁLOGOS ===
