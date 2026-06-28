@@ -367,7 +367,7 @@ export default function ExpedientePolicial({ user }) {
   // ============================================================================
   // RENDER: FORMULARIO NUEVO OFICIO
   // ============================================================================
-  const renderFormularioOficio = () => (
+const renderFormularioOficio = () => (
     <div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
         <button style={{ ...btnSecondary, padding: '6px 12px' }} onClick={() => setVista('listado')}>
@@ -377,18 +377,26 @@ export default function ExpedientePolicial({ user }) {
       </div>
 
       <div style={cardStyle}>
+        {/* C.I. prominente */}
+        <div style={{ padding: 14, background: '#f5ede0', borderRadius: 10, border: '1px solid #b6905440', marginBottom: 16 }}>
+          <label style={{ ...labelStyle, color: COLORS.gold, fontSize: 13 }}>Carpeta de Investigación (C.I.) *</label>
+          <p style={{ fontSize: 11, color: '#666', margin: '4px 0 8px 0' }}>20 dígitos asignados por el Ministerio Público — vincula todo el expediente.</p>
+          <input style={{ ...inputStyle, fontFamily: 'monospace', fontSize: 16, letterSpacing: 1, textAlign: 'center' }} maxLength={25} placeholder="12030290300463130025"
+            value={formOficio.carpeta_investigacion}
+            onChange={e => setFormOficio({ ...formOficio, carpeta_investigacion: e.target.value.replace(/\D/g, '') })} />
+        </div>
+
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-          <div>
-            <label style={labelStyle}>Carpeta de Investigación (20 dígitos) *</label>
-            <input style={inputStyle} maxLength={20} placeholder="12030290300463130025"
-              value={formOficio.carpeta_investigacion}
-              onChange={e => setFormOficio({ ...formOficio, carpeta_investigacion: e.target.value.replace(/\D/g, '') })} />
-          </div>
           <div>
             <label style={labelStyle}>Número de Oficio *</label>
             <input style={inputStyle} placeholder="6521"
               value={formOficio.numero_oficio}
               onChange={e => setFormOficio({ ...formOficio, numero_oficio: e.target.value })} />
+          </div>
+          <div>
+            <label style={labelStyle}>Fecha de Emisión *</label>
+            <input style={inputStyle} type="date" value={formOficio.fecha_emision}
+              onChange={e => setFormOficio({ ...formOficio, fecha_emision: e.target.value })} />
           </div>
           <div>
             <label style={labelStyle}>Unidad Emisora (MP) *</label>
@@ -432,17 +440,106 @@ export default function ExpedientePolicial({ user }) {
               value={formOficio.nombre_imputado}
               onChange={e => setFormOficio({ ...formOficio, nombre_imputado: e.target.value })} />
           </div>
+
+          {/* Lugar de los hechos mejorado */}
+          <div style={{ gridColumn: '1 / -1', borderTop: '2px solid #e8ecf1', paddingTop: 14, marginTop: 4 }}>
+            <div style={{ fontWeight: 700, color: COLORS.gold, fontSize: 13, marginBottom: 8 }}>LUGAR DE LOS HECHOS</div>
+          </div>
           <div style={{ gridColumn: '1 / -1' }}>
-            <label style={labelStyle}>Lugar de los Hechos</label>
+            <label style={labelStyle}>Dirección / Ubicación</label>
             <input style={inputStyle} placeholder="Cajero Banco Azteca, Blvd. Vicente Guerrero S/N, Col. Renacimiento"
               value={formOficio.lugar_hechos}
               onChange={e => setFormOficio({ ...formOficio, lugar_hechos: e.target.value })} />
           </div>
+          <div>
+            <label style={labelStyle}>Municipio</label>
+            <select style={selectStyle} value={formOficio.municipio}
+              onChange={e => setFormOficio({ ...formOficio, municipio: e.target.value })}>
+              <option value="">— Seleccionar —</option>
+              <option value="Acapulco de Juárez">001 — Acapulco de Juárez</option><option value="Ahuacuotzingo">002 — Ahuacuotzingo</option>
+              <option value="Ajuchitlán del Progreso">003 — Ajuchitlán del Progreso</option><option value="Alcozauca de Guerrero">004 — Alcozauca de Guerrero</option>
+              <option value="Alpoyeca">005 — Alpoyeca</option><option value="Apaxtla">006 — Apaxtla</option>
+              <option value="Arcelia">007 — Arcelia</option><option value="Atenango del Río">008 — Atenango del Río</option>
+              <option value="Atlamajalcingo del Monte">009 — Atlamajalcingo del Monte</option><option value="Atlixtac">010 — Atlixtac</option>
+              <option value="Atoyac de Álvarez">011 — Atoyac de Álvarez</option><option value="Ayutla de los Libres">012 — Ayutla de los Libres</option>
+              <option value="Azoyú">013 — Azoyú</option><option value="Benito Juárez">014 — Benito Juárez</option>
+              <option value="Buenavista de Cuéllar">015 — Buenavista de Cuéllar</option><option value="Coahuayutla de José María Izazaga">016 — Coahuayutla</option>
+              <option value="Cocula">017 — Cocula</option><option value="Copala">018 — Copala</option>
+              <option value="Copalillo">019 — Copalillo</option><option value="Copanatoyac">020 — Copanatoyac</option>
+              <option value="Coyuca de Benítez">021 — Coyuca de Benítez</option><option value="Coyuca de Catalán">022 — Coyuca de Catalán</option>
+              <option value="Cuajinicuilapa">023 — Cuajinicuilapa</option><option value="Cualác">024 — Cualác</option>
+              <option value="Cuautepec">025 — Cuautepec</option><option value="Cuetzala del Progreso">026 — Cuetzala del Progreso</option>
+              <option value="Cutzamala de Pinzón">027 — Cutzamala de Pinzón</option><option value="Chilapa de Álvarez">028 — Chilapa de Álvarez</option>
+              <option value="Chilpancingo de los Bravo">029 — Chilpancingo de los Bravo</option><option value="Florencio Villarreal">030 — Florencio Villarreal</option>
+              <option value="General Canuto A. Neri">031 — Gral. Canuto A. Neri</option><option value="General Heliodoro Castillo">032 — Gral. Heliodoro Castillo</option>
+              <option value="Huamuxtitlán">033 — Huamuxtitlán</option><option value="Huitzuco de los Figueroa">034 — Huitzuco de los Figueroa</option>
+              <option value="Iguala de la Independencia">035 — Iguala de la Independencia</option><option value="Igualapa">036 — Igualapa</option>
+              <option value="Ixcateopan de Cuauhtémoc">037 — Ixcateopan de Cuauhtémoc</option><option value="Zihuatanejo de Azueta">038 — Zihuatanejo de Azueta</option>
+              <option value="Juan R. Escudero">039 — Juan R. Escudero</option><option value="Leonardo Bravo">040 — Leonardo Bravo</option>
+              <option value="Malinaltepec">041 — Malinaltepec</option><option value="Mártir de Cuilapan">042 — Mártir de Cuilapan</option>
+              <option value="Metlatónoc">043 — Metlatónoc</option><option value="Mochitlán">044 — Mochitlán</option>
+              <option value="Olinalá">045 — Olinalá</option><option value="Ometepec">046 — Ometepec</option>
+              <option value="Pedro Ascencio Alquisiras">047 — Pedro Ascencio Alquisiras</option><option value="Petatlán">048 — Petatlán</option>
+              <option value="Pilcaya">049 — Pilcaya</option><option value="Pungarabato">050 — Pungarabato</option>
+              <option value="Quechultenango">051 — Quechultenango</option><option value="San Luis Acatlán">052 — San Luis Acatlán</option>
+              <option value="San Marcos">053 — San Marcos</option><option value="San Miguel Totolapan">054 — San Miguel Totolapan</option>
+              <option value="Taxco de Alarcón">055 — Taxco de Alarcón</option><option value="Tecoanapa">056 — Tecoanapa</option>
+              <option value="Técpan de Galeana">057 — Técpan de Galeana</option><option value="Teloloapan">058 — Teloloapan</option>
+              <option value="Tepecoacuilco de Trujano">059 — Tepecoacuilco de Trujano</option><option value="Tetipac">060 — Tetipac</option>
+              <option value="Tixtla de Guerrero">061 — Tixtla de Guerrero</option><option value="Tlacoachistlahuaca">062 — Tlacoachistlahuaca</option>
+              <option value="Tlacoapa">063 — Tlacoapa</option><option value="Tlalchapa">064 — Tlalchapa</option>
+              <option value="Tlalixtaquilla de Maldonado">065 — Tlalixtaquilla</option><option value="Tlapa de Comonfort">066 — Tlapa de Comonfort</option>
+              <option value="Tlapehuala">067 — Tlapehuala</option><option value="La Unión de Isidoro Montes de Oca">068 — La Unión</option>
+              <option value="Xalpatláhuac">069 — Xalpatláhuac</option><option value="Xochihuehuetlán">070 — Xochihuehuetlán</option>
+              <option value="Xochistlahuaca">071 — Xochistlahuaca</option><option value="Zapotitlán Tablas">072 — Zapotitlán Tablas</option>
+              <option value="Zirándaro">073 — Zirándaro</option><option value="Zitlala">074 — Zitlala</option>
+              <option value="Eduardo Neri">075 — Eduardo Neri</option><option value="Acatepec">076 — Acatepec</option>
+              <option value="Marquelia">077 — Marquelia</option><option value="Cochoapa el Grande">078 — Cochoapa el Grande</option>
+              <option value="José Joaquín de Herrera">079 — José Joaquín de Herrera</option><option value="Juchitán">080 — Juchitán</option>
+              <option value="Iliatenco">081 — Iliatenco</option>
+            </select>
+          </div>
+          <div>
+            <label style={labelStyle}>Entidad Federativa</label>
+            <input style={{ ...inputStyle, background: '#f0f0f0' }} value={formOficio.entidad_federativa} readOnly />
+          </div>
+          <div style={{ gridColumn: '1 / -1' }}>
+            <label style={labelStyle}>Referencias del lugar (como las describe el MP)</label>
+            <input style={inputStyle} placeholder="Frente al Parque Maza de Juárez, a un costado de la tienda OXXO..."
+              value={formOficio.referencias_lugar}
+              onChange={e => setFormOficio({ ...formOficio, referencias_lugar: e.target.value })} />
+          </div>
+          <div>
+            <label style={labelStyle}>Latitud (si se conoce)</label>
+            <input style={inputStyle} type="number" step="0.0000001" placeholder="16.8531"
+              value={formOficio.coordenadas_lat}
+              onChange={e => setFormOficio({ ...formOficio, coordenadas_lat: e.target.value })} />
+          </div>
+          <div>
+            <label style={labelStyle}>Longitud (si se conoce)</label>
+            <input style={inputStyle} type="number" step="0.0000001" placeholder="-99.8237"
+              value={formOficio.coordenadas_lng}
+              onChange={e => setFormOficio({ ...formOficio, coordenadas_lng: e.target.value })} />
+          </div>
+          {formOficio.coordenadas_lat && formOficio.coordenadas_lng && (
+            <div style={{ gridColumn: '1 / -1' }}>
+              <a href={`https://www.google.com/maps?q=${formOficio.coordenadas_lat},${formOficio.coordenadas_lng}`} target="_blank" rel="noopener noreferrer"
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 12, color: COLORS.gold, textDecoration: 'none' }}>
+                <MapPin size={13} /> Ver en Google Maps
+              </a>
+            </div>
+          )}
+
           <div style={{ gridColumn: '1 / -1' }}>
             <label style={labelStyle}>Descripción de los Hechos</label>
             <textarea style={textareaStyle} placeholder="Narrativa de los hechos según el oficio del MP..."
               value={formOficio.descripcion_hechos}
               onChange={e => setFormOficio({ ...formOficio, descripcion_hechos: e.target.value })} />
+          </div>
+
+          {/* Prioridad y término */}
+          <div style={{ gridColumn: '1 / -1', borderTop: '2px solid #e8ecf1', paddingTop: 14, marginTop: 4 }}>
+            <div style={{ fontWeight: 700, color: COLORS.gold, fontSize: 13, marginBottom: 8 }}>PRIORIDAD Y ASIGNACIÓN</div>
           </div>
           <div>
             <label style={labelStyle}>Prioridad</label>
@@ -462,15 +559,16 @@ export default function ExpedientePolicial({ user }) {
               onChange={e => setFormOficio({ ...formOficio, termino_horas: e.target.value })} />
           </div>
           <div>
-            <label style={labelStyle}>Fecha de Emisión del Oficio *</label>
-            <input style={inputStyle} type="date" value={formOficio.fecha_emision}
-              onChange={e => setFormOficio({ ...formOficio, fecha_emision: e.target.value })} />
-          </div>
-          <div>
             <label style={labelStyle}>Folio 911 (si aplica)</label>
             <input style={inputStyle} placeholder="Folio del reporte 911"
               value={formOficio.folio_911}
               onChange={e => setFormOficio({ ...formOficio, folio_911: e.target.value })} />
+          </div>
+          <div>
+            <label style={labelStyle}>Agente que recibe el oficio</label>
+            <input style={inputStyle} placeholder="Nombre del elemento de guardia"
+              value={formOficio.agente_recibe}
+              onChange={e => setFormOficio({ ...formOficio, agente_recibe: e.target.value })} />
           </div>
         </div>
 
