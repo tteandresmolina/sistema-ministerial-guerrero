@@ -103,15 +103,25 @@ export default function MapaCalor() {
       mapInstance.current.removeLayer(heatLayer.current);
     }
 
-    if (heatData.length > 0 && window.L.heatLayer) {
+   if (heatData.length > 0 && window.L.heatLayer) {
       heatLayer.current = window.L.heatLayer(heatData, {
-        radius: 25,
-        blur: 20,
-        maxZoom: 14,
-        max: 1,
+        radius: 35,
+        blur: 25,
+        maxZoom: 16,
+        max: 0.6,
+        minOpacity: 0.4,
         gradient: { 0.2: '#2196f3', 0.4: '#4caf50', 0.6: '#ffeb3b', 0.8: '#ff9800', 1.0: '#f44336' },
       }).addTo(mapInstance.current);
     }
+    const coloresFuente = { registros_911: '#dc3545', escenas_crimen: '#fd7e14', detenidos: '#001a4d', oficios_investigacion: '#b69054' };
+    activos.forEach(p => {
+      window.L.circleMarker([p.lat, p.lng], {
+        radius: 8, fillColor: coloresFuente[p.fuente] || '#001a4d', color: '#ffffff',
+        weight: 2, opacity: 1, fillOpacity: 0.85,
+      }).addTo(mapInstance.current).bindPopup(
+        '<b style="color:#001a4d">' + FUENTES.find(f => f.key === p.fuente)?.label + '</b><br>Lat: ' + p.lat.toFixed(5) + '<br>Lng: ' + p.lng.toFixed(5)
+      );
+    });
 
     // Auto-centrar si hay puntos
     if (activos.length > 0) {
