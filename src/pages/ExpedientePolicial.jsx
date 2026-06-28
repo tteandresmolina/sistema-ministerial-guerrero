@@ -110,14 +110,19 @@ export default function ExpedientePolicial({ user }) {
     await fetchExpedienteCompleto(oficio.carpeta_investigacion);
   };
 
-  const handleGuardarOficio = async () => {
+const handleGuardarOficio = async () => {
     if (!formOficio.carpeta_investigacion || !formOficio.numero_oficio || !formOficio.delito) {
       setError('Carpeta de Investigación, Número de Oficio y Delito son obligatorios');
       return;
     }
     const payload = {
       ...formOficio,
-      termino_horas: formOficio.termino_horas ? parseInt(formOficio.termino_horas) : null
+      termino_horas: formOficio.termino_horas ? parseInt(formOficio.termino_horas) : null,
+      coordenadas_lat: formOficio.coordenadas_lat ? parseFloat(formOficio.coordenadas_lat) : null,
+      coordenadas_lng: formOficio.coordenadas_lng ? parseFloat(formOficio.coordenadas_lng) : null,
+      municipio: formOficio.municipio || null,
+      referencias_lugar: formOficio.referencias_lugar || null,
+      agente_recibe: formOficio.agente_recibe || null
     };
     const result = await crearOficio(payload);
     if (result) {
@@ -125,7 +130,6 @@ export default function ExpedientePolicial({ user }) {
       setVista('listado');
     }
   };
-
   const handleGuardarPersona = async () => {
     if (!formPersona.nombre_completo && !formPersona.alias && !formPersona.descripcion_fisica) {
       setError('Ingrese al menos nombre, alias o descripción física');
