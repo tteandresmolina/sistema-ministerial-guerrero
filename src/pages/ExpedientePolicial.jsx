@@ -614,9 +614,11 @@ const renderFormularioOficio = () => (
     if (!oficioSeleccionado) return null;
     const o = oficioSeleccionado;
     const subTabs = [
+const subTabs = [
       { key: 'datos', label: 'Datos del Oficio', icon: FileText },
       { key: 'personas', label: `Personas (${personas.length})`, icon: Users },
       { key: 'acciones', label: `Acciones (${acciones.length})`, icon: Activity },
+      { key: 'detenidos_ci', label: 'Detenidos', icon: Shield },
       { key: 'timeline', label: 'Timeline', icon: Clock }
     ];
 
