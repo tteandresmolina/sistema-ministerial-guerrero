@@ -2,12 +2,13 @@
 // Tab 2 — Primer Respondiente (IPH Digital)
 // Sistema Ministerial — FGE Guerrero — Módulo 2
 // Fundamento: Modelo Nacional 1.2(a), Protocolo Nacional de Actuación PR
+// v2 — Mejoras: SSPC, sin AEI, Comisión agente, 24h, C.I. vinculación
 
 import { useState } from 'react';
 import {
   Shield, Clock, AlertTriangle, CheckCircle2, Plus, Search, Filter,
   X, Send, RefreshCw, Eye, UserCheck, MapPin, Users, Siren,
-  FileText, Radio, ChevronDown, Activity, Zap, ShieldAlert,
+  FileText, Radio, ChevronDown, Activity, Zap, ShieldAlert, Briefcase,
 } from 'lucide-react';
 import { usePrimerRespondiente } from '../hooks/usePrimerRespondiente';
 
@@ -17,9 +18,18 @@ const C = {
   green: '#28a745', yellow: '#ffc107', red: '#dc3545', orange: '#fd7e14',
 };
 
+// ═══════════════════════════════════════════════
+// CORPORACIONES — Feedback: +SSPC, Policía Ministerial sin AEI
+// ═══════════════════════════════════════════════
 const CORPORACIONES = [
-  'Policía Municipal', 'Policía Estatal', 'Guardia Nacional',
-  'Policía Ministerial / AEI', 'Ejército Mexicano', 'Marina', 'Otra',
+  'Policía Municipal',
+  'Policía Estatal',
+  'SSPC — Secretaría de Seguridad y Protección Ciudadana',
+  'Guardia Nacional',
+  'Policía Ministerial',
+  'Ejército Mexicano',
+  'Marina',
+  'Otra',
 ];
 
 const APOYO_OPTIONS = [
@@ -50,8 +60,101 @@ const ANEXOS_IPH = [
   { key: 'anexo_g', label: 'Anexo G — Continuación narrativa', trigger: 'La narrativa excede el espacio del IPH' },
 ];
 
+// ═══════════════════════════════════════════════
+// MUNICIPIOS DE GUERRERO (INEGI Clave 12)
+// ═══════════════════════════════════════════════
+const MUNICIPIOS_GUERRERO = [
+  { clave: '001', nombre: 'Acapulco de Juárez' },
+  { clave: '002', nombre: 'Ahuacuotzingo' },
+  { clave: '003', nombre: 'Ajuchitlán del Progreso' },
+  { clave: '004', nombre: 'Alcozauca de Guerrero' },
+  { clave: '005', nombre: 'Alpoyeca' },
+  { clave: '006', nombre: 'Apaxtla' },
+  { clave: '007', nombre: 'Arcelia' },
+  { clave: '008', nombre: 'Atenango del Río' },
+  { clave: '009', nombre: 'Atlamajalcingo del Monte' },
+  { clave: '010', nombre: 'Atlixtac' },
+  { clave: '011', nombre: 'Atoyac de Álvarez' },
+  { clave: '012', nombre: 'Ayutla de los Libres' },
+  { clave: '013', nombre: 'Azoyú' },
+  { clave: '014', nombre: 'Benito Juárez' },
+  { clave: '015', nombre: 'Buenavista de Cuéllar' },
+  { clave: '016', nombre: 'Coahuayutla de José María Izazaga' },
+  { clave: '017', nombre: 'Cocula' },
+  { clave: '018', nombre: 'Copala' },
+  { clave: '019', nombre: 'Copalillo' },
+  { clave: '020', nombre: 'Copanatoyac' },
+  { clave: '021', nombre: 'Coyuca de Benítez' },
+  { clave: '022', nombre: 'Coyuca de Catalán' },
+  { clave: '023', nombre: 'Cuajinicuilapa' },
+  { clave: '024', nombre: 'Cualác' },
+  { clave: '025', nombre: 'Cuautepec' },
+  { clave: '026', nombre: 'Cuetzala del Progreso' },
+  { clave: '027', nombre: 'Cutzamala de Pinzón' },
+  { clave: '028', nombre: 'Chilapa de Álvarez' },
+  { clave: '029', nombre: 'Chilpancingo de los Bravo' },
+  { clave: '030', nombre: 'Florencio Villarreal' },
+  { clave: '031', nombre: 'General Canuto A. Neri' },
+  { clave: '032', nombre: 'General Heliodoro Castillo' },
+  { clave: '033', nombre: 'Huamuxtitlán' },
+  { clave: '034', nombre: 'Huitzuco de los Figueroa' },
+  { clave: '035', nombre: 'Iguala de la Independencia' },
+  { clave: '036', nombre: 'Igualapa' },
+  { clave: '037', nombre: 'Ixcateopan de Cuauhtémoc' },
+  { clave: '038', nombre: 'Zihuatanejo de Azueta' },
+  { clave: '039', nombre: 'Juan R. Escudero' },
+  { clave: '040', nombre: 'Leonardo Bravo' },
+  { clave: '041', nombre: 'Malinaltepec' },
+  { clave: '042', nombre: 'Mártir de Cuilapan' },
+  { clave: '043', nombre: 'Metlatónoc' },
+  { clave: '044', nombre: 'Mochitlán' },
+  { clave: '045', nombre: 'Olinalá' },
+  { clave: '046', nombre: 'Ometepec' },
+  { clave: '047', nombre: 'Pedro Ascencio Alquisiras' },
+  { clave: '048', nombre: 'Petatlán' },
+  { clave: '049', nombre: 'Pilcaya' },
+  { clave: '050', nombre: 'Pungarabato' },
+  { clave: '051', nombre: 'Quechultenango' },
+  { clave: '052', nombre: 'San Luis Acatlán' },
+  { clave: '053', nombre: 'San Marcos' },
+  { clave: '054', nombre: 'San Miguel Totolapan' },
+  { clave: '055', nombre: 'Taxco de Alarcón' },
+  { clave: '056', nombre: 'Tecoanapa' },
+  { clave: '057', nombre: 'Técpan de Galeana' },
+  { clave: '058', nombre: 'Teloloapan' },
+  { clave: '059', nombre: 'Tepecoacuilco de Trujano' },
+  { clave: '060', nombre: 'Tetipac' },
+  { clave: '061', nombre: 'Tixtla de Guerrero' },
+  { clave: '062', nombre: 'Tlacoachistlahuaca' },
+  { clave: '063', nombre: 'Tlacoapa' },
+  { clave: '064', nombre: 'Tlalchapa' },
+  { clave: '065', nombre: 'Tlalixtaquilla de Maldonado' },
+  { clave: '066', nombre: 'Tlapa de Comonfort' },
+  { clave: '067', nombre: 'Tlapehuala' },
+  { clave: '068', nombre: 'La Unión de Isidoro Montes de Oca' },
+  { clave: '069', nombre: 'Xalpatláhuac' },
+  { clave: '070', nombre: 'Xochihuehuetlán' },
+  { clave: '071', nombre: 'Xochistlahuaca' },
+  { clave: '072', nombre: 'Zapotitlán Tablas' },
+  { clave: '073', nombre: 'Zirándaro' },
+  { clave: '074', nombre: 'Zitlala' },
+  { clave: '075', nombre: 'Eduardo Neri' },
+  { clave: '076', nombre: 'Acatepec' },
+  { clave: '077', nombre: 'Marquelia' },
+  { clave: '078', nombre: 'Cochoapa el Grande' },
+  { clave: '079', nombre: 'José Joaquín de Herrera' },
+  { clave: '080', nombre: 'Juchitán' },
+  { clave: '081', nombre: 'Iliatenco' },
+];
+
+// ═══════════════════════════════════════════════
+// FORMATO 24 HORAS
+// ═══════════════════════════════════════════════
+const HORAS_24 = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, '0'));
+const MINUTOS_60 = Array.from({ length: 60 }, (_, i) => String(i).padStart(2, '0'));
+
 function formatDate(d) { if (!d) return '—'; return new Date(d + 'T00:00:00').toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' }); }
-function formatTime(t) { return t ? t.substring(0, 5) : '—'; }
+function formatTime(t) { return t ? t.substring(0, 5) + ' hrs' : '—'; }
 function formatHoras(h) { if (h == null) return '—'; return h < 1 ? `${Math.round(h * 60)}min` : `${Math.floor(h)}h ${Math.round((h % 1) * 60)}m`; }
 
 function HoraDoradaBadge({ horaDorada }) {
@@ -65,14 +168,20 @@ function HoraDoradaBadge({ horaDorada }) {
   );
 }
 
-// Generar folio para flagrancia: GRO-MUN-DEP-YYYYMMDD-HHmm
-function generarFolioFlagrancia(municipio, corporacion) {
-  const now = new Date();
-  const fecha = now.toISOString().slice(0, 10).replace(/-/g, '');
-  const hora = now.toTimeString().slice(0, 5).replace(':', '');
-  const mun = (municipio || 'SIN').substring(0, 4).toUpperCase().replace(/\s/g, '');
-  const dep = (corporacion || 'PM').substring(0, 3).toUpperCase().replace(/\s/g, '');
-  return `GRO-${mun}-${dep}-${fecha}-${hora}`;
+// Selector de hora 24h reutilizable
+function Hora24Selector({ hh, mm, onChangeHH, onChangeMM, selectStyle }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+      <select style={{ ...selectStyle, flex: 1, textAlign: 'center' }} value={hh} onChange={e => onChangeHH(e.target.value)}>
+        {HORAS_24.map(h => <option key={h} value={h}>{h}</option>)}
+      </select>
+      <span style={{ fontSize: 18, fontWeight: 700, color: C.darkBlue }}>:</span>
+      <select style={{ ...selectStyle, flex: 1, textAlign: 'center' }} value={mm} onChange={e => onChangeMM(e.target.value)}>
+        {MINUTOS_60.map(m => <option key={m} value={m}>{m}</option>)}
+      </select>
+      <span style={{ fontSize: 11, color: C.gray, marginLeft: 4 }}>hrs</span>
+    </div>
+  );
 }
 
 export default function PrimerRespondiente({ perfil }) {
@@ -88,11 +197,17 @@ export default function PrimerRespondiente({ perfil }) {
   const [mensaje, setMensaje] = useState(null);
   const [seccionActiva, setSeccionActiva] = useState(1);
 
+  const nowHH = String(new Date().getHours()).padStart(2, '0');
+  const nowMM = String(new Date().getMinutes()).padStart(2, '0');
+
   const emptyForm = {
-    modo: 'vinculado', // 'vinculado' | 'independiente'
+    modo: 'vinculado',
     registro_911_id: '',
+    carpeta_investigacion: '',
     nombre: '', grado: '', unidad: '', corporacion: 'Policía Municipal',
-    hora_arribo: new Date().toTimeString().substring(0, 5),
+    comision_agente: '',
+    hora_arribo_hh: nowHH,
+    hora_arribo_mm: nowMM,
     tiempo_respuesta_min: '',
     verificacion_confirmada: false,
     tipo_evento_confirmado: '',
@@ -110,13 +225,11 @@ export default function PrimerRespondiente({ perfil }) {
     descripcion_uso_fuerza: '',
     huellas_violencia: false,
     huellas_descripcion: '',
-    hora_conocimiento_hecho: new Date().toISOString().slice(0, 16),
-    // PIM role
+    hora_conocimiento_fecha: new Date().toISOString().split('T')[0],
+    hora_conocimiento_hh: nowHH,
+    hora_conocimiento_mm: nowMM,
     pim_es_primer_respondiente: false,
-    // Anexos marcados
     anexos: [],
-    // Folio independiente
-    folio_independiente: '',
     municipio_flagrancia: '',
   };
   const [form, setForm] = useState(emptyForm);
@@ -144,18 +257,23 @@ export default function PrimerRespondiente({ perfil }) {
   const handleSubmit = async () => {
     if (!form.nombre.trim()) return setMensaje({ tipo: 'error', texto: 'El nombre del primer respondiente es obligatorio' });
     if (form.modo === 'vinculado' && !form.registro_911_id) return setMensaje({ tipo: 'error', texto: 'Selecciona un reporte 911 para vincular' });
-    if (!form.hora_arribo) return setMensaje({ tipo: 'error', texto: 'La hora de arribo es obligatoria' });
+    if (!form.hora_arribo_hh) return setMensaje({ tipo: 'error', texto: 'La hora de arribo es obligatoria' });
 
     setSaving(true);
     setMensaje(null);
 
+    const horaArribo = `${form.hora_arribo_hh}:${form.hora_arribo_mm}`;
+    const horaConocimiento = `${form.hora_conocimiento_fecha}T${form.hora_conocimiento_hh}:${form.hora_conocimiento_mm}`;
+
     const dataToSave = {
       registro_911_id: form.modo === 'vinculado' ? form.registro_911_id : null,
+      carpeta_investigacion: form.carpeta_investigacion || null,
       nombre: form.nombre,
       grado: form.grado || null,
       unidad: form.unidad || null,
       corporacion: form.corporacion || null,
-      hora_arribo: form.hora_arribo,
+      comision_agente: form.comision_agente || null,
+      hora_arribo: horaArribo,
       tiempo_respuesta_min: form.tiempo_respuesta_min ? parseInt(form.tiempo_respuesta_min) : null,
       verificacion_confirmada: form.verificacion_confirmada,
       tipo_evento_confirmado: form.tipo_evento_confirmado || null,
@@ -173,10 +291,9 @@ export default function PrimerRespondiente({ perfil }) {
       descripcion_uso_fuerza: form.uso_fuerza ? form.descripcion_uso_fuerza : null,
       huellas_violencia: form.huellas_violencia,
       huellas_descripcion: form.huellas_violencia ? form.huellas_descripcion : null,
-      hora_conocimiento_hecho: form.hora_conocimiento_hecho || null,
+      hora_conocimiento_hecho: horaConocimiento,
     };
 
-    // Si es independiente y no tiene 911, necesitamos crear sin FK
     if (form.modo === 'independiente') {
       delete dataToSave.registro_911_id;
     }
@@ -199,6 +316,7 @@ export default function PrimerRespondiente({ perfil }) {
     const q = searchTerm.toLowerCase();
     return (r.nombre || '').toLowerCase().includes(q) ||
       (r.corporacion || '').toLowerCase().includes(q) ||
+      (r.carpeta_investigacion || '').toLowerCase().includes(q) ||
       (r.registros_911?.folio_911 || '').toLowerCase().includes(q) ||
       (r.registros_911?.ubicacion_texto || '').toLowerCase().includes(q);
   });
@@ -210,7 +328,7 @@ export default function PrimerRespondiente({ perfil }) {
   }, {});
 
   // ═══════════════════════════════════════════════
-  // RENDER
+  // ESTILOS
   // ═══════════════════════════════════════════════
   const s = {
     container: { padding: 24, fontFamily: 'Segoe UI, Arial, sans-serif', backgroundColor: C.bg, minHeight: '100vh' },
@@ -295,7 +413,7 @@ export default function PrimerRespondiente({ perfil }) {
         <div style={{ padding: '16px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: `1px solid ${C.lightGray}`, flexWrap: 'wrap', gap: 10 }}>
           <div style={s.searchBox}>
             <Search size={16} color={C.gray} />
-            <input type="text" placeholder="Buscar por nombre, corporación, folio 911..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)}
+            <input type="text" placeholder="Buscar por nombre, corporación, folio 911, C.I...." value={searchTerm} onChange={e => setSearchTerm(e.target.value)}
               style={{ border: 'none', outline: 'none', fontSize: 14, backgroundColor: 'transparent', flex: 1, fontFamily: 'inherit' }} />
             {searchTerm && <X size={14} color={C.gray} style={{ cursor: 'pointer' }} onClick={() => setSearchTerm('')} />}
           </div>
@@ -318,7 +436,7 @@ export default function PrimerRespondiente({ perfil }) {
             <table style={s.table}>
               <thead>
                 <tr>
-                  <th style={s.th}>Folio 911</th>
+                  <th style={s.th}>C.I. / Folio</th>
                   <th style={s.th}>Respondiente</th>
                   <th style={s.th}>Corporación</th>
                   <th style={s.th}>Hora arribo</th>
@@ -336,7 +454,7 @@ export default function PrimerRespondiente({ perfil }) {
                       onMouseLeave={e => e.currentTarget.style.backgroundColor = idx % 2 === 0 ? C.white : C.bg}
                       onClick={() => setShowDetail(r)}>
                       <td style={{ ...s.td, fontFamily: 'monospace', fontWeight: 700, fontSize: 12 }}>
-                        {r.registros_911?.folio_911 || '(Independiente)'}
+                        {r.carpeta_investigacion || r.registros_911?.folio_911 || '(Pendiente C.I.)'}
                       </td>
                       <td style={s.td}>
                         <div style={{ fontWeight: 600 }}>{r.nombre}</div>
@@ -395,7 +513,7 @@ export default function PrimerRespondiente({ perfil }) {
                 ))}
               </div>
 
-              {/* Section navigation tabs */}
+              {/* Section nav */}
               <div style={s.tabNav}>
                 {[
                   { n: 1, label: 'Origen', icon: Radio },
@@ -432,21 +550,56 @@ export default function PrimerRespondiente({ perfil }) {
                     <div style={s.grid2}>
                       <div style={s.formGroup}>
                         <label style={s.label}>Municipio del hecho</label>
-                        <input style={s.input} placeholder="Ej: Acapulco de Juárez" value={form.municipio_flagrancia} onChange={e => set('municipio_flagrancia', e.target.value)} />
+                        <select style={s.select} value={form.municipio_flagrancia} onChange={e => set('municipio_flagrancia', e.target.value)}>
+                          <option value="">— Seleccionar municipio —</option>
+                          {MUNICIPIOS_GUERRERO.map(m => (
+                            <option key={m.clave} value={m.nombre}>{m.clave} — {m.nombre}</option>
+                          ))}
+                        </select>
                       </div>
                       <div style={s.formGroup}>
-                        <label style={s.label}>Folio IPH generado</label>
-                        <input style={{ ...s.input, fontFamily: 'monospace', backgroundColor: '#f0f0f0' }} readOnly
-                          value={generarFolioFlagrancia(form.municipio_flagrancia, form.corporacion)} />
+                        <label style={s.label}>Entidad Federativa</label>
+                        <input style={{ ...s.input, backgroundColor: '#f0f0f0' }} value="Guerrero" readOnly />
                       </div>
                     </div>
                   )}
 
+                  {/* Carpeta de Investigación — vinculación principal */}
+                  <div style={{ ...s.formGroup, marginTop: 14, padding: 14, backgroundColor: C.lightGold, borderRadius: 10, border: `1px solid ${C.gold}40` }}>
+                    <label style={{ ...s.label, color: C.gold, fontSize: 13 }}>
+                      <Briefcase size={14} style={{ marginRight: 6, verticalAlign: 'middle' }} />
+                      Carpeta de Investigación (C.I.)
+                    </label>
+                    <p style={{ fontSize: 11, color: C.gray, margin: '4px 0 8px 0' }}>
+                      20 dígitos asignados por el Ministerio Público. Se vincula cuando el MP la genera.
+                    </p>
+                    <input
+                      style={{ ...s.input, fontFamily: 'monospace', fontSize: 15, letterSpacing: 1, textAlign: 'center' }}
+                      type="text"
+                      maxLength={25}
+                      placeholder="Ej: 12030290300463130025"
+                      value={form.carpeta_investigacion}
+                      onChange={e => set('carpeta_investigacion', e.target.value)}
+                    />
+                  </div>
+
+                  {/* Momento del conocimiento — formato 24h */}
                   <div style={{ ...s.formGroup, marginTop: 14 }}>
-                    <label style={s.label}>Momento del conocimiento del hecho <span style={s.req}>*</span></label>
-                    <input type="datetime-local" style={s.input} value={form.hora_conocimiento_hecho} onChange={e => set('hora_conocimiento_hecho', e.target.value)} />
-                    {form.hora_conocimiento_hecho && (
-                      <div style={{ marginTop: 6 }}><HoraDoradaBadge horaDorada={calcularHoraDorada(form.hora_conocimiento_hecho)} /></div>
+                    <label style={s.label}>Fecha del conocimiento del hecho <span style={s.req}>*</span></label>
+                    <input type="date" style={s.input} value={form.hora_conocimiento_fecha} onChange={e => set('hora_conocimiento_fecha', e.target.value)} />
+                  </div>
+                  <div style={{ ...s.formGroup, marginTop: 10 }}>
+                    <label style={s.label}>Hora del conocimiento del hecho (24h) <span style={s.req}>*</span></label>
+                    <Hora24Selector
+                      hh={form.hora_conocimiento_hh} mm={form.hora_conocimiento_mm}
+                      onChangeHH={v => set('hora_conocimiento_hh', v)}
+                      onChangeMM={v => set('hora_conocimiento_mm', v)}
+                      selectStyle={s.select}
+                    />
+                    {form.hora_conocimiento_fecha && (
+                      <div style={{ marginTop: 6 }}>
+                        <HoraDoradaBadge horaDorada={calcularHoraDorada(`${form.hora_conocimiento_fecha}T${form.hora_conocimiento_hh}:${form.hora_conocimiento_mm}`)} />
+                      </div>
                     )}
                   </div>
                 </div>
@@ -482,11 +635,37 @@ export default function PrimerRespondiente({ perfil }) {
                     </div>
                     <div style={s.formGroup}>
                       <label style={s.label}>Unidad operativa</label>
-                      <input style={s.input} placeholder="Ej: PM-376, AEI-012" value={form.unidad} onChange={e => set('unidad', e.target.value)} />
+                      <input style={s.input} placeholder="Ej: PM-376, PIM-012" value={form.unidad} onChange={e => set('unidad', e.target.value)} />
                     </div>
+                  </div>
+
+                  {/* Comisión del agente — campo nuevo */}
+                  <div style={{ ...s.formGroup, marginTop: 14 }}>
+                    <label style={s.label}>
+                      <Briefcase size={13} style={{ marginRight: 4, verticalAlign: 'middle' }} />
+                      Comisión del agente
+                    </label>
+                    <p style={{ fontSize: 11, color: C.gray, margin: '2px 0 6px 0' }}>
+                      Coordinación, zona o especializada donde está comisionado el agente.
+                    </p>
+                    <input
+                      style={s.input}
+                      placeholder="Ej: Coordinación de Zona Renacimiento, Coord. Regional Zihuatanejo, Especializada Narcomenudeo..."
+                      value={form.comision_agente}
+                      onChange={e => set('comision_agente', e.target.value)}
+                    />
+                  </div>
+
+                  {/* Hora de arribo — formato 24h */}
+                  <div style={{ ...s.grid2, marginTop: 14 }}>
                     <div style={s.formGroup}>
-                      <label style={s.label}>Hora de arribo al lugar <span style={s.req}>*</span></label>
-                      <input type="time" style={s.input} value={form.hora_arribo} onChange={e => set('hora_arribo', e.target.value)} />
+                      <label style={s.label}>Hora de arribo al lugar (24h) <span style={s.req}>*</span></label>
+                      <Hora24Selector
+                        hh={form.hora_arribo_hh} mm={form.hora_arribo_mm}
+                        onChangeHH={v => set('hora_arribo_hh', v)}
+                        onChangeMM={v => set('hora_arribo_mm', v)}
+                        selectStyle={s.select}
+                      />
                     </div>
                     <div style={s.formGroup}>
                       <label style={s.label}>Tiempo de respuesta (minutos)</label>
@@ -706,16 +885,18 @@ export default function PrimerRespondiente({ perfil }) {
               <X size={20} style={{ cursor: 'pointer' }} onClick={() => setShowDetail(null)} />
             </div>
 
-            {/* Hora Dorada badge prominente */}
+            {/* Hora Dorada badge */}
             <div style={{ padding: 16, borderBottom: `1px solid ${C.lightGray}`, textAlign: 'center' }}>
               <HoraDoradaBadge horaDorada={calcularHoraDorada(showDetail.hora_conocimiento_hecho)} />
             </div>
 
             {/* Detail rows */}
             {[
+              { label: 'Carpeta Inv.', value: showDetail.carpeta_investigacion },
               { label: 'Folio 911', value: showDetail.registros_911?.folio_911 || '(Independiente)' },
               { label: 'Incidencia', value: showDetail.registros_911?.catalogo_incidencias?.nombre },
               { label: 'Ubicación', value: showDetail.registros_911?.ubicacion_texto },
+              { label: 'Comisión', value: showDetail.comision_agente },
               { label: 'Unidad', value: showDetail.unidad },
               { label: 'Hora arribo', value: formatTime(showDetail.hora_arribo) },
               { label: 'Tiempo respuesta', value: showDetail.tiempo_respuesta_min ? `${showDetail.tiempo_respuesta_min} min` : null },
@@ -745,7 +926,6 @@ export default function PrimerRespondiente({ perfil }) {
               </div>
             )}
 
-            {/* Uso de fuerza descripción */}
             {showDetail.uso_fuerza && showDetail.descripcion_uso_fuerza && (
               <div style={{ padding: '14px 20px', borderTop: `2px solid ${C.lightGray}` }}>
                 <div style={{ fontSize: 11, fontWeight: 700, color: C.red, textTransform: 'uppercase', marginBottom: 8 }}>Descripción del Uso de la Fuerza</div>
@@ -755,7 +935,6 @@ export default function PrimerRespondiente({ perfil }) {
               </div>
             )}
 
-            {/* Apoyo solicitado */}
             {showDetail.apoyo_solicitado && showDetail.apoyo_solicitado.length > 0 && (
               <div style={{ padding: '14px 20px', borderTop: `2px solid ${C.lightGray}` }}>
                 <div style={{ fontSize: 11, fontWeight: 700, color: C.gray, textTransform: 'uppercase', marginBottom: 8 }}>Apoyo Solicitado</div>
