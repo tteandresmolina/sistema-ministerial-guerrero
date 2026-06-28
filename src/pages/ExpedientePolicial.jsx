@@ -895,27 +895,26 @@ const renderFormularioOficio = () => (
   );
 
   // === SUB: ACCIONES DE INVESTIGACIÓN ===
-  const renderAccionesInvestigacion = () => (
+const renderAccionesInvestigacion = () => (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
         <span style={{ fontWeight: 700, color: COLORS.primary, fontSize: 14 }}>
           Acciones de Investigación ({acciones.length})
         </span>
         <button style={{ ...btnPrimary, padding: '7px 14px', fontSize: 13 }}
-          onClick={() => { setFormAccion(emptyAccion); setShowFormAccion(!showFormAccion); }}>
+          onClick={() => { setFormAccion(emptyAccion); setArchivosAccion([]); setShowFormAccion(!showFormAccion); }}>
           <ClipboardList size={14} /> {showFormAccion ? 'Cancelar' : 'Nueva Acción'}
         </button>
       </div>
 
-      {/* Form */}
       {showFormAccion && (
         <div style={{ ...cardStyle, background: '#f0fdf4', borderLeft: '4px solid #10b981' }}>
           <div style={{ fontWeight: 700, color: COLORS.primary, marginBottom: 10, fontSize: 14 }}>
-            Registrar Acción de Investigación (Modelo Nacional UDIC)
+            Registrar Acción de Investigación (CNPP Art. 132)
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
             <div>
-              <label style={labelStyle}>Tipo de Acción (CNPP Art. 132) *</label>
+              <label style={labelStyle}>Tipo de Acción *</label>
               <select style={selectStyle} value={formAccion.tipo_accion}
                 onChange={e => setFormAccion({ ...formAccion, tipo_accion: e.target.value })}>
                 {TIPOS_ACCION.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
@@ -938,12 +937,12 @@ const renderFormularioOficio = () => (
             </div>
             <div style={{ gridColumn: '1 / -1' }}>
               <label style={labelStyle}>Descripción de la Actuación *</label>
-              <textarea style={{ ...textareaStyle, minHeight: 90 }} placeholder="Describa detalladamente la acción realizada, conforme al Modelo Nacional..."
+              <textarea style={{ ...textareaStyle, minHeight: 90 }} placeholder="Describa detalladamente la acción realizada..."
                 value={formAccion.descripcion_actuacion} onChange={e => setFormAccion({ ...formAccion, descripcion_actuacion: e.target.value })} />
             </div>
             <div style={{ gridColumn: '1 / -1' }}>
               <label style={labelStyle}>Resultados Obtenidos</label>
-              <textarea style={textareaStyle} placeholder="Resultados de la acción..."
+              <textarea style={textareaStyle} placeholder="Resultados de la acción, datos de prueba obtenidos..."
                 value={formAccion.resultados} onChange={e => setFormAccion({ ...formAccion, resultados: e.target.value })} />
             </div>
             <div>
@@ -952,6 +951,43 @@ const renderFormularioOficio = () => (
                   onChange={e => setFormAccion({ ...formAccion, cumple_instruccion: e.target.checked })} />
                 Esta acción cumplimenta una instrucción del MP
               </label>
+            </div>
+
+            {/* Expediente digital — Archivos adjuntos */}
+            <div style={{ gridColumn: '1 / -1', borderTop: '2px solid #e8ecf1', paddingTop: 14, marginTop: 4 }}>
+              <div style={{ fontWeight: 700, color: COLORS.gold, fontSize: 13, marginBottom: 4, display: 'flex', alignItems: 'center', gap: 6 }}>
+                <FileText size={14} /> EXPEDIENTE DIGITAL DE LA ACCIÓN
+              </div>
+              <p style={{ fontSize: 11, color: '#666', marginBottom: 10 }}>Oficios de solicitud, contestación, datos de prueba, informes de investigación, cadena de custodia, videos. Formatos: PDF, Word, Excel, JPG, PNG, MP4 · Máximo 5MB por archivo</p>
+              <div style={{ border: '2px dashed #c7cfe0', borderRadius: 10, padding: 16, textAlign: 'center', cursor: 'pointer', background: COLORS.bg }}
+                onClick={() => document.getElementById('file-accion').click()}>
+                <FileText size={22} color="#999" />
+                <p style={{ fontSize: 12, color: '#999', margin: '4px 0 0 0' }}>Clic para seleccionar archivos</p>
+                <input id="file-accion" type="file" multiple
+                  accept="image/jpeg,image/png,application/pdf,video/mp4,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                  style={{ display: 'none' }}
+                  onChange={e => {
+                    const files = Array.from(e.target.files);
+                    const maxSize = 5 * 1024 * 1024;
+                    for (const f of files) { if (f.size > maxSize) { setError('"' + f.name + '" excede 5MB'); return; } }
+                    setArchivosAccion(prev => [...prev, ...files.map(f => ({ file: f, nombre: f.name, tipo: f.type, tamano: f.size }))]);
+                  }} />
+              </div>
+              {archivosAccion.length > 0 && (
+                <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  {archivosAccion.map((a, i) => (
+                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 10px', background: COLORS.bg, borderRadius: 8, border: '1px solid #e8ecf1' }}>
+                      <FileText size={14} color="#666" />
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: 12, fontWeight: 600, color: COLORS.primary }}>{a.nombre}</div>
+                        <div style={{ fontSize: 10, color: '#999' }}>{(a.tamano / 1024).toFixed(0)} KB · {a.tipo.split('/').pop().toUpperCase()}</div>
+                      </div>
+                      <button onClick={() => setArchivosAccion(prev => prev.filter((_, idx) => idx !== i))}
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#dc3545', fontSize: 12 }}>✕</button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
           <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 12 }}>
@@ -962,18 +998,15 @@ const renderFormularioOficio = () => (
         </div>
       )}
 
-      {/* Lista cronológica */}
       {acciones.length === 0 ? (
         <div style={{ ...cardStyle, textAlign: 'center', padding: 30, color: '#9ca3af' }}>
           No hay acciones de investigación registradas
         </div>
       ) : (
         <div style={{ position: 'relative', paddingLeft: 24 }}>
-          {/* Línea vertical del timeline */}
           <div style={{ position: 'absolute', left: 10, top: 0, bottom: 0, width: 2, background: '#d1d5db' }} />
           {acciones.map((a, i) => (
             <div key={a.id} style={{ position: 'relative', marginBottom: 12 }}>
-              {/* Dot */}
               <div style={{
                 position: 'absolute', left: -20, top: 8, width: 14, height: 14,
                 borderRadius: '50%', background: a.cumple_instruccion ? '#10b981' : COLORS.gold,
@@ -981,7 +1014,7 @@ const renderFormularioOficio = () => (
               }} />
               <div style={{ ...cardStyle, marginBottom: 0 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                  <div>
+                  <div style={{ flex: 1 }}>
                     <div style={{ fontWeight: 700, fontSize: 13, color: COLORS.primary, marginBottom: 4 }}>
                       #{i + 1} — {TIPOS_ACCION.find(t => t.value === a.tipo_accion)?.label || a.tipo_accion}
                       {a.cumple_instruccion && <span style={{ ...badge('#10b981'), marginLeft: 8 }}>Instrucción #{a.instruccion_numero} cumplida</span>}
@@ -989,6 +1022,15 @@ const renderFormularioOficio = () => (
                     <div style={{ fontSize: 12, color: '#374151', marginBottom: 4 }}>{a.descripcion_actuacion}</div>
                     {a.resultados && <div style={{ fontSize: 12, color: '#059669', fontStyle: 'italic' }}>Resultados: {a.resultados}</div>}
                     {a.tecnica_metodologia && <div style={{ fontSize: 11, color: '#6b7280', marginTop: 4 }}>Técnica: {a.tecnica_metodologia}</div>}
+                    {a.archivos_adjuntos && a.archivos_adjuntos.length > 0 && (
+                      <div style={{ marginTop: 6, display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                        {a.archivos_adjuntos.map((arch, j) => (
+                          <span key={j} style={{ padding: '2px 8px', borderRadius: 6, fontSize: 10, fontWeight: 600, background: '#e8ecf1', color: COLORS.primary, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                            <FileText size={10} /> {arch.nombre || 'Archivo ' + (j + 1)}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                   </div>
                   <div style={{ textAlign: 'right', fontSize: 11, color: '#9ca3af', minWidth: 100 }}>
                     <div>{formatFecha(a.fecha_hora_inicio)}</div>
