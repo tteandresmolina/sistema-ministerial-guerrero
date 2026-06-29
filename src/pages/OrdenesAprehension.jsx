@@ -357,7 +357,34 @@ const subirArchivo = async (file, carpeta, id) => {
                 <div style={{ ...st.fg, gridColumn: '1 / -1' }}><label style={st.label}>Señas particulares</label><input style={st.input} value={form.senas_particulares} onChange={e => set('senas_particulares', e.target.value)} placeholder="Cicatriz en ceja izquierda, tatuaje en antebrazo derecho..." /></div>
                 <div style={{ ...st.fg, gridColumn: '1 / -1' }}><label style={st.label}>Descripción física general</label><textarea style={st.textarea} value={form.descripcion_fisica} onChange={e => set('descripcion_fisica', e.target.value)} placeholder="Media filiación completa..." rows={2} /></div>
               </div>
-
+{/* Archivos adjuntos */}
+              <div style={{ ...st.sTitle, marginTop: 20 }}><Camera size={15} /> Fotografías y Oficio Escaneado</div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 14 }}>
+                <div style={st.fg}>
+                  <label style={st.label}>Foto de Frente</label>
+                  <div style={{ border: `2px dashed ${fotoFrente ? C.green : C.lightGray}`, borderRadius: 10, padding: 14, textAlign: 'center', cursor: 'pointer', backgroundColor: fotoFrente ? '#e8f5e9' : C.bg }}
+                    onClick={() => document.getElementById('foto-frente-oa').click()}>
+                    {fotoFrente ? <div><CheckCircle2 size={20} color={C.green} /><div style={{ fontSize: 11, color: C.green, marginTop: 4 }}>{fotoFrente.name}</div></div> : <div><Camera size={20} color={C.gray} /><div style={{ fontSize: 10, color: C.gray, marginTop: 4 }}>Clic para subir</div></div>}
+                    <input id="foto-frente-oa" type="file" accept="image/jpeg,image/png" style={{ display: 'none' }} onChange={e => { if (e.target.files[0]) setFotoFrente(e.target.files[0]); }} />
+                  </div>
+                </div>
+                <div style={st.fg}>
+                  <label style={st.label}>Foto de Perfil</label>
+                  <div style={{ border: `2px dashed ${fotoPerfil ? C.green : C.lightGray}`, borderRadius: 10, padding: 14, textAlign: 'center', cursor: 'pointer', backgroundColor: fotoPerfil ? '#e8f5e9' : C.bg }}
+                    onClick={() => document.getElementById('foto-perfil-oa').click()}>
+                    {fotoPerfil ? <div><CheckCircle2 size={20} color={C.green} /><div style={{ fontSize: 11, color: C.green, marginTop: 4 }}>{fotoPerfil.name}</div></div> : <div><User size={20} color={C.gray} /><div style={{ fontSize: 10, color: C.gray, marginTop: 4 }}>Clic para subir</div></div>}
+                    <input id="foto-perfil-oa" type="file" accept="image/jpeg,image/png" style={{ display: 'none' }} onChange={e => { if (e.target.files[0]) setFotoPerfil(e.target.files[0]); }} />
+                  </div>
+                </div>
+                <div style={st.fg}>
+                  <label style={st.label}>Oficio MP→Juez (PDF)</label>
+                  <div style={{ border: `2px dashed ${oficioArchivo ? C.green : C.lightGray}`, borderRadius: 10, padding: 14, textAlign: 'center', cursor: 'pointer', backgroundColor: oficioArchivo ? '#e8f5e9' : C.bg }}
+                    onClick={() => document.getElementById('oficio-oa').click()}>
+                    {oficioArchivo ? <div><CheckCircle2 size={20} color={C.green} /><div style={{ fontSize: 11, color: C.green, marginTop: 4 }}>{oficioArchivo.name}</div></div> : <div><FileText size={20} color={C.gray} /><div style={{ fontSize: 10, color: C.gray, marginTop: 4 }}>Clic para subir</div></div>}
+                    <input id="oficio-oa" type="file" accept="image/jpeg,image/png,application/pdf" style={{ display: 'none' }} onChange={e => { if (e.target.files[0]) setOficioArchivo(e.target.files[0]); }} />
+                  </div>
+                </div>
+              </div>
               {/* Observaciones */}
               <div style={{ ...st.fg, marginTop: 14 }}>
                 <label style={st.label}>Observaciones</label>
