@@ -17,6 +17,7 @@ import VictimasTestigos from './pages/VictimasTestigos';
 import ExpedientePolicial from './pages/ExpedientePolicial';
 import DashboardOperativo from './pages/DashboardOperativo';
 import AnalisisSARA from './pages/AnalisisSARA';
+import OrdenesAprehension from './pages/OrdenesAprehension';
 // ─── CONSTANTES ───────────────────────────────────────────────────────────────
 const REGIONES = ["Región Centro","Región Montaña","Región Costa Grande","Región Costa Chica","Región Tierra Caliente","Región Acapulco","Región Norte"];
 const COMPLEXIONES = ["Delgada","Regular","Robusta","Obesa"];
