@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { useAnalisisSARA } from '../hooks/useAnalisisSARA';
 import MapaCalor from './MapaCalor';
+import TrianguloProblema from './TrianguloProblema';
 const COLORS = { primary: '#001a4d', gold: '#b69054', white: '#ffffff' };
 
 const cardStyle = {
