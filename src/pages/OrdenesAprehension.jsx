@@ -89,8 +89,10 @@ const subirArchivo = async (file, carpeta, id) => {
     setSaving(true); setMensaje(null);
     const payload = {
       ...form,
-      anio: form.anio ? parseInt(form.anio) : null,
+anio: form.anio ? parseInt(form.anio) : null,
       edad_aproximada: form.edad_aproximada ? parseInt(form.edad_aproximada) : null,
+      fecha_emision: form.fecha_emision || null,
+      fecha_ejecucion: form.fecha_ejecucion || null,
       registrado_por: perfil?.nombre_completo || '',
       region: perfil?.region || '',
     };
