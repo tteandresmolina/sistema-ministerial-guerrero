@@ -638,7 +638,7 @@ const [showMapa, setShowMapa] = useState(false);
         </button>
       </div>
       {showMapa && <MapaCalor />}
-
+<TrianguloProblema />
       {vista === 'listado' && renderListado()}
       {vista === 'nuevo' && renderFormNuevo()}
       {vista === 'detalle' && renderDetalle()}
