@@ -402,14 +402,15 @@ export default function VehiculosRobo({ perfil }) {
                 <div style={st.fg}><label style={st.label}>No. Oficio del MP</label><input style={st.input} value={form.numero_oficio_mp} onChange={e => set('numero_oficio_mp', e.target.value)} /></div>
               </div>
 
+              
               {/* Fotografías */}
               <div style={{ ...st.sTitle, marginTop: 20 }}><Camera size={15} /> Catálogo Fotográfico</div>
               <p style={{ fontSize: 11, color: C.gray, marginBottom: 10 }}>Sube fotos del vehículo, NIV grabado, motor y placas + oficio del MP</p>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 10 }}>
                 <FotoSlotUpload label="Vehículo" icon={<Truck size={18} color={C.gray} />} file={fotoVehiculo} setFile={setFotoVehiculo} inputId="f-vehiculo" />
                 <FotoSlotUpload label="NIV grabado" icon={<FileText size={18} color={C.gray} />} file={fotoNiv} setFile={setFotoNiv} inputId="f-niv" />
-                <FotoSlotUpload label="Motor" icon={<Shield size={18} color={C.gray} />} file={fotoMotor} setFile={setFotoMotor} inputId="f-motor" />
-                <FotoSlotUpload label="Placas" icon={<MapPin size={18} color={C.gray} />} file={fotoPlacas} setFile={setFotoPlacas} inputId="f-placas" />
+                <FotoSlotUpload label="Vehículo 2" icon={<Truck size={18} color={C.gray} />} file={fotoNiv} setFile={setFotoNiv} inputId="f-niv" />
+                <FotoSlotUpload label="Vehículo 3" icon={<Truck size={18} color={C.gray} />} file={fotoMotor} setFile={setFotoMotor} inputId="f-motor" />
                 <FotoSlotUpload label="Oficio MP" icon={<FileText size={18} color={C.gray} />} file={oficioMp} setFile={setOficioMp} inputId="f-oficio" />
               </div>
 
