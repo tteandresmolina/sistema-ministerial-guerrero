@@ -45,8 +45,11 @@ export default function OrdenesAprehension({ perfil }) {
   const [busqueda, setBusqueda] = useState('');
   const [indiceActual, setIndiceActual] = useState(0);
   const [showForm, setShowForm] = useState(false);
-  const [saving, setSaving] = useState(false);
+const [saving, setSaving] = useState(false);
   const [mensaje, setMensaje] = useState(null);
+  const [fotoFrente, setFotoFrente] = useState(null);
+  const [fotoPerfil, setFotoPerfil] = useState(null);
+  const [oficioArchivo, setOficioArchivo] = useState(null);
 
   const emptyForm = {
     anio: new Date().getFullYear(), folio: '', comandancia: '',
