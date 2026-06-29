@@ -2,8 +2,9 @@
 // Módulo: Órdenes de Aprehensión y Reaprehensión
 // Consulta rápida por apellidos + Registro con fotos e identificación visual
 // Fundamento: CNPP, Mandamientos Ministeriales FGE Guerrero
+// v3 — Fotos, carpeta judicial, terminología dual (acusatorio + inquisitivo)
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import {
   Search, Plus, User, AlertTriangle, CheckCircle2, X, Send, RefreshCw,
   Eye, FileText, Shield, ChevronLeft, ChevronRight, Camera, Upload,
@@ -31,21 +32,13 @@ const st = {
   badge: (bg, clr) => ({ display: 'inline-block', padding: '4px 10px', borderRadius: 12, fontSize: 11, fontWeight: 600, backgroundColor: bg, color: clr }),
 };
 
-const RESOLUCIONES = {
-  'FALTA POR CUMPLIR': { bg: '#ffebee', color: '#b71c1c' },
-  'CUMPLIDA': { bg: '#e8f5e9', color: '#2e7d32' },
-  'CANCELADA': { bg: '#eceff1', color: '#546e7a' },
-  'PRESCRITA': { bg: '#fff3e0', color: '#e65100' },
-};
-
 export default function OrdenesAprehension({ perfil }) {
   const { ordenes, loading, stats, buscarPorApellidos, crearOrden, actualizarOrden, fetchStats } = useOrdenesAprehension();
 
-  const [vista, setVista] = useState('consulta');
   const [busqueda, setBusqueda] = useState('');
   const [indiceActual, setIndiceActual] = useState(0);
   const [showForm, setShowForm] = useState(false);
-const [saving, setSaving] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [mensaje, setMensaje] = useState(null);
   const [fotoFrente, setFotoFrente] = useState(null);
   const [fotoPerfil, setFotoPerfil] = useState(null);
@@ -53,7 +46,7 @@ const [saving, setSaving] = useState(false);
 
   const emptyForm = {
     anio: new Date().getFullYear(), folio: '', comandancia: '',
-    mandato_judicial: 'APREHENSION', causa_penal: '',
+    mandato_judicial: 'APREHENSION', causa_penal: '', carpeta_judicial: '',
     fecha_emision: '', fecha_ejecucion: '', numero_oficio: '',
     resolucion: 'FALTA POR CUMPLIR', av_previa: '',
     delito: '', delito2: '', agraviado: '', inculpado: '',
@@ -64,7 +57,6 @@ const [saving, setSaving] = useState(false);
   const [form, setForm] = useState(emptyForm);
   const set = (k, v) => setForm(p => ({ ...p, [k]: v }));
 
-  // Búsqueda tipo Ctrl+B
   const ejecutarBusqueda = () => {
     if (busqueda.trim().length >= 2) {
       buscarPorApellidos(busqueda);
@@ -74,7 +66,7 @@ const [saving, setSaving] = useState(false);
 
   const ordenActual = ordenes.length > 0 ? ordenes[indiceActual] : null;
 
-const subirArchivo = async (file, carpeta, id) => {
+  const subirArchivo = async (file, carpeta, id) => {
     const ext = file.name.split('.').pop();
     const path = `${carpeta}/${id}_${Date.now()}.${ext}`;
     const { error } = await supabase.storage.from('ordenes-aprehension').upload(path, file);
@@ -84,12 +76,12 @@ const subirArchivo = async (file, carpeta, id) => {
   };
 
   const handleSubmit = async () => {
-    if (!form.inculpado.trim()) return setMensaje({ tipo: 'error', texto: 'El nombre del inculpado es obligatorio' });
+    if (!form.inculpado.trim()) return setMensaje({ tipo: 'error', texto: 'El nombre del imputado/inculpado es obligatorio' });
     if (!form.delito.trim()) return setMensaje({ tipo: 'error', texto: 'El delito es obligatorio' });
     setSaving(true); setMensaje(null);
     const payload = {
       ...form,
-anio: form.anio ? parseInt(form.anio) : null,
+      anio: form.anio ? parseInt(form.anio) : null,
       edad_aproximada: form.edad_aproximada ? parseInt(form.edad_aproximada) : null,
       fecha_emision: form.fecha_emision || null,
       fecha_ejecucion: form.fecha_ejecucion || null,
@@ -127,7 +119,7 @@ anio: form.anio ? parseInt(form.anio) : null,
         </div>
         <div style={{ display: 'flex', gap: 10 }}>
           <button onClick={() => fetchStats()} style={st.btnOutline}><RefreshCw size={15} /></button>
-          <button style={st.btn(C.darkBlue, C.white)} onClick={() => { setForm(emptyForm); setShowForm(true); setMensaje(null); }}>
+          <button style={st.btn(C.darkBlue, C.white)} onClick={() => { setForm(emptyForm); setFotoFrente(null); setFotoPerfil(null); setOficioArchivo(null); setShowForm(true); setMensaje(null); }}>
             <Plus size={16} /> Registrar Orden
           </button>
         </div>
@@ -157,7 +149,6 @@ anio: form.anio ? parseInt(form.anio) : null,
       <div style={{ backgroundColor: C.white, borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.08)', padding: 20, marginBottom: 20 }}>
         <div style={st.sTitle}><Search size={16} /> Consulta Rápida por Apellidos</div>
         <p style={{ fontSize: 12, color: C.gray, marginBottom: 12 }}>Escribe los apellidos y presiona Buscar. Navega entre coincidencias con ◄ Anterior y Siguiente ►</p>
-
         <div style={{ display: 'flex', gap: 10, marginBottom: 16 }}>
           <input style={{ ...st.input, flex: 1, fontSize: 16, fontWeight: 600, letterSpacing: 0.5 }}
             placeholder="APELLIDO PATERNO MATERNO..."
@@ -178,7 +169,6 @@ anio: form.anio ? parseInt(form.anio) : null,
 
         {!loading && ordenes.length > 0 && (
           <div>
-            {/* Navegación Anterior / Siguiente */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
               <button onClick={() => setIndiceActual(p => Math.max(0, p - 1))} disabled={indiceActual === 0}
                 style={{ ...st.btn(indiceActual === 0 ? C.lightGray : C.darkBlue, C.white), opacity: indiceActual === 0 ? 0.4 : 1 }}>
@@ -193,20 +183,16 @@ anio: form.anio ? parseInt(form.anio) : null,
               </button>
             </div>
 
-            {/* Resultado actual */}
             {ordenActual && (
               <div style={{ border: `2px solid ${ordenActual.resolucion === 'FALTA POR CUMPLIR' ? C.red : C.green}`, borderRadius: 12, overflow: 'hidden' }}>
-                {/* Banner de resolución */}
                 <div style={{ padding: '10px 16px', backgroundColor: ordenActual.resolucion === 'FALTA POR CUMPLIR' ? '#ffebee' : '#e8f5e9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <span style={{ fontSize: 16, fontWeight: 700, color: ordenActual.resolucion === 'FALTA POR CUMPLIR' ? '#b71c1c' : '#2e7d32' }}>
                     {ordenActual.resolucion === 'FALTA POR CUMPLIR' ? '⚠ ORDEN VIGENTE — FALTA POR CUMPLIR' : '✅ ' + ordenActual.resolucion}
                   </span>
                   <span style={st.badge(C.darkBlue + '15', C.darkBlue)}>{ordenActual.mandato_judicial}</span>
                 </div>
-
                 <div style={{ padding: 20 }}>
                   <div style={{ display: 'flex', gap: 20, alignItems: 'flex-start' }}>
-                    {/* Fotos */}
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 8, flexShrink: 0 }}>
                       {ordenActual.foto_frente_url ? (
                         <img src={ordenActual.foto_frente_url} alt="Frente" style={{ width: 120, height: 150, objectFit: 'cover', borderRadius: 10, border: `2px solid ${C.lightGray}` }} />
@@ -220,21 +206,19 @@ anio: form.anio ? parseInt(form.anio) : null,
                         <img src={ordenActual.foto_perfil_url} alt="Perfil" style={{ width: 120, height: 90, objectFit: 'cover', borderRadius: 8, border: `1px solid ${C.lightGray}` }} />
                       )}
                     </div>
-
-                    {/* Datos principales */}
                     <div style={{ flex: 1 }}>
                       <div style={{ fontSize: 22, fontWeight: 700, color: C.darkBlue, marginBottom: 4 }}>{ordenActual.inculpado}</div>
                       <div style={{ fontSize: 14, color: C.red, fontWeight: 600, marginBottom: 8 }}>{ordenActual.delito}{ordenActual.delito2 ? ' / ' + ordenActual.delito2 : ''}</div>
-
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 12 }}>
                         {[
                           { l: 'Causa Penal', v: ordenActual.causa_penal },
+                          { l: 'Carpeta Judicial', v: ordenActual.carpeta_judicial },
                           { l: 'No. Oficio', v: ordenActual.numero_oficio },
                           { l: 'Fecha Emisión', v: ordenActual.fecha_emision },
                           { l: 'A.V. Previa', v: ordenActual.av_previa },
                           { l: 'Folio', v: ordenActual.folio ? `${ordenActual.anio}/${ordenActual.folio}` : null },
                           { l: 'Comandancia', v: ordenActual.comandancia },
-                          { l: 'Agraviado', v: ordenActual.agraviado },
+                          { l: 'Víctima / Agraviado', v: ordenActual.agraviado },
                         ].filter(r => r.v).map((r, i) => (
                           <div key={i}>
                             <div style={{ fontSize: 10, fontWeight: 600, color: C.gray, textTransform: 'uppercase' }}>{r.l}</div>
@@ -242,8 +226,6 @@ anio: form.anio ? parseInt(form.anio) : null,
                           </div>
                         ))}
                       </div>
-
-                      {/* Descripción física */}
                       {(ordenActual.descripcion_fisica || ordenActual.senas_particulares || ordenActual.complexion) && (
                         <div style={{ padding: 12, backgroundColor: C.lightGold, borderRadius: 8, border: `1px solid ${C.gold}40` }}>
                           <div style={{ fontSize: 11, fontWeight: 700, color: C.gold, textTransform: 'uppercase', marginBottom: 6 }}>Descripción Física</div>
@@ -259,11 +241,9 @@ anio: form.anio ? parseInt(form.anio) : null,
                           {ordenActual.descripcion_fisica && <div style={{ fontSize: 12, color: C.darkBlue, marginTop: 4, fontStyle: 'italic' }}>{ordenActual.descripcion_fisica}</div>}
                         </div>
                       )}
-
                       {ordenActual.observaciones && (
                         <div style={{ marginTop: 10, fontSize: 12, color: C.gray }}>Obs: {ordenActual.observaciones}</div>
                       )}
-
                       {ordenActual.oficio_mp_juez_url && (
                         <a href={ordenActual.oficio_mp_juez_url} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, marginTop: 10, fontSize: 12, color: C.gold, textDecoration: 'none' }}>
                           <FileText size={13} /> Ver oficio MP→Juez (PDF)
@@ -300,10 +280,9 @@ anio: form.anio ? parseInt(form.anio) : null,
 
             <div style={{ padding: 24 }}>
 
-              {/* Datos del mandato */}
               <div style={st.sTitle}><FileText size={15} /> Datos del Mandato Judicial</div>
               <div style={st.grid2}>
-                <div style={st.fg}><label style={st.label}>Inculpado (nombre completo) *</label><input style={{ ...st.input, fontSize: 16, fontWeight: 600 }} value={form.inculpado} onChange={e => set('inculpado', e.target.value.toUpperCase())} placeholder="APELLIDO PATERNO MATERNO NOMBRE(S)" /></div>
+                <div style={st.fg}><label style={st.label}>Imputado / Inculpado (nombre completo) *</label><input style={{ ...st.input, fontSize: 16, fontWeight: 600 }} value={form.inculpado} onChange={e => set('inculpado', e.target.value.toUpperCase())} placeholder="APELLIDO PATERNO MATERNO NOMBRE(S)" /></div>
                 <div style={st.fg}>
                   <label style={st.label}>Mandato Judicial</label>
                   <select style={st.select} value={form.mandato_judicial} onChange={e => set('mandato_judicial', e.target.value)}>
@@ -315,9 +294,10 @@ anio: form.anio ? parseInt(form.anio) : null,
                 <div style={st.fg}><label style={st.label}>Delito 2 (si aplica)</label><input style={st.input} value={form.delito2} onChange={e => set('delito2', e.target.value.toUpperCase())} /></div>
                 <div style={st.fg}><label style={st.label}>Causa Penal</label><input style={st.input} value={form.causa_penal} onChange={e => set('causa_penal', e.target.value)} placeholder="17/2018-I" /></div>
                 <div style={st.fg}><label style={st.label}>No. de Oficio</label><input style={st.input} value={form.numero_oficio} onChange={e => set('numero_oficio', e.target.value)} placeholder="235/2" /></div>
+                <div style={st.fg}><label style={st.label}>Fecha de Emisión</label><input style={st.input} type="date" value={form.fecha_emision} onChange={e => set('fecha_emision', e.target.value)} /></div>
                 <div style={st.fg}><label style={st.label}>A.V. Previa (sistema inquisitivo)</label><input style={st.input} value={form.av_previa} onChange={e => set('av_previa', e.target.value)} placeholder="TAB/COY/02/0225/2013" /></div>
                 <div style={st.fg}><label style={st.label}>Carpeta Judicial (sistema acusatorio)</label><input style={st.input} value={form.carpeta_judicial} onChange={e => set('carpeta_judicial', e.target.value)} placeholder="CJ/ACA/01/0456/2024" /></div>
-                <div style={st.fg}><label style={st.label}>Agraviado</label>
+                <div style={st.fg}><label style={st.label}>Víctima / Agraviado</label><input style={st.input} value={form.agraviado} onChange={e => set('agraviado', e.target.value.toUpperCase())} placeholder="NOMBRE DE LA VÍCTIMA O AGRAVIADO" /></div>
                 <div style={st.fg}><label style={st.label}>Comandancia</label><input style={st.input} value={form.comandancia} onChange={e => set('comandancia', e.target.value)} placeholder="Coyuca de Benítez" /></div>
                 <div style={st.fg}><label style={st.label}>Año</label><input style={st.input} type="number" value={form.anio} onChange={e => set('anio', e.target.value)} /></div>
                 <div style={st.fg}><label style={st.label}>Folio</label><input style={st.input} value={form.folio} onChange={e => set('folio', e.target.value)} placeholder="0716" /></div>
@@ -332,8 +312,8 @@ anio: form.anio ? parseInt(form.anio) : null,
                 </div>
               </div>
 
-              {/* Descripción física */}
-              <div style={{ ...st.sTitle, marginTop: 20 }}><User size={15} /> Identificación Visual del Inculpado</div>
+              {/* Identificación visual */}
+              <div style={{ ...st.sTitle, marginTop: 20 }}><User size={15} /> Identificación Visual del Imputado</div>
               <div style={st.grid2}>
                 <div style={st.fg}>
                   <label style={st.label}>Sexo</label>
@@ -359,7 +339,8 @@ anio: form.anio ? parseInt(form.anio) : null,
                 <div style={{ ...st.fg, gridColumn: '1 / -1' }}><label style={st.label}>Señas particulares</label><input style={st.input} value={form.senas_particulares} onChange={e => set('senas_particulares', e.target.value)} placeholder="Cicatriz en ceja izquierda, tatuaje en antebrazo derecho..." /></div>
                 <div style={{ ...st.fg, gridColumn: '1 / -1' }}><label style={st.label}>Descripción física general</label><textarea style={st.textarea} value={form.descripcion_fisica} onChange={e => set('descripcion_fisica', e.target.value)} placeholder="Media filiación completa..." rows={2} /></div>
               </div>
-{/* Archivos adjuntos */}
+
+              {/* Fotografías y Oficio */}
               <div style={{ ...st.sTitle, marginTop: 20 }}><Camera size={15} /> Fotografías y Oficio Escaneado</div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 14 }}>
                 <div style={st.fg}>
@@ -387,6 +368,7 @@ anio: form.anio ? parseInt(form.anio) : null,
                   </div>
                 </div>
               </div>
+
               {/* Observaciones */}
               <div style={{ ...st.fg, marginTop: 14 }}>
                 <label style={st.label}>Observaciones</label>
