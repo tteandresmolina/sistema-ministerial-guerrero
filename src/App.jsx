@@ -2351,6 +2351,7 @@ export default function App() {
         {tabApp === "dashoperativo" && <DashboardOperativo user={perfil} />}
         {tabApp === "sara" && <AnalisisSARA user={perfil} />}
         {tabApp === "victimastestigos" && <VictimasTestigos perfil={perfil} />}
+        {tabApp === "ordenes" && <OrdenesAprehension perfil={perfil} />}
         {tabApp === "detenidos" && <ModuloDetenidos perfil={perfil} detenidoInicial={detenidoParaAbrir} onDetenidoInicialUsado={() => setDetenidoParaAbrir(null)} />}
       </div>
     </div>
