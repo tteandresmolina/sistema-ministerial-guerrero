@@ -187,7 +187,10 @@ export default function VehiculosRobo({ perfil }) {
       {/* ═══ CONSULTA RÁPIDA ═══ */}
       <div style={{ backgroundColor: C.white, borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.08)', padding: 20, marginBottom: 20 }}>
         <div style={st.sTitle}><Search size={16} /> Consulta Rápida en Campo</div>
-
+<div style={{ display: 'flex', gap: 10, marginBottom: 14 }}>
+          <a href="https://www2.repuve.gob.mx:8443/ciudadania/" target="_blank" rel="noopener noreferrer" style={{ ...st.btnOutline, textDecoration: 'none', fontSize: 12, padding: '6px 14px', borderColor: C.gold, color: C.gold }}>🔗 Consultar REPUVE Oficial</a>
+          <a href="https://www.ocra.org.mx/" target="_blank" rel="noopener noreferrer" style={{ ...st.btnOutline, textDecoration: 'none', fontSize: 12, padding: '6px 14px', borderColor: C.orange, color: C.orange }}>🔗 Consultar OCRA</a>
+        </div>
         {/* Modo de búsqueda */}
         <div style={{ display: 'flex', gap: 6, marginBottom: 14 }}>
           {[{ k: 'niv', l: 'Por NIV (serie)' }, { k: 'motor', l: 'Por Motor' }, { k: 'placas', l: 'Por Placas' }].map(m => (
