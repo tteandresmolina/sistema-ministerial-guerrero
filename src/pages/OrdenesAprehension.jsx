@@ -74,6 +74,15 @@ const [saving, setSaving] = useState(false);
 
   const ordenActual = ordenes.length > 0 ? ordenes[indiceActual] : null;
 
+const subirArchivo = async (file, carpeta, id) => {
+    const ext = file.name.split('.').pop();
+    const path = `${carpeta}/${id}_${Date.now()}.${ext}`;
+    const { error } = await supabase.storage.from('ordenes-aprehension').upload(path, file);
+    if (error) return null;
+    const { data } = supabase.storage.from('ordenes-aprehension').getPublicUrl(path);
+    return data?.publicUrl || null;
+  };
+
   const handleSubmit = async () => {
     if (!form.inculpado.trim()) return setMensaje({ tipo: 'error', texto: 'El nombre del inculpado es obligatorio' });
     if (!form.delito.trim()) return setMensaje({ tipo: 'error', texto: 'El delito es obligatorio' });
@@ -86,12 +95,19 @@ const [saving, setSaving] = useState(false);
       region: perfil?.region || '',
     };
     const result = await crearOrden(payload);
-    setSaving(false);
     if (result.success) {
-      setMensaje({ tipo: 'ok', texto: 'Orden de aprehensión registrada correctamente' });
-      setForm(emptyForm);
+      const id = result.data.id;
+      const updates = {};
+      if (fotoFrente) { const url = await subirArchivo(fotoFrente, 'fotos_frente', id); if (url) updates.foto_frente_url = url; }
+      if (fotoPerfil) { const url = await subirArchivo(fotoPerfil, 'fotos_perfil', id); if (url) updates.foto_perfil_url = url; }
+      if (oficioArchivo) { const url = await subirArchivo(oficioArchivo, 'oficios', id); if (url) updates.oficio_mp_juez_url = url; }
+      if (Object.keys(updates).length > 0) await actualizarOrden(id, updates);
+      setSaving(false);
+      setMensaje({ tipo: 'ok', texto: 'Orden registrada con archivos adjuntos' });
+      setForm(emptyForm); setFotoFrente(null); setFotoPerfil(null); setOficioArchivo(null);
       setTimeout(() => { setShowForm(false); setMensaje(null); }, 1500);
     } else {
+      setSaving(false);
       setMensaje({ tipo: 'error', texto: result.error });
     }
   };
