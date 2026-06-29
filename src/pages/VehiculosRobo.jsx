@@ -373,21 +373,7 @@ export default function VehiculosRobo({ perfil }) {
                 </div>
               </div>
 
-              {/* Condición del NIV */}
-              <div style={{ ...st.sTitle, marginTop: 20 }}><Shield size={15} /> Condición del NIV</div>
-              <div style={st.grid2}>
-                <div style={st.fg}>
-                  <label style={st.label}>Condición</label>
-                  <select style={st.select} value={form.niv_condicion} onChange={e => set('niv_condicion', e.target.value)}>
-                    <option value="original">Original (sin alteración)</option>
-                    <option value="alterado">Alterado</option>
-                    <option value="borrado">Borrado</option>
-                    <option value="injertado">Injertado (regrabado)</option>
-                    <option value="no_verificable">No verificable en campo</option>
-                  </select>
-                </div>
-                <div style={st.fg}><label style={st.label}>Observaciones del NIV</label><input style={st.input} value={form.niv_observaciones} onChange={e => set('niv_observaciones', e.target.value)} placeholder="Números revelados con ácido, lija..." /></div>
-              </div>
+
 
               {/* Datos del robo */}
               <div style={{ ...st.sTitle, marginTop: 20 }}><AlertTriangle size={15} /> Datos del Robo</div>
