@@ -315,9 +315,9 @@ anio: form.anio ? parseInt(form.anio) : null,
                 <div style={st.fg}><label style={st.label}>Delito 2 (si aplica)</label><input style={st.input} value={form.delito2} onChange={e => set('delito2', e.target.value.toUpperCase())} /></div>
                 <div style={st.fg}><label style={st.label}>Causa Penal</label><input style={st.input} value={form.causa_penal} onChange={e => set('causa_penal', e.target.value)} placeholder="17/2018-I" /></div>
                 <div style={st.fg}><label style={st.label}>No. de Oficio</label><input style={st.input} value={form.numero_oficio} onChange={e => set('numero_oficio', e.target.value)} placeholder="235/2" /></div>
-                <div style={st.fg}><label style={st.label}>Fecha de Emisión</label><input style={st.input} type="date" value={form.fecha_emision} onChange={e => set('fecha_emision', e.target.value)} /></div>
-                <div style={st.fg}><label style={st.label}>A.V. Previa</label><input style={st.input} value={form.av_previa} onChange={e => set('av_previa', e.target.value)} placeholder="TAB/COY/02/0225/2013" /></div>
-                <div style={st.fg}><label style={st.label}>Agraviado</label><input style={st.input} value={form.agraviado} onChange={e => set('agraviado', e.target.value.toUpperCase())} placeholder="NOMBRE DEL AGRAVIADO" /></div>
+                <div style={st.fg}><label style={st.label}>A.V. Previa (sistema inquisitivo)</label><input style={st.input} value={form.av_previa} onChange={e => set('av_previa', e.target.value)} placeholder="TAB/COY/02/0225/2013" /></div>
+                <div style={st.fg}><label style={st.label}>Carpeta Judicial (sistema acusatorio)</label><input style={st.input} value={form.carpeta_judicial} onChange={e => set('carpeta_judicial', e.target.value)} placeholder="CJ/ACA/01/0456/2024" /></div>
+                <div style={st.fg}><label style={st.label}>Agraviado</label>
                 <div style={st.fg}><label style={st.label}>Comandancia</label><input style={st.input} value={form.comandancia} onChange={e => set('comandancia', e.target.value)} placeholder="Coyuca de Benítez" /></div>
                 <div style={st.fg}><label style={st.label}>Año</label><input style={st.input} type="number" value={form.anio} onChange={e => set('anio', e.target.value)} /></div>
                 <div style={st.fg}><label style={st.label}>Folio</label><input style={st.input} value={form.folio} onChange={e => set('folio', e.target.value)} placeholder="0716" /></div>
