@@ -2323,7 +2323,8 @@ export default function App() {
             <button onClick={() => setTabApp("expediente")} style={{ background: "none", border: "none", borderBottom: tabApp === "expediente" ? "2px solid #001a4d" : "2px solid transparent", padding: "10px 18px", fontWeight: tabApp === "expediente" ? 700 : 500, color: tabApp === "expediente" ? "#001a4d" : "#888", cursor: "pointer", fontSize: 15 }}>Expediente Policial</button>
 
             <div style={{ width: 2, height: 28, backgroundColor: "#b69054", margin: "0 6px", borderRadius: 1 }} />
-
+<div style={{ width: 2, height: 28, backgroundColor: "#b69054", margin: "0 6px", borderRadius: 1 }} />
+            <button onClick={() => setTabApp("ordenes")} style={{ background: "none", border: "none", borderBottom: tabApp === "ordenes" ? "2px solid #001a4d" : "2px solid transparent", padding: "10px 18px", fontWeight: tabApp === "ordenes" ? 700 : 500, color: tabApp === "ordenes" ? "#001a4d" : "#888", cursor: "pointer", fontSize: 15 }}>Órdenes</button>
             {/* ── GRUPO 2: Detenidos ── */}
             <button onClick={() => setTabApp("busqueda")} style={{ background: "none", border: "none", borderBottom: tabApp === "busqueda" ? "2px solid #001a4d" : "2px solid transparent", padding: "10px 18px", fontWeight: tabApp === "busqueda" ? 700 : 500, color: tabApp === "busqueda" ? "#001a4d" : "#888", cursor: "pointer", fontSize: 15 }}>Búsqueda</button>
             <button onClick={() => setTabApp("detenidos")} style={{ background: "none", border: "none", borderBottom: tabApp === "detenidos" ? "2px solid #001a4d" : "2px solid transparent", padding: "10px 18px", fontWeight: tabApp === "detenidos" ? 700 : 500, color: tabApp === "detenidos" ? "#001a4d" : "#888", cursor: "pointer", fontSize: 15 }}>Detenidos</button>
