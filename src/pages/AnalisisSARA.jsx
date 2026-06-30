@@ -11,6 +11,7 @@ import {
 import { useAnalisisSARA } from '../hooks/useAnalisisSARA';
 import MapaCalor from './MapaCalor';
 import TrianguloProblema from './TrianguloProblema';
+import ChecklistCHEERS from './ChecklistCHEERS';
 const COLORS = { primary: '#001a4d', gold: '#b69054', white: '#ffffff' };
 
 const cardStyle = {
@@ -638,6 +639,7 @@ const [showMapa, setShowMapa] = useState(false);
         </button>
       </div>
       {showMapa && <MapaCalor />}
+      <ChecklistCHEERS />
 <TrianguloProblema />
       {vista === 'listado' && renderListado()}
       {vista === 'nuevo' && renderFormNuevo()}
