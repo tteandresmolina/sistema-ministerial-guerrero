@@ -95,6 +95,10 @@ export default function ExpedientePolicial({ user }) {
     municipio: '', entidad_federativa: 'Guerrero',
     coordenadas_lat: '', coordenadas_lng: '', referencias_lugar: '',
     agente_recibe: ''
+    carpeta_judicial: '',
+    fiscalia_especializada: '',
+    unidad_origen: '',
+    fuente_conocimiento: '911',
 
   };
   const [formOficio, setFormOficio] = useState(emptyOficio);
@@ -404,6 +408,31 @@ const renderFormularioOficio = () => (
           <p style={{ fontSize: 11, color: '#666', margin: '4px 0 8px 0' }}>20 dígitos asignados por el Ministerio Público — vincula todo el expediente.</p>
           <input style={{ ...inputStyle, fontFamily: 'monospace', fontSize: 16, letterSpacing: 1, textAlign: 'center' }} maxLength={25} placeholder="12030290300463130025"
             value={formOficio.carpeta_investigacion}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 14 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                <label style={{ fontSize: 12, fontWeight: 600, color: '#001a4d' }}>Carpeta Judicial (si judicializada)</label>
+                <input style={{ padding: '10px 12px', border: '1px solid #e8ecf1', borderRadius: 8, fontSize: 14, fontFamily: 'monospace' }} value={oficioActual.carpeta_judicial || ''} onChange={e => setOficioActual(p => ({ ...p, carpeta_judicial: e.target.value }))} placeholder="CJ/ACA/01/0456/2024" />
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                <label style={{ fontSize: 12, fontWeight: 600, color: '#001a4d' }}>Fuente de Conocimiento</label>
+                <select style={{ padding: '10px 12px', border: '1px solid #e8ecf1', borderRadius: 8, fontSize: 14, backgroundColor: '#fff' }} value={oficioActual.fuente_conocimiento || '911'} onChange={e => setOficioActual(p => ({ ...p, fuente_conocimiento: e.target.value }))}>
+                  {FUENTES_CONOCIMIENTO.map(f => <option key={f} value={f}>{f}</option>)}
+                </select>
+              </div>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 14 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                <label style={{ fontSize: 12, fontWeight: 600, color: '#001a4d' }}>Fiscalía Especializada (si aplica)</label>
+                <select style={{ padding: '10px 12px', border: '1px solid #e8ecf1', borderRadius: 8, fontSize: 14, backgroundColor: '#fff' }} value={oficioActual.fiscalia_especializada || ''} onChange={e => setOficioActual(p => ({ ...p, fiscalia_especializada: e.target.value }))}>
+                  <option value="">— No aplica (Coordinación regular) —</option>
+                  {FISCALIAS_ESPECIALIZADAS.filter(f => f).map(f => <option key={f} value={f}>{f}</option>)}
+                </select>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                <label style={{ fontSize: 12, fontWeight: 600, color: '#001a4d' }}>Unidad de origen (si fue transferido)</label>
+                <input style={{ padding: '10px 12px', border: '1px solid #e8ecf1', borderRadius: 8, fontSize: 14 }} value={oficioActual.unidad_origen || ''} onChange={e => setOficioActual(p => ({ ...p, unidad_origen: e.target.value }))} placeholder="Ej: Coordinación de Zona Centro" />
+              </div>
+            </div>
             onChange={e => setFormOficio({ ...formOficio, carpeta_investigacion: e.target.value.replace(/\D/g, '') })} />
         </div>
 
