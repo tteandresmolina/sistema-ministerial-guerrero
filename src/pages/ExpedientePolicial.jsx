@@ -95,6 +95,10 @@ export default function ExpedientePolicial({ user }) {
     municipio: '', entidad_federativa: 'Guerrero',
     coordenadas_lat: '', coordenadas_lng: '', referencias_lugar: '',
     agente_recibe: ''
+    carpeta_judicial: '',
+    fiscalia_especializada: '',
+    unidad_origen: '',
+    fuente_conocimiento: '911',
   };
   const [formOficio, setFormOficio] = useState(emptyOficio);
 
