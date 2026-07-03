@@ -94,7 +94,7 @@ export default function ExpedientePolicial({ user }) {
     termino_horas: '', fecha_emision: new Date().toISOString().split('T')[0],
     municipio: '', entidad_federativa: 'Guerrero',
     coordenadas_lat: '', coordenadas_lng: '', referencias_lugar: '',
-    agente_recibe: ''
+agente_recibe: '',
     carpeta_judicial: '',
     fiscalia_especializada: '',
     unidad_origen: '',
@@ -143,7 +143,11 @@ const handleGuardarOficio = async () => {
       coordenadas_lng: formOficio.coordenadas_lng ? parseFloat(formOficio.coordenadas_lng) : null,
       municipio: formOficio.municipio || null,
       referencias_lugar: formOficio.referencias_lugar || null,
-      agente_recibe: formOficio.agente_recibe || null
+agente_recibe: formOficio.agente_recibe || null,
+      carpeta_judicial: formOficio.carpeta_judicial || null,
+      fiscalia_especializada: formOficio.fiscalia_especializada || null,
+      unidad_origen: formOficio.unidad_origen || null,
+      fuente_conocimiento: formOficio.fuente_conocimiento || null,
     };
     const result = await crearOficio(payload);
     if (result) {
@@ -170,6 +174,10 @@ const handleGuardarOficio = async () => {
       setFormPersona(emptyPersona);
       setShowFormPersona(false);
     }
+  };
+  const handleCambiarEstatusPersona = async (persona, nuevoEstatus) => {
+    await actualizarPersona(persona.id, { estatus: nuevoEstatus });
+    await fetchExpedienteCompleto(oficioSeleccionado.carpeta_investigacion);
   };
   const handleGuardarAccion = async () => {
     if (!formAccion.tipo_accion || !formAccion.descripcion_actuacion) {
@@ -407,8 +415,8 @@ const renderFormularioOficio = () => (
           <label style={{ ...labelStyle, color: COLORS.gold, fontSize: 13 }}>Carpeta de Investigación (C.I.) *</label>
           <p style={{ fontSize: 11, color: '#666', margin: '4px 0 8px 0' }}>20 dígitos asignados por el Ministerio Público — vincula todo el expediente.</p>
           <input style={{ ...inputStyle, fontFamily: 'monospace', fontSize: 16, letterSpacing: 1, textAlign: 'center' }} maxLength={25} placeholder="12030290300463130025"
-            value={formOficio.carpeta_investigacion}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 14 }}>
+onChange={e => setFormOficio({ ...formOficio, carpeta_investigacion: e.target.value.replace(/\D/g, '') })} />
+        </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 <label style={{ fontSize: 12, fontWeight: 600, color: '#001a4d' }}>Carpeta Judicial (si judicializada)</label>
                 <input style={{ padding: '10px 12px', border: '1px solid #e8ecf1', borderRadius: 8, fontSize: 14, fontFamily: 'monospace' }} value={oficioActual.carpeta_judicial || ''} onChange={e => setOficioActual(p => ({ ...p, carpeta_judicial: e.target.value }))} placeholder="CJ/ACA/01/0456/2024" />
@@ -433,7 +441,29 @@ const renderFormularioOficio = () => (
                 <input style={{ padding: '10px 12px', border: '1px solid #e8ecf1', borderRadius: 8, fontSize: 14 }} value={oficioActual.unidad_origen || ''} onChange={e => setOficioActual(p => ({ ...p, unidad_origen: e.target.value }))} placeholder="Ej: Coordinación de Zona Centro" />
               </div>
             </div>
+value={formOficio.carpeta_investigacion}
             onChange={e => setFormOficio({ ...formOficio, carpeta_investigacion: e.target.value.replace(/\D/g, '') })} />
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 14 }}>
+          <div>
+            <label style={labelStyle}>Carpeta Judicial (si judicializada)</label>
+            <input style={{ ...inputStyle, fontFamily: 'monospace' }} value={formOficio.carpeta_judicial} onChange={e => setFormOficio({ ...formOficio, carpeta_judicial: e.target.value })} placeholder="CJ/ACA/01/0456/2024" />
+          </div>
+          <div>
+            <label style={labelStyle}>Fuente de Conocimiento</label>
+            <select style={selectStyle} value={formOficio.fuente_conocimiento} onChange={e => setFormOficio({ ...formOficio, fuente_conocimiento: e.target.value })}>{FUENTES_CONOCIMIENTO.map(f => <option key={f} value={f}>{f}</option>)}</select>
+          </div>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 14 }}>
+          <div>
+            <label style={labelStyle}>Fiscalía Especializada (si aplica)</label>
+            <select style={selectStyle} value={formOficio.fiscalia_especializada} onChange={e => setFormOficio({ ...formOficio, fiscalia_especializada: e.target.value })}><option value="">— No aplica (Coordinación regular) —</option>{FISCALIAS_ESPECIALIZADAS.filter(f => f).map(f => <option key={f} value={f}>{f}</option>)}</select>
+          </div>
+          <div>
+            <label style={labelStyle}>Unidad de origen (si fue transferido)</label>
+            <input style={inputStyle} value={formOficio.unidad_origen} onChange={e => setFormOficio({ ...formOficio, unidad_origen: e.target.value })} placeholder="Ej: Coordinación de Zona Centro" />
+          </div>
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
