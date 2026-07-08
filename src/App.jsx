@@ -15,7 +15,6 @@ import DashboardOperativo from './pages/DashboardOperativo';
 import AnalisisSARA from './pages/AnalisisSARA';
 import OrdenesAprehension from './pages/OrdenesAprehension';
 import VehiculosRobo from './pages/VehiculosRobo';
-import OficialiaPartes from './pages/OficialiaPartes';
 import ModuloDetenidos, { BusquedaOperativa, calcularSemaforo, SEMAFORO, REGIONES, Input, Select, TextArea } from './pages/Detenidos';
 
 // ─── CONSTANTES ───────────────────────────────────────────────────────────────
@@ -405,7 +404,6 @@ export default function App() {
 
       <div style={{ background: "#eef1f6", borderBottom: "1px solid #d9dee5", padding: "0 20px", display: "flex", gap: 4, flexWrap: "wrap", alignItems: "center" }}>
             {/* ── GRUPO 1: Expediente de Investigación Policial ── */}
-            <button onClick={() => setTabApp("oficialia")} style={{ background: "none", border: "none", borderBottom: tabApp === "oficialia" ? "2px solid #001a4d" : "2px solid transparent", padding: "10px 18px", fontWeight: tabApp === "oficialia" ? 700 : 500, color: tabApp === "oficialia" ? "#001a4d" : "#888", cursor: "pointer", fontSize: 15 }}>Oficialía</button>
             <button onClick={() => setTabApp("registro911")} style={{ background: "none", border: "none", borderBottom: tabApp === "registro911" ? "2px solid #001a4d" : "2px solid transparent", padding: "10px 18px", fontWeight: tabApp === "registro911" ? 700 : 500, color: tabApp === "registro911" ? "#001a4d" : "#888", cursor: "pointer", fontSize: 15 }}>Registro 911</button>
             <button onClick={() => setTabApp("primerrespondiente")} style={{ background: "none", border: "none", borderBottom: tabApp === "primerrespondiente" ? "2px solid #001a4d" : "2px solid transparent", padding: "10px 18px", fontWeight: tabApp === "primerrespondiente" ? 700 : 500, color: tabApp === "primerrespondiente" ? "#001a4d" : "#888", cursor: "pointer", fontSize: 15 }}>Primer Respondiente</button>
             <button onClick={() => setTabApp("escenacrimen")} style={{ background: "none", border: "none", borderBottom: tabApp === "escenacrimen" ? "2px solid #001a4d" : "2px solid transparent", padding: "10px 18px", fontWeight: tabApp === "escenacrimen" ? 700 : 500, color: tabApp === "escenacrimen" ? "#001a4d" : "#888", cursor: "pointer", fontSize: 15 }}>Procesamiento del Lugar</button>
@@ -434,7 +432,6 @@ export default function App() {
         {tabApp === "busqueda" && <BusquedaOperativa perfil={perfil} onAbrirDetenido={abrirDesdeListaBusqueda} />}
         {tabApp === "dashboard" && puedeVerDashboard && <DashboardMandos perfil={perfil} />}
         {tabApp === "historico" && <DashboardHistorico />}
-        {tabApp === "oficialia" && <OficialiaPartes perfil={perfil} />}
         {tabApp === "registro911" && <Registro911 perfil={perfil} />}
         {tabApp === "primerrespondiente" && <PrimerRespondiente perfil={perfil} />}
         {tabApp === "escenacrimen" && <EscenaCrimen perfil={perfil} />}
