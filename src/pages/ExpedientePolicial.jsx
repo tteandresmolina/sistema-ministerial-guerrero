@@ -17,10 +17,17 @@ const REGIONES_GUERRERO = [
   'Acapulco', 'Centro', 'Costa Chica', 'Costa Grande', 'Montaña', 'Norte', 'Tierra Caliente', 'Sierra',
 ];
 const FISCALIAS_ESPECIALIZADAS = [
-  '', 'Combate a la Corrupción', 'Delitos Electorales', 'Desaparición Forzada y Búsqueda de Personas',
-  'Narcomenudeo', 'Contra el Secuestro', 'Contra el Robo de Vehículos',
-  'Delitos Sexuales y Violencia Familiar', 'Investigación del Delito de Feminicidio',
-  'Justicia para Adolescentes', 'Contra la Trata de Personas',
+  '',
+  'Fiscalía Especializada en Combate a la Corrupción',
+  'Fiscalía Especial de Delitos Electorales',
+  'Fiscalía Especializada en Materia de Desaparición Forzada y Búsqueda de Personas Desaparecidas',
+  'Fiscalía Especializada en Delitos de Narcomenudeo',
+  'Fiscalía Especializada Contra el Secuestro y Combate a la Extorsión',
+  'Fiscalía Especializada Contra el Robo de Vehículos',
+  'Fiscalía Especializada en Delitos Sexuales y Violencia Familiar',
+  'Fiscalía Especializada en Investigación del Delito de Feminicidio',
+  'Fiscalía Especializada en Justicia para Adolescentes',
+  'Fiscalía Especializada Contra la Trata de Personas',
 ];
 const FUENTES_CONOCIMIENTO = [
   '911', '089', 'Flagrancia', 'Denuncia directa', 'Oficio del MP', 'Oficio judicial',
