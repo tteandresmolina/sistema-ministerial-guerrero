@@ -1,0 +1,17 @@
+{
+  "name": "Sistema Ministerial — FGE Guerrero",
+  "short_name": "Sist. Ministerial",
+  "description": "Sistema de Información Criminal — Policía de Investigación Ministerial, Fiscalía General del Estado de Guerrero",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#001a4d",
+  "theme_color": "#001a4d",
+  "lang": "es-MX",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
