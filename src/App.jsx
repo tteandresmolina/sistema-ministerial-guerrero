@@ -16,6 +16,7 @@ import AnalisisSARA from './pages/AnalisisSARA';
 import OrdenesAprehension from './pages/OrdenesAprehension';
 import VehiculosRobo from './pages/VehiculosRobo';
 import OficialiaPartes from './pages/OficialiaPartes';
+import SubcoordAdmin from './pages/SubcoordAdmin';
 import ModuloDetenidos, { BusquedaOperativa, calcularSemaforo, SEMAFORO, REGIONES, Input, Select, TextArea } from './pages/Detenidos';
 
 // ─── CONSTANTES ───────────────────────────────────────────────────────────────
@@ -99,7 +100,7 @@ function Auth() {
         <div style={{ background: "#eef1f6", border: "1px solid #c3cbd6", borderRadius: 14, padding: 26 }}>
           <div style={{ display: "flex", gap: 6, marginBottom: 20, background: "#ffffff", borderRadius: 8, padding: 4 }}>
             <button onClick={() => { setModo("login"); setError(""); setExito(""); }} style={{ flex: 1, background: modo === "login" ? "#c3cbd6" : "none", border: "none", borderRadius: 6, padding: "8px", color: modo === "login" ? "#1a1a2e" : "#6b7280", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>Iniciar sesión</button>
-            <button onClick={() => { setModo("registro"); setError(""); setExito(""); }} style={{ flex: 1, background: modo === "registro" ? "#c3cbd6" : "none", border: "none", borderRadius: 6, padding: "8px", color: modo === "registro" ? "#1a1a2e" : "#6b7280", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>Crear cuenta</button>
+            <button disabled style={{ flex: 1, background: "none", border: "none", borderRadius: 6, padding: "8px", color: "#d1d5db", fontSize: 12, fontWeight: 700, cursor: "not-allowed" }}>Registro solo por Subcoord. Admtivo.</button>
           </div>
           <div style={{ display: "grid", gap: 14 }}>
             {modo === "registro" && (<>
@@ -429,6 +430,9 @@ export default function App() {
               <button onClick={() => setTabApp("dashboard")} style={{ background: "none", border: "none", borderBottom: tabApp === "dashboard" ? "2px solid #001a4d" : "2px solid transparent", padding: "10px 18px", fontWeight: tabApp === "dashboard" ? 700 : 500, color: tabApp === "dashboard" ? "#001a4d" : "#888", cursor: "pointer", fontSize: 15 }}>Histórico</button>
             )}
             <button onClick={() => setTabApp("historico")} style={{ background: "none", border: "none", borderBottom: tabApp === "historico" ? "2px solid #001a4d" : "2px solid transparent", padding: "10px 18px", fontWeight: tabApp === "historico" ? 700 : 500, color: tabApp === "historico" ? "#001a4d" : "#888", cursor: "pointer", fontSize: 15 }}>Histórico Detenidos</button>
+            {perfil && ['mando','subcoord_admin'].includes(perfil.rol) && (
+              <button onClick={() => setTabApp("subcoord_admin")} style={{ background: "none", border: "none", borderBottom: tabApp === "subcoord_admin" ? "2px solid #001a4d" : "2px solid transparent", padding: "10px 18px", fontWeight: tabApp === "subcoord_admin" ? 700 : 500, color: tabApp === "subcoord_admin" ? "#001a4d" : "#888", cursor: "pointer", fontSize: 15 }}>Subcoord. Admtivo.</button>
+            )}
           </div>
       <div style={{ padding: 20, maxWidth: tabApp === "dashboard" ? 1000 : 800, margin: "0 auto" }}>
         {tabApp === "busqueda" && <BusquedaOperativa perfil={perfil} onAbrirDetenido={abrirDesdeListaBusqueda} />}
@@ -445,6 +449,7 @@ export default function App() {
         {tabApp === "victimastestigos" && <VictimasTestigos perfil={perfil} />}
         {tabApp === "ordenes" && <OrdenesAprehension perfil={perfil} />}
         {tabApp === "vehiculos" && <VehiculosRobo perfil={perfil} />}
+        {tabApp === "subcoord_admin" && <SubcoordAdmin perfil={perfil} />}
         {tabApp === "detenidos" && <ModuloDetenidos perfil={perfil} detenidoInicial={detenidoParaAbrir} onDetenidoInicialUsado={() => setDetenidoParaAbrir(null)} />}
       </div>
     </div>
