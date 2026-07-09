@@ -85,10 +85,20 @@ export default function ExpedientePolicial({ user }) {
 
   const handleVerExpediente = async (oficio) => { setOficioSeleccionado(oficio); setVista('detalle'); setSubTab('datos'); await fetchExpedienteCompleto(oficio.carpeta_investigacion); };
 
-  const handleGuardarOficio = async () => {
+const handleGuardarOficio = async () => {
     if (!formOficio.carpeta_investigacion || !formOficio.numero_oficio || !formOficio.delito) { setError('Carpeta de Investigación, Número de Oficio y Delito son obligatorios'); return; }
-    const payload = { ...formOficio, termino_horas: formOficio.termino_horas ? parseInt(formOficio.termino_horas) : null, coordenadas_lat: formOficio.coordenadas_lat ? parseFloat(formOficio.coordenadas_lat) : null, coordenadas_lng: formOficio.coordenadas_lng ? parseFloat(formOficio.coordenadas_lng) : null, municipio: formOficio.municipio || null, referencias_lugar: formOficio.referencias_lugar || null, agente_recibe: formOficio.agente_recibe || null, carpeta_judicial: formOficio.carpeta_judicial || null, fiscalia_especializada: formOficio.fiscalia_especializada || null, unidad_origen: formOficio.unidad_origen || null, fuente_conocimiento: formOficio.fuente_conocimiento || null };
+    const { _archivoOficio, ...datosOficio } = formOficio;
+    const payload = { ...datosOficio, termino_horas: datosOficio.termino_horas ? parseInt(datosOficio.termino_horas) : null, coordenadas_lat: datosOficio.coordenadas_lat ? parseFloat(datosOficio.coordenadas_lat) : null, coordenadas_lng: datosOficio.coordenadas_lng ? parseFloat(datosOficio.coordenadas_lng) : null, municipio: datosOficio.municipio || null, referencias_lugar: datosOficio.referencias_lugar || null, agente_recibe: datosOficio.agente_recibe || null, carpeta_judicial: datosOficio.carpeta_judicial || null, fiscalia_especializada: datosOficio.fiscalia_especializada || null, unidad_origen: datosOficio.unidad_origen || null, fuente_conocimiento: datosOficio.fuente_conocimiento || null };
     const result = await crearOficio(payload);
+    if (result && _archivoOficio) {
+      const ext = _archivoOficio.name.split('.').pop();
+      const ruta = `oficios/${result.id}_${Date.now()}.${ext}`;
+      const { error: errUp } = await supabase.storage.from('expedientes').upload(ruta, _archivoOficio);
+      if (!errUp) {
+        const { data: urlData } = supabase.storage.from('expedientes').getPublicUrl(ruta);
+        await supabase.from('oficios_investigacion').update({ archivo_oficio_url: urlData.publicUrl, nombre_archivo_oficio: _archivoOficio.name }).eq('id', result.id);
+      }
+    }
     if (result) { setFormOficio(emptyOficio); setVista('listado'); }
   };
 
