@@ -17,6 +17,7 @@ import OrdenesAprehension from './pages/OrdenesAprehension';
 import VehiculosRobo from './pages/VehiculosRobo';
 import OficialiaPartes from './pages/OficialiaPartes';
 import SubcoordAdmin from './pages/SubcoordAdmin';
+import BodegaIndicios from './pages/BodegaIndicios';
 import ModuloDetenidos, { BusquedaOperativa, calcularSemaforo, SEMAFORO, REGIONES, Input, Select, TextArea } from './pages/Detenidos';
 
 // ─── CONSTANTES ───────────────────────────────────────────────────────────────
@@ -417,6 +418,9 @@ export default function App() {
             <div style={{ width: 2, height: 28, backgroundColor: "#b69054", margin: "0 6px", borderRadius: 1 }} />
             <button onClick={() => setTabApp("ordenes")} style={{ background: "none", border: "none", borderBottom: tabApp === "ordenes" ? "2px solid #001a4d" : "2px solid transparent", padding: "10px 18px", fontWeight: tabApp === "ordenes" ? 700 : 500, color: tabApp === "ordenes" ? "#001a4d" : "#888", cursor: "pointer", fontSize: 15 }}>Órdenes</button>
         <button onClick={() => setTabApp("vehiculos")} style={{ background: "none", border: "none", borderBottom: tabApp === "vehiculos" ? "2px solid #001a4d" : "2px solid transparent", padding: "10px 18px", fontWeight: tabApp === "vehiculos" ? 700 : 500, color: tabApp === "vehiculos" ? "#001a4d" : "#888", cursor: "pointer", fontSize: 15 }}>Vehículos</button>
+            {perfil && (['mando','regional'].includes(perfil.rol) || (perfil.coordinacion_especializada || '').toLowerCase().includes('narcomenudeo')) && (
+              <button onClick={() => setTabApp("bodega")} style={{ background: "none", border: "none", borderBottom: tabApp === "bodega" ? "2px solid #001a4d" : "2px solid transparent", padding: "10px 18px", fontWeight: tabApp === "bodega" ? 700 : 500, color: tabApp === "bodega" ? "#001a4d" : "#888", cursor: "pointer", fontSize: 15 }}>Bodega</button>
+            )}
             {/* ── GRUPO 2: Detenidos ── */}
             <button onClick={() => setTabApp("busqueda")} style={{ background: "none", border: "none", borderBottom: tabApp === "busqueda" ? "2px solid #001a4d" : "2px solid transparent", padding: "10px 18px", fontWeight: tabApp === "busqueda" ? 700 : 500, color: tabApp === "busqueda" ? "#001a4d" : "#888", cursor: "pointer", fontSize: 15 }}>Búsqueda</button>
             <button onClick={() => setTabApp("detenidos")} style={{ background: "none", border: "none", borderBottom: tabApp === "detenidos" ? "2px solid #001a4d" : "2px solid transparent", padding: "10px 18px", fontWeight: tabApp === "detenidos" ? 700 : 500, color: tabApp === "detenidos" ? "#001a4d" : "#888", cursor: "pointer", fontSize: 15 }}>Detenidos</button>
@@ -450,6 +454,7 @@ export default function App() {
         {tabApp === "ordenes" && <OrdenesAprehension perfil={perfil} />}
         {tabApp === "vehiculos" && <VehiculosRobo perfil={perfil} />}
         {tabApp === "subcoord_admin" && <SubcoordAdmin perfil={perfil} />}
+        {tabApp === "bodega" && <BodegaIndicios perfil={perfil} />}
         {tabApp === "detenidos" && <ModuloDetenidos perfil={perfil} detenidoInicial={detenidoParaAbrir} onDetenidoInicialUsado={() => setDetenidoParaAbrir(null)} />}
       </div>
     </div>
