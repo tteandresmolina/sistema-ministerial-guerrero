@@ -49,18 +49,18 @@ const ESTATUS_CONFIG = {
 const EMBALAJES = ['Bolsa plástica', 'Bolsa de papel', 'Sobre de papel', 'Caja de cartón', 'Tubo de ensayo', 'Frasco', 'Contenedor rígido', 'Bolsa antiestática', 'Otro'];
 
 const s = {
-  btn: (bg, clr) => ({ backgroundColor: bg, color: clr, border: 'none', borderRadius: 8, padding: '10px 20px', fontSize: 14, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }),
-  btnOutline: { backgroundColor: 'transparent', color: C.darkBlue, border: `2px solid ${C.darkBlue}`, borderRadius: 8, padding: '8px 16px', fontSize: 13, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 },
-  input: { padding: '10px 12px', border: `1px solid ${C.lightGray}`, borderRadius: 8, fontSize: 14, outline: 'none', fontFamily: 'inherit', width: '100%', boxSizing: 'border-box' },
-  select: { padding: '10px 12px', border: `1px solid ${C.lightGray}`, borderRadius: 8, fontSize: 14, outline: 'none', backgroundColor: C.white, fontFamily: 'inherit', cursor: 'pointer', width: '100%', boxSizing: 'border-box' },
-  textarea: { padding: '10px 12px', border: `1px solid ${C.lightGray}`, borderRadius: 8, fontSize: 14, outline: 'none', fontFamily: 'inherit', resize: 'vertical', minHeight: 70, width: '100%', boxSizing: 'border-box' },
-  label: { fontSize: 12, fontWeight: 600, color: C.darkBlue, marginBottom: 4, display: 'block' },
-  sectionTitle: { fontSize: 14, fontWeight: 700, color: C.gold, marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8, textTransform: 'uppercase' },
+  btn: (bg, clr) => ({ backgroundColor: bg, color: clr, border: 'none', borderRadius: 8, padding: '14px 24px', fontSize: 16, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }),
+  btnOutline: { backgroundColor: 'transparent', color: C.darkBlue, border: `2px solid ${C.darkBlue}`, borderRadius: 8, padding: '12px 20px', fontSize: 15, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 },
+  input: { padding: '13px 14px', border: `1px solid ${C.lightGray}`, borderRadius: 8, fontSize: 16, outline: 'none', fontFamily: 'inherit', width: '100%', boxSizing: 'border-box' },
+  select: { padding: '13px 14px', border: `1px solid ${C.lightGray}`, borderRadius: 8, fontSize: 16, outline: 'none', backgroundColor: C.white, fontFamily: 'inherit', cursor: 'pointer', width: '100%', boxSizing: 'border-box' },
+  textarea: { padding: '13px 14px', border: `1px solid ${C.lightGray}`, borderRadius: 8, fontSize: 16, outline: 'none', fontFamily: 'inherit', resize: 'vertical', minHeight: 70, width: '100%', boxSizing: 'border-box' },
+  label: { fontSize: 14, fontWeight: 600, color: C.darkBlue, marginBottom: 4, display: 'block' },
+  sectionTitle: { fontSize: 16, fontWeight: 700, color: C.gold, marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8, textTransform: 'uppercase' },
   grid2: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 },
   formGroup: { display: 'flex', flexDirection: 'column', gap: 4 },
-  badge: (bg, clr) => ({ display: 'inline-block', padding: '4px 10px', borderRadius: 12, fontSize: 11, fontWeight: 600, backgroundColor: bg, color: clr }),
-  th: { padding: '12px 16px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: C.gray, textTransform: 'uppercase', borderBottom: `2px solid ${C.lightGray}`, backgroundColor: C.bg, whiteSpace: 'nowrap' },
-  td: { padding: '12px 16px', fontSize: 13, borderBottom: `1px solid ${C.lightGray}`, color: C.darkBlue },
+  badge: (bg, clr) => ({ display: 'inline-block', padding: '4px 10px', borderRadius: 12, fontSize: 13, fontWeight: 600, backgroundColor: bg, color: clr }),
+  th: { padding: '12px 16px', textAlign: 'left', fontSize: 13, fontWeight: 700, color: C.gray, textTransform: 'uppercase', borderBottom: `2px solid ${C.lightGray}`, backgroundColor: C.bg, whiteSpace: 'nowrap' },
+  td: { padding: '12px 16px', fontSize: 15, borderBottom: `1px solid ${C.lightGray}`, color: C.darkBlue },
 };
 
 export default function IndiciosEvidencia({ perfil }) {
@@ -163,7 +163,7 @@ export default function IndiciosEvidencia({ perfil }) {
           <h2 style={{ fontSize: 22, fontWeight: 700, color: C.darkBlue, display: 'flex', alignItems: 'center', gap: 10, margin: 0 }}>
             <Package size={22} color={C.gold} /> Indicios y Evidencia
           </h2>
-          <p style={{ fontSize: 13, color: C.gray, margin: '4px 0 0 0' }}>Módulo 2 · Tab 4 · Cadena de Custodia — Guía Nacional CNSP</p>
+          <p style={{ fontSize: 15, color: C.gray, margin: '4px 0 0 0' }}>Módulo 2 · Tab 4 · Cadena de Custodia — Guía Nacional CNSP</p>
         </div>
         <div style={{ display: 'flex', gap: 10 }}>
           <button style={s.btnOutline} onClick={refetch}><RefreshCw size={15} /> Actualizar</button>
@@ -188,7 +188,7 @@ export default function IndiciosEvidencia({ perfil }) {
             </div>
             <div>
               <div style={{ fontSize: 22, fontWeight: 700, color: C.darkBlue }}>{st2.value}</div>
-              <div style={{ fontSize: 12, color: C.gray }}>{st2.label}</div>
+              <div style={{ fontSize: 14, color: C.gray }}>{st2.label}</div>
             </div>
           </div>
         ))}
@@ -199,7 +199,7 @@ export default function IndiciosEvidencia({ perfil }) {
         <div style={{ padding: '16px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: `1px solid ${C.lightGray}`, flexWrap: 'wrap', gap: 10 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, backgroundColor: C.bg, borderRadius: 8, padding: '8px 14px', flex: 1, maxWidth: 350 }}>
             <Search size={16} color={C.gray} />
-            <input type="text" placeholder="Buscar por descripción, número, tipología..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} style={{ border: 'none', outline: 'none', fontSize: 14, backgroundColor: 'transparent', flex: 1, fontFamily: 'inherit' }} />
+            <input type="text" placeholder="Buscar por descripción, número, tipología..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} style={{ border: 'none', outline: 'none', fontSize: 16, backgroundColor: 'transparent', flex: 1, fontFamily: 'inherit' }} />
             {searchTerm && <X size={14} color={C.gray} style={{ cursor: 'pointer' }} onClick={() => setSearchTerm('')} />}
           </div>
         </div>
@@ -239,7 +239,7 @@ export default function IndiciosEvidencia({ perfil }) {
                       <td style={s.td}>{ORIGENES.find(o => o.key === ind.tipo_origen)?.label || ind.tipo_origen}</td>
                       <td style={s.td}><span style={s.badge(est.bg, est.color)}>{est.label}</span></td>
                       <td style={s.td}>
-                        <button style={{ ...s.btnOutline, padding: '4px 10px', fontSize: 11 }} onClick={e => { e.stopPropagation(); setShowDetail(ind); }}>
+                        <button style={{ ...s.btnOutline, padding: '4px 10px', fontSize: 13 }} onClick={e => { e.stopPropagation(); setShowDetail(ind); }}>
                           <Eye size={13} /> Ver
                         </button>
                       </td>
@@ -266,7 +266,7 @@ export default function IndiciosEvidencia({ perfil }) {
               {/* Tabs */}
               <div style={{ display: 'flex', gap: 4, marginBottom: 20, flexWrap: 'wrap' }}>
                 {[{ n: 1, label: 'Identificación', icon: FileText }, { n: 2, label: 'Descripción', icon: Search }, { n: 3, label: 'Embalaje', icon: Package }].map(t => (
-                  <button key={t.n} onClick={() => setSeccion(t.n)} style={{ padding: '8px 16px', borderRadius: 8, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, border: `1px solid ${seccion === t.n ? C.gold : C.lightGray}`, backgroundColor: seccion === t.n ? C.lightGold : C.white, color: seccion === t.n ? C.gold : C.gray, fontSize: 12, fontWeight: 700 }}>
+                  <button key={t.n} onClick={() => setSeccion(t.n)} style={{ padding: '12px 20px', borderRadius: 8, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, border: `1px solid ${seccion === t.n ? C.gold : C.lightGray}`, backgroundColor: seccion === t.n ? C.lightGold : C.white, color: seccion === t.n ? C.gold : C.gray, fontSize: 14, fontWeight: 700 }}>
                     <t.icon size={14} /> {t.label}
                   </button>
                 ))}
@@ -299,8 +299,8 @@ export default function IndiciosEvidencia({ perfil }) {
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 6 }}>
                       {ORIGENES.map(o => (
                         <button key={o.key} onClick={() => set('tipo_origen', o.key)} style={{ textAlign: 'left', padding: '10px 14px', borderRadius: 8, cursor: 'pointer', border: form.tipo_origen === o.key ? `2px solid ${C.gold}` : `1px solid ${C.lightGray}`, backgroundColor: form.tipo_origen === o.key ? C.lightGold : C.white }}>
-                          <div style={{ fontSize: 13, fontWeight: 700, color: form.tipo_origen === o.key ? C.darkBlue : C.gray }}>{o.label}</div>
-                          <div style={{ fontSize: 11, color: C.gray }}>{o.desc}</div>
+                          <div style={{ fontSize: 15, fontWeight: 700, color: form.tipo_origen === o.key ? C.darkBlue : C.gray }}>{o.label}</div>
+                          <div style={{ fontSize: 13, color: C.gray }}>{o.desc}</div>
                         </button>
                       ))}
                     </div>
@@ -357,7 +357,7 @@ export default function IndiciosEvidencia({ perfil }) {
                     {[{ key: 'sellado', label: 'Sellado realizado' }, { key: 'etiquetado', label: 'Etiquetado realizado' }].map(opt => (
                       <div key={opt.key} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 14px', borderRadius: 8, cursor: 'pointer', border: `1px solid ${form[opt.key] ? C.green : C.lightGray}`, backgroundColor: form[opt.key] ? C.green + '12' : 'transparent' }} onClick={() => set(opt.key, !form[opt.key])}>
                         <input type="checkbox" checked={form[opt.key]} readOnly style={{ width: 16, height: 16 }} />
-                        <span style={{ color: form[opt.key] ? '#1b5e20' : C.gray, fontWeight: 600, fontSize: 13 }}>{opt.label}</span>
+                        <span style={{ color: form[opt.key] ? '#1b5e20' : C.gray, fontWeight: 600, fontSize: 15 }}>{opt.label}</span>
                       </div>
                     ))}
                   </div>
@@ -371,14 +371,14 @@ export default function IndiciosEvidencia({ perfil }) {
               )}
 
               {mensaje && (
-                <div style={{ padding: '10px 14px', borderRadius: 8, backgroundColor: mensaje.tipo === 'ok' ? '#e8f5e9' : '#ffebee', color: mensaje.tipo === 'ok' ? '#1b5e20' : '#b71c1c', fontSize: 13, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 8, marginTop: 8 }}>
+                <div style={{ padding: '10px 14px', borderRadius: 8, backgroundColor: mensaje.tipo === 'ok' ? '#e8f5e9' : '#ffebee', color: mensaje.tipo === 'ok' ? '#1b5e20' : '#b71c1c', fontSize: 15, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 8, marginTop: 8 }}>
                   {mensaje.tipo === 'ok' ? <CheckCircle2 size={16} /> : <AlertTriangle size={16} />} {mensaje.texto}
                 </div>
               )}
             </div>
 
             <div style={{ padding: '16px 24px', borderTop: `1px solid ${C.lightGray}`, display: 'flex', justifyContent: 'flex-end', gap: 12 }}>
-              {seccion > 1 && <button onClick={() => setSeccion(p => p - 1)} style={{ backgroundColor: 'transparent', color: C.gray, border: `1px solid ${C.lightGray}`, borderRadius: 8, padding: '10px 20px', fontSize: 14, cursor: 'pointer' }}>← Anterior</button>}
+              {seccion > 1 && <button onClick={() => setSeccion(p => p - 1)} style={{ backgroundColor: 'transparent', color: C.gray, border: `1px solid ${C.lightGray}`, borderRadius: 8, padding: '14px 24px', fontSize: 16, cursor: 'pointer' }}>← Anterior</button>}
               <div style={{ flex: 1 }} />
               {seccion < 3 ? (
                 <button onClick={() => setSeccion(p => p + 1)} style={s.btn(C.darkBlue, C.white)}>Siguiente →</button>
@@ -400,15 +400,15 @@ export default function IndiciosEvidencia({ perfil }) {
             <div style={{ backgroundColor: C.darkBlue, color: C.white, padding: '18px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
                 <div style={{ fontSize: 16, fontWeight: 700 }}>Indicio {showDetail.numero_indicio}</div>
-                <div style={{ fontSize: 12, opacity: 0.8 }}>{TIPOLOGIAS.find(t => t.key === showDetail.tipologia)?.label}</div>
+                <div style={{ fontSize: 14, opacity: 0.8 }}>{TIPOLOGIAS.find(t => t.key === showDetail.tipologia)?.label}</div>
               </div>
               <X size={20} style={{ cursor: 'pointer' }} onClick={() => { setShowDetail(null); setShowMovForm(false); }} />
             </div>
 
             {/* Estatus + cambiar */}
             <div style={{ padding: '14px 20px', borderBottom: `1px solid ${C.lightGray}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
-              {(() => { const est = ESTATUS_CONFIG[showDetail.estatus] || {}; return <span style={{ ...s.badge(est.bg, est.color), fontSize: 13, padding: '6px 14px' }}>{est.label}</span>; })()}
-              <select style={{ ...s.select, width: 'auto', fontSize: 12, padding: '6px 10px' }} value={showDetail.estatus}
+              {(() => { const est = ESTATUS_CONFIG[showDetail.estatus] || {}; return <span style={{ ...s.badge(est.bg, est.color), fontSize: 15, padding: '6px 14px' }}>{est.label}</span>; })()}
+              <select style={{ ...s.select, width: 'auto', fontSize: 14, padding: '6px 10px' }} value={showDetail.estatus}
                 onChange={async e => { await actualizarEstatus(showDetail.id, e.target.value); setShowDetail(p => ({ ...p, estatus: e.target.value })); }}>
                 {Object.entries(ESTATUS_CONFIG).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
               </select>
@@ -430,19 +430,19 @@ export default function IndiciosEvidencia({ perfil }) {
               { label: 'Etiquetado', value: showDetail.etiquetado ? '✅' : '❌' },
               { label: 'Recolectó', value: showDetail.recolectado_por },
             ].filter(r => r.value).map((row, i) => (
-              <div key={i} style={{ padding: '10px 20px', borderBottom: `1px solid ${C.lightGray}`, display: 'flex', justifyContent: 'space-between', gap: 12 }}>
-                <span style={{ fontSize: 11, fontWeight: 600, color: C.gray, textTransform: 'uppercase', minWidth: 110 }}>{row.label}</span>
-                <span style={{ fontSize: 14, color: C.darkBlue, textAlign: 'right', flex: 1, wordBreak: 'break-word' }}>{row.value}</span>
+              <div key={i} style={{ padding: '14px 24px', borderBottom: `1px solid ${C.lightGray}`, display: 'flex', justifyContent: 'space-between', gap: 12 }}>
+                <span style={{ fontSize: 13, fontWeight: 600, color: C.gray, textTransform: 'uppercase', minWidth: 110 }}>{row.label}</span>
+                <span style={{ fontSize: 16, color: C.darkBlue, textAlign: 'right', flex: 1, wordBreak: 'break-word' }}>{row.value}</span>
               </div>
             ))}
 
             {/* ─── CADENA DE CUSTODIA TIMELINE ─── */}
             <div style={{ padding: '16px 20px', borderTop: `2px solid ${C.gold}` }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-                <div style={{ fontSize: 13, fontWeight: 700, color: C.gold, textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: 8 }}>
+                <div style={{ fontSize: 15, fontWeight: 700, color: C.gold, textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: 8 }}>
                   <Link2 size={15} /> Cadena de Custodia ({movimientos.length})
                 </div>
-                <button onClick={() => setShowMovForm(v => !v)} style={{ backgroundColor: C.lightGold, border: `1px solid ${C.gold}55`, borderRadius: 8, padding: '6px 12px', color: C.gold, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
+                <button onClick={() => setShowMovForm(v => !v)} style={{ backgroundColor: C.lightGold, border: `1px solid ${C.gold}55`, borderRadius: 8, padding: '6px 12px', color: C.gold, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
                   {showMovForm ? '✕ Cancelar' : '+ Movimiento'}
                 </button>
               </div>
@@ -450,25 +450,25 @@ export default function IndiciosEvidencia({ perfil }) {
               {/* Form nuevo movimiento */}
               {showMovForm && (
                 <div style={{ backgroundColor: C.bg, borderRadius: 8, padding: 14, marginBottom: 14, border: `1px solid ${C.lightGray}` }}>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: C.darkBlue, marginBottom: 10 }}>Registrar entrega-recepción</div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: C.darkBlue, marginBottom: 10 }}>Registrar entrega-recepción</div>
                   <div style={s.grid2}>
-                    <div style={s.formGroup}><label style={{ ...s.label, fontSize: 10 }}>Quien entrega *</label><input style={{ ...s.input, fontSize: 12, padding: 8 }} value={movForm.nombre_entrega} onChange={e => setMov('nombre_entrega', e.target.value)} /></div>
-                    <div style={s.formGroup}><label style={{ ...s.label, fontSize: 10 }}>Institución</label><input style={{ ...s.input, fontSize: 12, padding: 8 }} value={movForm.institucion_entrega} onChange={e => setMov('institucion_entrega', e.target.value)} /></div>
-                    <div style={s.formGroup}><label style={{ ...s.label, fontSize: 10 }}>Quien recibe *</label><input style={{ ...s.input, fontSize: 12, padding: 8 }} value={movForm.nombre_recibe} onChange={e => setMov('nombre_recibe', e.target.value)} /></div>
-                    <div style={s.formGroup}><label style={{ ...s.label, fontSize: 10 }}>Institución recibe</label><input style={{ ...s.input, fontSize: 12, padding: 8 }} value={movForm.institucion_recibe} onChange={e => setMov('institucion_recibe', e.target.value)} /></div>
+                    <div style={s.formGroup}><label style={{ ...s.label, fontSize: 12 }}>Quien entrega *</label><input style={{ ...s.input, fontSize: 14, padding: 8 }} value={movForm.nombre_entrega} onChange={e => setMov('nombre_entrega', e.target.value)} /></div>
+                    <div style={s.formGroup}><label style={{ ...s.label, fontSize: 12 }}>Institución</label><input style={{ ...s.input, fontSize: 14, padding: 8 }} value={movForm.institucion_entrega} onChange={e => setMov('institucion_entrega', e.target.value)} /></div>
+                    <div style={s.formGroup}><label style={{ ...s.label, fontSize: 12 }}>Quien recibe *</label><input style={{ ...s.input, fontSize: 14, padding: 8 }} value={movForm.nombre_recibe} onChange={e => setMov('nombre_recibe', e.target.value)} /></div>
+                    <div style={s.formGroup}><label style={{ ...s.label, fontSize: 12 }}>Institución recibe</label><input style={{ ...s.input, fontSize: 14, padding: 8 }} value={movForm.institucion_recibe} onChange={e => setMov('institucion_recibe', e.target.value)} /></div>
                   </div>
-                  <div style={{ ...s.formGroup, marginTop: 10 }}><label style={{ ...s.label, fontSize: 10 }}>Propósito / Actividad *</label><input style={{ ...s.input, fontSize: 12, padding: 8 }} placeholder="Ej: Análisis pericial, almacenamiento..." value={movForm.actividad_proposito} onChange={e => setMov('actividad_proposito', e.target.value)} /></div>
+                  <div style={{ ...s.formGroup, marginTop: 10 }}><label style={{ ...s.label, fontSize: 12 }}>Propósito / Actividad *</label><input style={{ ...s.input, fontSize: 14, padding: 8 }} placeholder="Ej: Análisis pericial, almacenamiento..." value={movForm.actividad_proposito} onChange={e => setMov('actividad_proposito', e.target.value)} /></div>
                   <div style={{ ...s.grid2, marginTop: 10 }}>
-                    <div style={s.formGroup}><label style={{ ...s.label, fontSize: 10 }}>Lugar de permanencia</label><input style={{ ...s.input, fontSize: 12, padding: 8 }} value={movForm.lugar_permanencia} onChange={e => setMov('lugar_permanencia', e.target.value)} /></div>
-                    <div style={s.formGroup}><label style={{ ...s.label, fontSize: 10 }}>Estado del embalaje</label>
-                      <select style={{ ...s.select, fontSize: 12, padding: 8 }} value={movForm.estado_embalaje} onChange={e => setMov('estado_embalaje', e.target.value)}>
+                    <div style={s.formGroup}><label style={{ ...s.label, fontSize: 12 }}>Lugar de permanencia</label><input style={{ ...s.input, fontSize: 14, padding: 8 }} value={movForm.lugar_permanencia} onChange={e => setMov('lugar_permanencia', e.target.value)} /></div>
+                    <div style={s.formGroup}><label style={{ ...s.label, fontSize: 12 }}>Estado del embalaje</label>
+                      <select style={{ ...s.select, fontSize: 14, padding: 8 }} value={movForm.estado_embalaje} onChange={e => setMov('estado_embalaje', e.target.value)}>
                         <option value="integro">Íntegro</option>
                         <option value="abierto">Abierto</option>
                         <option value="deteriorado">Deteriorado</option>
                       </select>
                     </div>
                   </div>
-                  <button onClick={handleMovSubmit} style={{ ...s.btn(C.gold, C.white), width: '100%', justifyContent: 'center', marginTop: 12, fontSize: 12 }}>
+                  <button onClick={handleMovSubmit} style={{ ...s.btn(C.gold, C.white), width: '100%', justifyContent: 'center', marginTop: 12, fontSize: 14 }}>
                     <Send size={13} /> Registrar Movimiento
                   </button>
                 </div>
@@ -476,7 +476,7 @@ export default function IndiciosEvidencia({ perfil }) {
 
               {/* Timeline */}
               {movimientos.length === 0 ? (
-                <div style={{ color: C.gray, fontSize: 12, textAlign: 'center', padding: 20 }}>Sin movimientos registrados. El indicio permanece con quien lo recolectó.</div>
+                <div style={{ color: C.gray, fontSize: 14, textAlign: 'center', padding: 20 }}>Sin movimientos registrados. El indicio permanece con quien lo recolectó.</div>
               ) : (
                 <div style={{ position: 'relative', paddingLeft: 20 }}>
                   <div style={{ position: 'absolute', left: 8, top: 0, bottom: 0, width: 2, backgroundColor: C.gold + '40' }} />
@@ -485,18 +485,18 @@ export default function IndiciosEvidencia({ perfil }) {
                       <div style={{ position: 'absolute', left: -16, top: 4, width: 12, height: 12, borderRadius: '50%', backgroundColor: C.gold, border: `2px solid ${C.white}` }} />
                       <div style={{ backgroundColor: C.bg, borderRadius: 8, padding: 12, border: `1px solid ${C.lightGray}` }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-                          <span style={{ fontSize: 10, fontWeight: 700, color: C.gold }}>MOVIMIENTO #{m.numero_movimiento}</span>
-                          <span style={{ fontSize: 10, color: C.gray }}>{new Date(m.fecha_hora_entrega).toLocaleString('es-MX', { dateStyle: 'short', timeStyle: 'short' })}</span>
+                          <span style={{ fontSize: 12, fontWeight: 700, color: C.gold }}>MOVIMIENTO #{m.numero_movimiento}</span>
+                          <span style={{ fontSize: 12, color: C.gray }}>{new Date(m.fecha_hora_entrega).toLocaleString('es-MX', { dateStyle: 'short', timeStyle: 'short' })}</span>
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                          <span style={{ fontSize: 12, color: C.darkBlue, fontWeight: 600 }}>{m.nombre_entrega}</span>
+                          <span style={{ fontSize: 14, color: C.darkBlue, fontWeight: 600 }}>{m.nombre_entrega}</span>
                           <ArrowRight size={14} color={C.gold} />
-                          <span style={{ fontSize: 12, color: C.darkBlue, fontWeight: 600 }}>{m.nombre_recibe}</span>
+                          <span style={{ fontSize: 14, color: C.darkBlue, fontWeight: 600 }}>{m.nombre_recibe}</span>
                         </div>
-                        <div style={{ fontSize: 11, color: C.gray }}>{m.actividad_proposito}</div>
-                        {m.lugar_permanencia && <div style={{ fontSize: 10, color: C.gray, marginTop: 2 }}>📍 {m.lugar_permanencia}</div>}
+                        <div style={{ fontSize: 13, color: C.gray }}>{m.actividad_proposito}</div>
+                        {m.lugar_permanencia && <div style={{ fontSize: 12, color: C.gray, marginTop: 2 }}>📍 {m.lugar_permanencia}</div>}
                         {m.estado_embalaje && m.estado_embalaje !== 'integro' && (
-                          <div style={{ fontSize: 10, color: C.red, marginTop: 2 }}>⚠ Embalaje: {m.estado_embalaje}</div>
+                          <div style={{ fontSize: 12, color: C.red, marginTop: 2 }}>⚠ Embalaje: {m.estado_embalaje}</div>
                         )}
                       </div>
                     </div>
