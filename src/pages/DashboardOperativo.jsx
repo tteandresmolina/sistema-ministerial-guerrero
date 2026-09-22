@@ -29,20 +29,20 @@ const sectionTitle = {
 };
 const selectStyle = {
   padding: '8px 12px', borderRadius: 7, border: '1.5px solid #c7cfe0',
-  fontSize: 13, fontFamily: 'inherit', background: COLORS.white, outline: 'none'
+  fontSize: 15, fontFamily: 'inherit', background: COLORS.white, outline: 'none'
 };
 const inputStyle = {
-  padding: '8px 12px', borderRadius: 7, border: '1.5px solid #c7cfe0',
-  fontSize: 13, fontFamily: 'inherit', outline: 'none'
+  padding: '13px 14px', borderRadius: 7, border: '2px solid #c7cfe0',
+  fontSize: 16, fontFamily: 'inherit', outline: 'none', minHeight: 44
 };
 const btnPrimary = {
   background: COLORS.gold, color: COLORS.white, border: 'none', borderRadius: 7,
-  padding: '9px 18px', fontWeight: 700, fontSize: 13, cursor: 'pointer',
-  display: 'inline-flex', alignItems: 'center', gap: 6
+  padding: '14px 24px', fontWeight: 700, fontSize: 16, cursor: 'pointer',
+  display: 'inline-flex', alignItems: 'center', gap: 7, minHeight: 44
 };
 const badge = (color) => ({
   display: 'inline-block', padding: '3px 10px', borderRadius: 12,
-  fontSize: 11, fontWeight: 700, color: COLORS.white, background: color,
+  fontSize: 13, fontWeight: 700, color: COLORS.white, background: color,
   textTransform: 'uppercase', letterSpacing: 0.5
 });
 
@@ -91,7 +91,7 @@ export default function DashboardOperativo({ user }) {
   const renderPeriodo = () => (
     <div style={{ ...cardStyle, display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', marginBottom: 16 }}>
       <Calendar size={18} color={COLORS.primary} />
-      <span style={{ fontWeight: 700, color: COLORS.primary, fontSize: 14 }}>Período:</span>
+      <span style={{ fontWeight: 700, color: COLORS.primary, fontSize: 16 }}>Período:</span>
       <select style={selectStyle} value={periodo} onChange={e => setPeriodo(e.target.value)}>
         <option value="mes_actual">Mes Actual</option>
         <option value="mes_anterior">Mes Anterior</option>
@@ -109,7 +109,7 @@ export default function DashboardOperativo({ user }) {
       <button style={btnPrimary} onClick={fetchTodo} disabled={loading}>
         <RefreshCw size={14} /> {loading ? 'Cargando...' : 'Actualizar'}
       </button>
-      <span style={{ fontSize: 11, color: '#9ca3af', marginLeft: 'auto' }}>
+      <span style={{ fontSize: 13, color: '#9ca3af', marginLeft: 'auto' }}>
         Rol: {(user?.rol || '').replace(/_/g, ' ')} · {user?.region || 'Todas las regiones'}
       </span>
     </div>
@@ -137,8 +137,8 @@ export default function DashboardOperativo({ user }) {
           }}>
             <k.icon size={22} color={k.color} style={{ marginBottom: 6 }} />
             <div style={{ fontSize: 26, fontWeight: 900, color: k.color, lineHeight: 1.1 }}>{formatNum(k.value)}</div>
-            <div style={{ fontSize: 12, fontWeight: 700, color: COLORS.primary, marginTop: 4 }}>{k.label}</div>
-            <div style={{ fontSize: 10, color: '#9ca3af', marginTop: 2 }}>{k.sub}</div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: COLORS.primary, marginTop: 4 }}>{k.label}</div>
+            <div style={{ fontSize: 12, color: '#9ca3af', marginTop: 2 }}>{k.sub}</div>
           </div>
         ))}
       </div>
@@ -175,7 +175,7 @@ export default function DashboardOperativo({ user }) {
         {indicadores.map((ind, i) => (
           <div key={i} style={{ ...cardStyle, marginBottom: 0 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-              <span style={{ fontSize: 13, fontWeight: 700, color: COLORS.primary }}>{ind.label}</span>
+              <span style={{ fontSize: 15, fontWeight: 700, color: COLORS.primary }}>{ind.label}</span>
               <span style={{ fontSize: 22, fontWeight: 900, color: ind.color }}>{ind.valor}%</span>
             </div>
             <div style={{ background: '#e5e7eb', borderRadius: 6, height: 10, overflow: 'hidden' }}>
@@ -184,7 +184,7 @@ export default function DashboardOperativo({ user }) {
                 background: ind.color, borderRadius: 6, transition: 'width 0.5s ease'
               }} />
             </div>
-            <div style={{ fontSize: 11, color: '#6b7280', marginTop: 6 }}>{ind.detalle}</div>
+            <div style={{ fontSize: 13, color: '#6b7280', marginTop: 6 }}>{ind.detalle}</div>
           </div>
         ))}
       </div>
@@ -229,7 +229,7 @@ export default function DashboardOperativo({ user }) {
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
         {/* Pie de estatus */}
         <div>
-          <div style={{ fontSize: 13, fontWeight: 700, color: COLORS.primary, marginBottom: 8, textAlign: 'center' }}>
+          <div style={{ fontSize: 15, fontWeight: 700, color: COLORS.primary, marginBottom: 8, textAlign: 'center' }}>
             Oficios por Estatus
           </div>
           {estatusData.length > 0 ? (
@@ -237,32 +237,32 @@ export default function DashboardOperativo({ user }) {
               <PieChart>
                 <Pie data={estatusData} dataKey="value" nameKey="name" cx="50%" cy="50%"
                   outerRadius={80} innerRadius={35} paddingAngle={2} label={({ name, value }) => `${name}: ${value}`}
-                  style={{ fontSize: 10 }}>
+                  style={{ fontSize: 12 }}>
                   {estatusData.map((entry, i) => <Cell key={i} fill={entry.fill} />)}
                 </Pie>
                 <Tooltip />
               </PieChart>
             </ResponsiveContainer>
           ) : (
-            <div style={{ textAlign: 'center', padding: 40, color: '#9ca3af', fontSize: 13 }}>Sin datos</div>
+            <div style={{ textAlign: 'center', padding: 40, color: '#9ca3af', fontSize: 15 }}>Sin datos</div>
           )}
         </div>
         {/* Bar de prioridad */}
         <div>
-          <div style={{ fontSize: 13, fontWeight: 700, color: COLORS.primary, marginBottom: 8, textAlign: 'center' }}>
+          <div style={{ fontSize: 15, fontWeight: 700, color: COLORS.primary, marginBottom: 8, textAlign: 'center' }}>
             Oficios por Prioridad
           </div>
           {oficiosPorPrioridad.length > 0 ? (
             <ResponsiveContainer width="100%" height={220}>
               <BarChart data={oficiosPorPrioridad} layout="vertical" margin={{ left: 80 }}>
-                <XAxis type="number" style={{ fontSize: 11 }} />
-                <YAxis type="category" dataKey="name" style={{ fontSize: 11 }} width={75} />
+                <XAxis type="number" style={{ fontSize: 13 }} />
+                <YAxis type="category" dataKey="name" style={{ fontSize: 13 }} width={75} />
                 <Tooltip />
                 <Bar dataKey="value" fill={COLORS.gold} radius={[0, 4, 4, 0]} />
               </BarChart>
             </ResponsiveContainer>
           ) : (
-            <div style={{ textAlign: 'center', padding: 40, color: '#9ca3af', fontSize: 13 }}>Sin datos</div>
+            <div style={{ textAlign: 'center', padding: 40, color: '#9ca3af', fontSize: 15 }}>Sin datos</div>
           )}
         </div>
       </div>
@@ -274,20 +274,20 @@ export default function DashboardOperativo({ user }) {
   // ============================================================================
   const renderDelitosFrecuentes = () => (
     <div>
-      <div style={{ fontSize: 13, fontWeight: 700, color: COLORS.primary, marginBottom: 8 }}>
+      <div style={{ fontSize: 15, fontWeight: 700, color: COLORS.primary, marginBottom: 8 }}>
         Delitos más Frecuentes ({periodoLabel[periodo]})
       </div>
       {delitosFrecuentes.length > 0 ? (
         <ResponsiveContainer width="100%" height={Math.max(180, delitosFrecuentes.length * 32)}>
           <BarChart data={delitosFrecuentes} layout="vertical" margin={{ left: 160 }}>
-            <XAxis type="number" style={{ fontSize: 11 }} />
-            <YAxis type="category" dataKey="name" style={{ fontSize: 10 }} width={155} />
+            <XAxis type="number" style={{ fontSize: 13 }} />
+            <YAxis type="category" dataKey="name" style={{ fontSize: 12 }} width={155} />
             <Tooltip />
             <Bar dataKey="value" fill={COLORS.primary} radius={[0, 4, 4, 0]} />
           </BarChart>
         </ResponsiveContainer>
       ) : (
-        <div style={{ textAlign: 'center', padding: 30, color: '#9ca3af', fontSize: 13 }}>Sin datos de delitos en el período</div>
+        <div style={{ textAlign: 'center', padding: 30, color: '#9ca3af', fontSize: 15 }}>Sin datos de delitos en el período</div>
       )}
     </div>
   );
@@ -313,15 +313,15 @@ export default function DashboardOperativo({ user }) {
               <PieChart>
                 <Pie data={data} dataKey="value" nameKey="name" cx="50%" cy="50%"
                   outerRadius={75} innerRadius={30} paddingAngle={2}
-                  label={({ name, value }) => `${value}`} style={{ fontSize: 11 }}>
+                  label={({ name, value }) => `${value}`} style={{ fontSize: 13 }}>
                   {data.map((entry, i) => <Cell key={i} fill={entry.fill} />)}
                 </Pie>
                 <Tooltip />
-                <Legend iconSize={10} wrapperStyle={{ fontSize: 11 }} />
+                <Legend iconSize={10} wrapperStyle={{ fontSize: 13 }} />
               </PieChart>
             </ResponsiveContainer>
           ) : (
-            <div style={{ textAlign: 'center', padding: 40, color: '#9ca3af', fontSize: 13 }}>Sin datos</div>
+            <div style={{ textAlign: 'center', padding: 40, color: '#9ca3af', fontSize: 15 }}>Sin datos</div>
           )}
         </div>
         <div>
@@ -329,13 +329,13 @@ export default function DashboardOperativo({ user }) {
             <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 0', borderBottom: '1px solid #f3f4f6' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <div style={{ width: 10, height: 10, borderRadius: '50%', background: d.fill }} />
-                <span style={{ fontSize: 13, color: '#374151' }}>{d.name}</span>
+                <span style={{ fontSize: 15, color: '#374151' }}>{d.name}</span>
               </div>
               <span style={{ fontSize: 15, fontWeight: 800, color: d.fill }}>{d.value}</span>
             </div>
           ))}
           <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', marginTop: 4, borderTop: '2px solid #e5e7eb' }}>
-            <span style={{ fontSize: 13, fontWeight: 800, color: COLORS.primary }}>Total</span>
+            <span style={{ fontSize: 15, fontWeight: 800, color: COLORS.primary }}>Total</span>
             <span style={{ fontSize: 16, fontWeight: 900, color: COLORS.primary }}>{metricasPersonas.total}</span>
           </div>
         </div>
@@ -350,30 +350,30 @@ export default function DashboardOperativo({ user }) {
     <div>
       <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 16 }}>
         <div>
-          <div style={{ fontSize: 13, fontWeight: 700, color: COLORS.primary, marginBottom: 8 }}>
+          <div style={{ fontSize: 15, fontWeight: 700, color: COLORS.primary, marginBottom: 8 }}>
             Acciones de Investigación por Día
           </div>
           {accionesPorDia.length > 0 ? (
             <ResponsiveContainer width="100%" height={200}>
               <BarChart data={accionesPorDia}>
-                <XAxis dataKey="name" style={{ fontSize: 10 }} />
-                <YAxis style={{ fontSize: 11 }} />
+                <XAxis dataKey="name" style={{ fontSize: 12 }} />
+                <YAxis style={{ fontSize: 13 }} />
                 <Tooltip />
                 <Bar dataKey="value" fill={COLORS.gold} radius={[4, 4, 0, 0]} name="Acciones" />
               </BarChart>
             </ResponsiveContainer>
           ) : (
-            <div style={{ textAlign: 'center', padding: 40, color: '#9ca3af', fontSize: 13 }}>Sin acciones registradas</div>
+            <div style={{ textAlign: 'center', padding: 40, color: '#9ca3af', fontSize: 15 }}>Sin acciones registradas</div>
           )}
         </div>
         <div>
-          <div style={{ fontSize: 13, fontWeight: 700, color: COLORS.primary, marginBottom: 8 }}>
+          <div style={{ fontSize: 15, fontWeight: 700, color: COLORS.primary, marginBottom: 8 }}>
             Top Tipos de Acción
           </div>
           {metricasAcciones.por_tipo.slice(0, 6).map((t, i) => (
             <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 0', borderBottom: '1px solid #f3f4f6' }}>
-              <span style={{ fontSize: 11, color: '#374151', textTransform: 'capitalize' }}>{t.name}</span>
-              <span style={{ fontSize: 12, fontWeight: 700, color: COLORS.gold }}>{t.value}</span>
+              <span style={{ fontSize: 13, color: '#374151', textTransform: 'capitalize' }}>{t.name}</span>
+              <span style={{ fontSize: 14, fontWeight: 700, color: COLORS.gold }}>{t.value}</span>
             </div>
           ))}
         </div>
@@ -387,10 +387,10 @@ export default function DashboardOperativo({ user }) {
   const renderCargaAgentes = () => (
     <div>
       {cargaAgentes.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: 30, color: '#9ca3af', fontSize: 13 }}>Sin datos de carga de agentes</div>
+        <div style={{ textAlign: 'center', padding: 30, color: '#9ca3af', fontSize: 15 }}>Sin datos de carga de agentes</div>
       ) : (
         <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
             <thead>
               <tr style={{ background: COLORS.primary, color: COLORS.white }}>
                 <th style={{ padding: '8px 10px', textAlign: 'left', borderRadius: '6px 0 0 0' }}>Agente</th>
@@ -407,7 +407,7 @@ export default function DashboardOperativo({ user }) {
                 <tr key={i} style={{ background: i % 2 === 0 ? '#f9fafb' : COLORS.white, borderBottom: '1px solid #e5e7eb' }}>
                   <td style={{ padding: '8px 10px', fontWeight: 600, color: COLORS.primary }}>
                     {a.nombre_agente_asignado || 'Sin nombre'}
-                    <div style={{ fontSize: 10, color: '#9ca3af', fontWeight: 400 }}>{a.zona || a.region || ''}</div>
+                    <div style={{ fontSize: 12, color: '#9ca3af', fontWeight: 400 }}>{a.zona || a.region || ''}</div>
                   </td>
                   <td style={{ padding: '8px 10px', textAlign: 'center', fontWeight: 700 }}>{a.total_oficios}</td>
                   <td style={{ padding: '8px 10px', textAlign: 'center' }}>
@@ -426,7 +426,7 @@ export default function DashboardOperativo({ user }) {
                     <div style={{ background: '#e5e7eb', borderRadius: 4, height: 8, width: 60, display: 'inline-block', overflow: 'hidden' }}>
                       <div style={{ height: '100%', width: `${Math.round(a.avance_promedio || 0)}%`, background: COLORS.gold, borderRadius: 4 }} />
                     </div>
-                    <div style={{ fontSize: 10, color: '#6b7280' }}>{Math.round(a.avance_promedio || 0)}%</div>
+                    <div style={{ fontSize: 12, color: '#6b7280' }}>{Math.round(a.avance_promedio || 0)}%</div>
                   </td>
                 </tr>
               ))}
@@ -443,7 +443,7 @@ export default function DashboardOperativo({ user }) {
   const renderAlertasVencidos = () => (
     <div>
       {oficiosVencidos.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: 30, color: '#10b981', fontSize: 13 }}>
+        <div style={{ textAlign: 'center', padding: 30, color: '#10b981', fontSize: 15 }}>
           <CheckCircle size={24} style={{ marginBottom: 6 }} />
           <div>No hay oficios vencidos ni próximos a vencer</div>
         </div>
@@ -458,10 +458,10 @@ export default function DashboardOperativo({ user }) {
               borderLeft: `4px solid ${esVencido ? '#ef4444' : '#f59e0b'}`
             }}>
               <div>
-                <div style={{ fontSize: 13, fontWeight: 700, color: esVencido ? '#dc2626' : '#92400e' }}>
+                <div style={{ fontSize: 15, fontWeight: 700, color: esVencido ? '#dc2626' : '#92400e' }}>
                   Oficio #{o.numero_oficio}
                 </div>
-                <div style={{ fontSize: 11, color: '#6b7280' }}>
+                <div style={{ fontSize: 13, color: '#6b7280' }}>
                   C.I. {o.carpeta_investigacion} · {o.nombre_agente_asignado || 'Sin asignar'}
                 </div>
               </div>
@@ -470,7 +470,7 @@ export default function DashboardOperativo({ user }) {
                   {esVencido ? 'VENCIDO' : 'POR VENCER'}
                 </span>
                 {o.horas_restantes != null && (
-                  <div style={{ fontSize: 10, color: '#6b7280', marginTop: 3 }}>
+                  <div style={{ fontSize: 12, color: '#6b7280', marginTop: 3 }}>
                     <Clock size={10} style={{ verticalAlign: 'middle' }} />
                     {o.horas_restantes < 0 ? ` Hace ${Math.abs(Math.round(o.horas_restantes))}h` : ` ${Math.round(o.horas_restantes)}h`}
                   </div>
@@ -494,7 +494,7 @@ export default function DashboardOperativo({ user }) {
           <BarChart3 size={22} color={COLORS.gold} />
           Dashboard Operativo
         </h2>
-        <div style={{ fontSize: 12, color: '#6b7280' }}>
+        <div style={{ fontSize: 14, color: '#6b7280' }}>
           Indicadores de gestión y calidad SESNSP · {periodoLabel[periodo]}
         </div>
       </div>
@@ -502,7 +502,7 @@ export default function DashboardOperativo({ user }) {
       {/* Error */}
       {error && (
         <div style={{ ...cardStyle, background: '#fef2f2', borderLeft: '4px solid #ef4444', display: 'flex', justifyContent: 'space-between' }}>
-          <span style={{ color: '#dc2626', fontSize: 13 }}>{error}</span>
+          <span style={{ color: '#dc2626', fontSize: 15 }}>{error}</span>
           <button onClick={() => setError(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#dc2626' }}>✕</button>
         </div>
       )}
