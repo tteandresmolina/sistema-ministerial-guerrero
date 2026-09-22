@@ -161,9 +161,9 @@ function HoraDoradaBadge({ horaDorada }) {
   const cfg = HORA_DORADA_CONFIG[horaDorada.color] || HORA_DORADA_CONFIG.gris;
   return (
     <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: cfg.bg, border: `1px solid ${cfg.border}`, borderRadius: 20, padding: '4px 12px' }}>
-      <span style={{ fontSize: 12 }}>{cfg.icon}</span>
-      <span style={{ color: cfg.color, fontSize: 10, fontWeight: 700 }}>{cfg.label}</span>
-      {horaDorada.horas != null && <span style={{ color: cfg.color, fontSize: 10 }}>({formatHoras(horaDorada.horas)})</span>}
+      <span style={{ fontSize: 14 }}>{cfg.icon}</span>
+      <span style={{ color: cfg.color, fontSize: 12, fontWeight: 700 }}>{cfg.label}</span>
+      {horaDorada.horas != null && <span style={{ color: cfg.color, fontSize: 12 }}>({formatHoras(horaDorada.horas)})</span>}
     </div>
   );
 }
@@ -179,7 +179,7 @@ function Hora24Selector({ hh, mm, onChangeHH, onChangeMM, selectStyle }) {
       <select style={{ ...selectStyle, flex: 1, textAlign: 'center' }} value={mm} onChange={e => onChangeMM(e.target.value)}>
         {MINUTOS_60.map(m => <option key={m} value={m}>{m}</option>)}
       </select>
-      <span style={{ fontSize: 11, color: C.gray, marginLeft: 4 }}>hrs</span>
+      <span style={{ fontSize: 13, color: C.gray, marginLeft: 4 }}>hrs</span>
     </div>
   );
 }
@@ -336,36 +336,36 @@ export default function PrimerRespondiente({ perfil }) {
     title: { fontSize: 22, fontWeight: 700, color: C.darkBlue, display: 'flex', alignItems: 'center', gap: 10, margin: 0 },
     statsRow: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 14, marginBottom: 24 },
     statCard: { backgroundColor: C.white, borderRadius: 10, padding: 16, boxShadow: '0 1px 4px rgba(0,0,0,0.08)', display: 'flex', alignItems: 'center', gap: 12 },
-    btn: (bg, clr) => ({ backgroundColor: bg, color: clr, border: 'none', borderRadius: 8, padding: '10px 20px', fontSize: 14, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }),
-    btnOutline: { backgroundColor: 'transparent', color: C.darkBlue, border: `2px solid ${C.darkBlue}`, borderRadius: 8, padding: '8px 16px', fontSize: 13, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 },
+    btn: (bg, clr) => ({ backgroundColor: bg, color: clr, border: 'none', borderRadius: 8, padding: '14px 24px', fontSize: 16, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }),
+    btnOutline: { backgroundColor: 'transparent', color: C.darkBlue, border: `2px solid ${C.darkBlue}`, borderRadius: 8, padding: '12px 20px', fontSize: 15, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 },
     overlay: { position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,26,77,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'flex-start', paddingTop: 30, zIndex: 1000, overflowY: 'auto' },
     card: { backgroundColor: C.white, borderRadius: 14, width: '100%', maxWidth: 750, boxShadow: '0 8px 32px rgba(0,0,0,0.2)', marginBottom: 40 },
     cardHeader: { backgroundColor: C.darkBlue, color: C.white, padding: '18px 24px', borderRadius: '14px 14px 0 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
     body: { padding: 24 },
     section: { marginBottom: 20 },
-    sectionTitle: { fontSize: 14, fontWeight: 700, color: C.gold, marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8, textTransform: 'uppercase', letterSpacing: 0.5 },
+    sectionTitle: { fontSize: 16, fontWeight: 700, color: C.gold, marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8, textTransform: 'uppercase', letterSpacing: 0.5 },
     grid2: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 },
     grid1: { display: 'grid', gridTemplateColumns: '1fr', gap: 14 },
     formGroup: { display: 'flex', flexDirection: 'column', gap: 4 },
-    label: { fontSize: 12, fontWeight: 600, color: C.darkBlue },
+    label: { fontSize: 14, fontWeight: 600, color: C.darkBlue },
     req: { color: C.red, marginLeft: 2 },
-    input: { padding: '10px 12px', border: `1px solid ${C.lightGray}`, borderRadius: 8, fontSize: 14, outline: 'none', fontFamily: 'inherit' },
-    select: { padding: '10px 12px', border: `1px solid ${C.lightGray}`, borderRadius: 8, fontSize: 14, outline: 'none', backgroundColor: C.white, fontFamily: 'inherit', cursor: 'pointer' },
-    textarea: { padding: '10px 12px', border: `1px solid ${C.lightGray}`, borderRadius: 8, fontSize: 14, outline: 'none', fontFamily: 'inherit', resize: 'vertical', minHeight: 70 },
-    checkbox: { display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderRadius: 8, cursor: 'pointer', fontSize: 13, fontWeight: 600 },
+    input: { padding: '13px 14px', border: `1px solid ${C.lightGray}`, borderRadius: 8, fontSize: 16, outline: 'none', fontFamily: 'inherit' },
+    select: { padding: '13px 14px', border: `1px solid ${C.lightGray}`, borderRadius: 8, fontSize: 16, outline: 'none', backgroundColor: C.white, fontFamily: 'inherit', cursor: 'pointer' },
+    textarea: { padding: '13px 14px', border: `1px solid ${C.lightGray}`, borderRadius: 8, fontSize: 16, outline: 'none', fontFamily: 'inherit', resize: 'vertical', minHeight: 70 },
+    checkbox: { display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderRadius: 8, cursor: 'pointer', fontSize: 15, fontWeight: 600 },
     table: { width: '100%', borderCollapse: 'collapse' },
-    th: { padding: '12px 16px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: C.gray, textTransform: 'uppercase', letterSpacing: 0.5, borderBottom: `2px solid ${C.lightGray}`, backgroundColor: C.bg, whiteSpace: 'nowrap' },
-    td: { padding: '12px 16px', fontSize: 13, borderBottom: `1px solid ${C.lightGray}`, color: C.darkBlue },
-    badge: (bg, clr) => ({ display: 'inline-block', padding: '4px 10px', borderRadius: 12, fontSize: 11, fontWeight: 600, whiteSpace: 'nowrap', backgroundColor: bg, color: clr }),
+    th: { padding: '12px 16px', textAlign: 'left', fontSize: 13, fontWeight: 700, color: C.gray, textTransform: 'uppercase', letterSpacing: 0.5, borderBottom: `2px solid ${C.lightGray}`, backgroundColor: C.bg, whiteSpace: 'nowrap' },
+    td: { padding: '12px 16px', fontSize: 15, borderBottom: `1px solid ${C.lightGray}`, color: C.darkBlue },
+    badge: (bg, clr) => ({ display: 'inline-block', padding: '4px 10px', borderRadius: 12, fontSize: 13, fontWeight: 600, whiteSpace: 'nowrap', backgroundColor: bg, color: clr }),
     tableContainer: { backgroundColor: C.white, borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.08)', overflow: 'hidden' },
     searchBox: { display: 'flex', alignItems: 'center', gap: 8, backgroundColor: C.bg, borderRadius: 8, padding: '8px 14px', flex: 1, maxWidth: 350 },
     empty: { textAlign: 'center', padding: '60px 20px', color: C.gray },
     footer: { padding: '16px 24px', borderTop: `1px solid ${C.lightGray}`, display: 'flex', justifyContent: 'flex-end', gap: 12 },
     tabNav: { display: 'flex', gap: 4, marginBottom: 20, flexWrap: 'wrap' },
     tabBtn: (active) => ({
-      padding: '8px 16px', borderRadius: 8, border: `1px solid ${active ? C.gold : C.lightGray}`,
+      padding: '12px 20px', borderRadius: 8, border: `1px solid ${active ? C.gold : C.lightGray}`,
       backgroundColor: active ? C.lightGold : C.white, color: active ? C.gold : C.gray,
-      fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
+      fontSize: 14, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
     }),
   };
 
@@ -376,7 +376,7 @@ export default function PrimerRespondiente({ perfil }) {
       <div style={s.header}>
         <div>
           <h2 style={s.title}><Shield size={22} color={C.gold} />Primer Respondiente — IPH Digital</h2>
-          <p style={{ fontSize: 13, color: C.gray, margin: '4px 0 0 0' }}>Módulo 2 · Tab 2 · Informe Policial Homologado</p>
+          <p style={{ fontSize: 15, color: C.gray, margin: '4px 0 0 0' }}>Módulo 2 · Tab 2 · Informe Policial Homologado</p>
         </div>
         <div style={{ display: 'flex', gap: 10 }}>
           <button style={s.btnOutline} onClick={refetch}><RefreshCw size={15} /> Actualizar</button>
@@ -402,7 +402,7 @@ export default function PrimerRespondiente({ perfil }) {
             </div>
             <div>
               <div style={{ fontSize: 22, fontWeight: 700, color: C.darkBlue }}>{st.value}</div>
-              <div style={{ fontSize: 12, color: C.gray }}>{st.label}</div>
+              <div style={{ fontSize: 14, color: C.gray }}>{st.label}</div>
             </div>
           </div>
         ))}
@@ -414,7 +414,7 @@ export default function PrimerRespondiente({ perfil }) {
           <div style={s.searchBox}>
             <Search size={16} color={C.gray} />
             <input type="text" placeholder="Buscar por nombre, corporación, folio 911, C.I...." value={searchTerm} onChange={e => setSearchTerm(e.target.value)}
-              style={{ border: 'none', outline: 'none', fontSize: 14, backgroundColor: 'transparent', flex: 1, fontFamily: 'inherit' }} />
+              style={{ border: 'none', outline: 'none', fontSize: 16, backgroundColor: 'transparent', flex: 1, fontFamily: 'inherit' }} />
             {searchTerm && <X size={14} color={C.gray} style={{ cursor: 'pointer' }} onClick={() => setSearchTerm('')} />}
           </div>
         </div>
@@ -427,7 +427,7 @@ export default function PrimerRespondiente({ perfil }) {
             <p style={{ fontSize: 16, fontWeight: 600, marginTop: 12 }}>
               {searchTerm ? 'Sin resultados' : 'No hay IPH registrados'}
             </p>
-            <p style={{ fontSize: 13 }}>
+            <p style={{ fontSize: 15 }}>
               {searchTerm ? 'Intenta con otros criterios' : 'Haz clic en "Nuevo IPH" para comenzar'}
             </p>
           </div>
@@ -453,21 +453,21 @@ export default function PrimerRespondiente({ perfil }) {
                       onMouseEnter={e => e.currentTarget.style.backgroundColor = C.lightGold}
                       onMouseLeave={e => e.currentTarget.style.backgroundColor = idx % 2 === 0 ? C.white : C.bg}
                       onClick={() => setShowDetail(r)}>
-                      <td style={{ ...s.td, fontFamily: 'monospace', fontWeight: 700, fontSize: 12 }}>
+                      <td style={{ ...s.td, fontFamily: 'monospace', fontWeight: 700, fontSize: 14 }}>
                         {r.carpeta_investigacion || r.registros_911?.folio_911 || '(Pendiente C.I.)'}
                       </td>
                       <td style={s.td}>
                         <div style={{ fontWeight: 600 }}>{r.nombre}</div>
-                        {r.grado && <div style={{ fontSize: 11, color: C.gray }}>{r.grado}</div>}
+                        {r.grado && <div style={{ fontSize: 13, color: C.gray }}>{r.grado}</div>}
                       </td>
                       <td style={s.td}><span style={s.badge(C.darkBlue + '15', C.darkBlue)}>{r.corporacion || '—'}</span></td>
                       <td style={s.td}>{formatTime(r.hora_arribo)}</td>
                       <td style={s.td}><HoraDoradaBadge horaDorada={hd} /></td>
                       <td style={s.td}>
-                        {r.personas_detenidas ? <span style={s.badge('#fff3e0', '#e65100')}>Sí</span> : <span style={{ color: C.gray, fontSize: 12 }}>No</span>}
+                        {r.personas_detenidas ? <span style={s.badge('#fff3e0', '#e65100')}>Sí</span> : <span style={{ color: C.gray, fontSize: 14 }}>No</span>}
                       </td>
                       <td style={s.td}>
-                        <button style={{ ...s.btnOutline, padding: '4px 10px', fontSize: 11 }} onClick={e => { e.stopPropagation(); setShowDetail(r); }}>
+                        <button style={{ ...s.btnOutline, padding: '4px 10px', fontSize: 13 }} onClick={e => { e.stopPropagation(); setShowDetail(r); }}>
                           <Eye size={13} /> Ver
                         </button>
                       </td>
@@ -506,7 +506,7 @@ export default function PrimerRespondiente({ perfil }) {
                     border: form.modo === m.key ? `2px solid ${C.gold}` : `1px solid ${C.lightGray}`,
                     backgroundColor: form.modo === m.key ? C.lightGold : C.white,
                     color: form.modo === m.key ? C.darkBlue : C.gray,
-                    fontSize: 13, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                    fontSize: 15, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
                   }}>
                     <m.icon size={16} /> {m.label}
                   </button>
@@ -544,7 +544,7 @@ export default function PrimerRespondiente({ perfil }) {
                           </option>
                         ))}
                       </select>
-                      {reportes911.length === 0 && <p style={{ color: C.gray, fontSize: 11 }}>No hay reportes 911 pendientes de atender.</p>}
+                      {reportes911.length === 0 && <p style={{ color: C.gray, fontSize: 13 }}>No hay reportes 911 pendientes de atender.</p>}
                     </div>
                   ) : (
                     <div style={s.grid2}>
@@ -566,11 +566,11 @@ export default function PrimerRespondiente({ perfil }) {
 
                   {/* Carpeta de Investigación — vinculación principal */}
                   <div style={{ ...s.formGroup, marginTop: 14, padding: 14, backgroundColor: C.lightGold, borderRadius: 10, border: `1px solid ${C.gold}40` }}>
-                    <label style={{ ...s.label, color: C.gold, fontSize: 13 }}>
+                    <label style={{ ...s.label, color: C.gold, fontSize: 15 }}>
                       <Briefcase size={14} style={{ marginRight: 6, verticalAlign: 'middle' }} />
                       Carpeta de Investigación (C.I.)
                     </label>
-                    <p style={{ fontSize: 11, color: C.gray, margin: '4px 0 8px 0' }}>
+                    <p style={{ fontSize: 13, color: C.gray, margin: '4px 0 8px 0' }}>
                       20 dígitos asignados por el Ministerio Público. Se vincula cuando el MP la genera.
                     </p>
                     <input
@@ -645,7 +645,7 @@ export default function PrimerRespondiente({ perfil }) {
                       <Briefcase size={13} style={{ marginRight: 4, verticalAlign: 'middle' }} />
                       Comisión del agente
                     </label>
-                    <p style={{ fontSize: 11, color: C.gray, margin: '2px 0 6px 0' }}>
+                    <p style={{ fontSize: 13, color: C.gray, margin: '2px 0 6px 0' }}>
                       Coordinación, zona o especializada donde está comisionado el agente.
                     </p>
                     <input
@@ -722,7 +722,7 @@ export default function PrimerRespondiente({ perfil }) {
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 6 }}>
                       {APOYO_OPTIONS.map(opt => (
                         <button key={opt} onClick={() => toggleApoyo(opt)} style={{
-                          padding: '6px 12px', borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: 'pointer',
+                          padding: '6px 12px', borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: 'pointer',
                           border: form.apoyo_solicitado.includes(opt) ? `1px solid ${C.gold}` : `1px solid ${C.lightGray}`,
                           backgroundColor: form.apoyo_solicitado.includes(opt) ? C.lightGold : C.white,
                           color: form.apoyo_solicitado.includes(opt) ? C.gold : C.gray,
@@ -777,8 +777,8 @@ export default function PrimerRespondiente({ perfil }) {
                             border: form.nivel_contacto === key ? `2px solid ${C.gold}` : `1px solid ${C.lightGray}`,
                             backgroundColor: form.nivel_contacto === key ? C.lightGold : C.white,
                           }}>
-                            <div style={{ fontSize: 13, fontWeight: 700, color: form.nivel_contacto === key ? C.darkBlue : C.gray }}>{cfg.label}</div>
-                            <div style={{ fontSize: 11, color: C.gray, marginTop: 2 }}>{cfg.desc}</div>
+                            <div style={{ fontSize: 15, fontWeight: 700, color: form.nivel_contacto === key ? C.darkBlue : C.gray }}>{cfg.label}</div>
+                            <div style={{ fontSize: 13, color: C.gray, marginTop: 2 }}>{cfg.desc}</div>
                           </button>
                         ))}
                       </div>
@@ -805,7 +805,7 @@ export default function PrimerRespondiente({ perfil }) {
               {seccionActiva === 5 && (
                 <div style={s.section}>
                   <div style={s.sectionTitle}><FileText size={15} /> Anexos del IPH Aplicables</div>
-                  <p style={{ fontSize: 12, color: C.gray, marginBottom: 14 }}>
+                  <p style={{ fontSize: 14, color: C.gray, marginBottom: 14 }}>
                     Marca los anexos que aplican a este IPH. Las páginas 1-5 son obligatorias y se generan automáticamente.
                   </p>
 
@@ -818,7 +818,7 @@ export default function PrimerRespondiente({ perfil }) {
                         <input type="checkbox" checked={form.anexos.includes(anx.key)} readOnly style={{ width: 16, height: 16 }} />
                         <div>
                           <div style={{ color: form.anexos.includes(anx.key) ? C.darkBlue : C.gray, fontWeight: 700 }}>{anx.label}</div>
-                          <div style={{ fontSize: 11, color: C.gray, fontWeight: 400 }}>{anx.trigger}</div>
+                          <div style={{ fontSize: 13, color: C.gray, fontWeight: 400 }}>{anx.trigger}</div>
                         </div>
                       </div>
                     ))}
@@ -826,10 +826,10 @@ export default function PrimerRespondiente({ perfil }) {
 
                   {!form.pim_es_primer_respondiente && (
                     <div style={{ marginTop: 16, padding: 14, backgroundColor: '#fff8e1', border: '1px solid #ffc10755', borderRadius: 8 }}>
-                      <div style={{ fontSize: 12, fontWeight: 700, color: '#f57f17', marginBottom: 4 }}>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: '#f57f17', marginBottom: 4 }}>
                         Nota: PIM recibió entrega-recepción
                       </div>
-                      <div style={{ fontSize: 12, color: '#795548' }}>
+                      <div style={{ fontSize: 14, color: '#795548' }}>
                         El primer respondiente llenará el IPH completo. El PIM solo firma el Anexo F (Entrega-recepción del lugar) y en oficina genera el acta de levantamiento cadavérico e informes de investigación en campo, según corresponda.
                       </div>
                     </div>
@@ -843,7 +843,7 @@ export default function PrimerRespondiente({ perfil }) {
                   padding: '10px 14px', borderRadius: 8,
                   backgroundColor: mensaje.tipo === 'ok' ? '#e8f5e9' : '#ffebee',
                   color: mensaje.tipo === 'ok' ? '#1b5e20' : '#b71c1c',
-                  fontSize: 13, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 8, marginTop: 8,
+                  fontSize: 15, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 8, marginTop: 8,
                 }}>
                   {mensaje.tipo === 'ok' ? <CheckCircle2 size={16} /> : <AlertTriangle size={16} />}
                   {mensaje.texto}
@@ -853,7 +853,7 @@ export default function PrimerRespondiente({ perfil }) {
 
             <div style={s.footer}>
               {seccionActiva > 1 && (
-                <button onClick={() => setSeccionActiva(p => p - 1)} style={{ backgroundColor: 'transparent', color: C.gray, border: `1px solid ${C.lightGray}`, borderRadius: 8, padding: '10px 20px', fontSize: 14, cursor: 'pointer' }}>
+                <button onClick={() => setSeccionActiva(p => p - 1)} style={{ backgroundColor: 'transparent', color: C.gray, border: `1px solid ${C.lightGray}`, borderRadius: 8, padding: '14px 24px', fontSize: 16, cursor: 'pointer' }}>
                   ← Anterior
                 </button>
               )}
@@ -880,7 +880,7 @@ export default function PrimerRespondiente({ perfil }) {
             <div style={{ backgroundColor: C.darkBlue, color: C.white, padding: '18px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
                 <div style={{ fontSize: 16, fontWeight: 700 }}>IPH — {showDetail.nombre}</div>
-                <div style={{ fontSize: 12, opacity: 0.8, marginTop: 2 }}>{showDetail.corporacion} {showDetail.grado ? `· ${showDetail.grado}` : ''}</div>
+                <div style={{ fontSize: 14, opacity: 0.8, marginTop: 2 }}>{showDetail.corporacion} {showDetail.grado ? `· ${showDetail.grado}` : ''}</div>
               </div>
               <X size={20} style={{ cursor: 'pointer' }} onClick={() => setShowDetail(null)} />
             </div>
@@ -910,17 +910,17 @@ export default function PrimerRespondiente({ perfil }) {
               { label: 'Huellas violencia', value: showDetail.huellas_violencia ? '⚠️ Sí' : null },
               { label: 'Región', value: showDetail.region },
             ].filter(r => r.value).map((row, i) => (
-              <div key={i} style={{ padding: '10px 20px', borderBottom: `1px solid ${C.lightGray}`, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
-                <span style={{ fontSize: 11, fontWeight: 600, color: C.gray, textTransform: 'uppercase', minWidth: 120 }}>{row.label}</span>
-                <span style={{ fontSize: 14, color: C.darkBlue, textAlign: 'right', flex: 1, wordBreak: 'break-word' }}>{row.value}</span>
+              <div key={i} style={{ padding: '14px 24px', borderBottom: `1px solid ${C.lightGray}`, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
+                <span style={{ fontSize: 13, fontWeight: 600, color: C.gray, textTransform: 'uppercase', minWidth: 120 }}>{row.label}</span>
+                <span style={{ fontSize: 16, color: C.darkBlue, textAlign: 'right', flex: 1, wordBreak: 'break-word' }}>{row.value}</span>
               </div>
             ))}
 
             {/* Hallazgos */}
             {showDetail.descripcion_hallazgo && (
               <div style={{ padding: '14px 20px', borderTop: `2px solid ${C.lightGray}` }}>
-                <div style={{ fontSize: 11, fontWeight: 700, color: C.gray, textTransform: 'uppercase', marginBottom: 8 }}>Hallazgos Iniciales</div>
-                <div style={{ fontSize: 14, color: C.darkBlue, lineHeight: 1.6, backgroundColor: C.bg, padding: 12, borderRadius: 8 }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: C.gray, textTransform: 'uppercase', marginBottom: 8 }}>Hallazgos Iniciales</div>
+                <div style={{ fontSize: 16, color: C.darkBlue, lineHeight: 1.6, backgroundColor: C.bg, padding: 12, borderRadius: 8 }}>
                   {showDetail.descripcion_hallazgo}
                 </div>
               </div>
@@ -928,8 +928,8 @@ export default function PrimerRespondiente({ perfil }) {
 
             {showDetail.uso_fuerza && showDetail.descripcion_uso_fuerza && (
               <div style={{ padding: '14px 20px', borderTop: `2px solid ${C.lightGray}` }}>
-                <div style={{ fontSize: 11, fontWeight: 700, color: C.red, textTransform: 'uppercase', marginBottom: 8 }}>Descripción del Uso de la Fuerza</div>
-                <div style={{ fontSize: 14, color: C.darkBlue, lineHeight: 1.6, backgroundColor: '#ffebee', padding: 12, borderRadius: 8 }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: C.red, textTransform: 'uppercase', marginBottom: 8 }}>Descripción del Uso de la Fuerza</div>
+                <div style={{ fontSize: 16, color: C.darkBlue, lineHeight: 1.6, backgroundColor: '#ffebee', padding: 12, borderRadius: 8 }}>
                   {showDetail.descripcion_uso_fuerza}
                 </div>
               </div>
@@ -937,7 +937,7 @@ export default function PrimerRespondiente({ perfil }) {
 
             {showDetail.apoyo_solicitado && showDetail.apoyo_solicitado.length > 0 && (
               <div style={{ padding: '14px 20px', borderTop: `2px solid ${C.lightGray}` }}>
-                <div style={{ fontSize: 11, fontWeight: 700, color: C.gray, textTransform: 'uppercase', marginBottom: 8 }}>Apoyo Solicitado</div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: C.gray, textTransform: 'uppercase', marginBottom: 8 }}>Apoyo Solicitado</div>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                   {showDetail.apoyo_solicitado.map((a, i) => (
                     <span key={i} style={s.badge(C.darkBlue + '15', C.darkBlue)}>{a}</span>
