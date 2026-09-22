@@ -92,18 +92,18 @@ const ESTADO_SALUD = [
 ];
 
 const st = {
-  btn: (bg, clr) => ({ backgroundColor: bg, color: clr, border: 'none', borderRadius: 8, padding: '10px 20px', fontSize: 14, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }),
-  btnOutline: { backgroundColor: 'transparent', color: C.darkBlue, border: `2px solid ${C.darkBlue}`, borderRadius: 8, padding: '8px 16px', fontSize: 13, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 },
-  input: { padding: '10px 12px', border: `1px solid ${C.lightGray}`, borderRadius: 8, fontSize: 14, outline: 'none', fontFamily: 'inherit', width: '100%', boxSizing: 'border-box' },
-  select: { padding: '10px 12px', border: `1px solid ${C.lightGray}`, borderRadius: 8, fontSize: 14, outline: 'none', backgroundColor: C.white, fontFamily: 'inherit', width: '100%', boxSizing: 'border-box', cursor: 'pointer' },
-  textarea: { padding: '10px 12px', border: `1px solid ${C.lightGray}`, borderRadius: 8, fontSize: 14, outline: 'none', fontFamily: 'inherit', resize: 'vertical', minHeight: 70, width: '100%', boxSizing: 'border-box' },
-  label: { fontSize: 12, fontWeight: 600, color: C.darkBlue, marginBottom: 4, display: 'block' },
-  sTitle: { fontSize: 14, fontWeight: 700, color: C.gold, marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8, textTransform: 'uppercase' },
+  btn: (bg, clr) => ({ backgroundColor: bg, color: clr, border: 'none', borderRadius: 8, padding: '14px 24px', fontSize: 16, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }),
+  btnOutline: { backgroundColor: 'transparent', color: C.darkBlue, border: `2px solid ${C.darkBlue}`, borderRadius: 8, padding: '12px 20px', fontSize: 15, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 },
+  input: { padding: '13px 14px', border: `1px solid ${C.lightGray}`, borderRadius: 8, fontSize: 16, outline: 'none', fontFamily: 'inherit', width: '100%', boxSizing: 'border-box' },
+  select: { padding: '13px 14px', border: `1px solid ${C.lightGray}`, borderRadius: 8, fontSize: 16, outline: 'none', backgroundColor: C.white, fontFamily: 'inherit', width: '100%', boxSizing: 'border-box', cursor: 'pointer' },
+  textarea: { padding: '13px 14px', border: `1px solid ${C.lightGray}`, borderRadius: 8, fontSize: 16, outline: 'none', fontFamily: 'inherit', resize: 'vertical', minHeight: 70, width: '100%', boxSizing: 'border-box' },
+  label: { fontSize: 14, fontWeight: 600, color: C.darkBlue, marginBottom: 4, display: 'block' },
+  sTitle: { fontSize: 16, fontWeight: 700, color: C.gold, marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8, textTransform: 'uppercase' },
   grid2: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 },
   fg: { display: 'flex', flexDirection: 'column', gap: 4 },
-  badge: (bg, clr) => ({ display: 'inline-block', padding: '4px 10px', borderRadius: 12, fontSize: 11, fontWeight: 600, backgroundColor: bg, color: clr }),
-  th: { padding: '12px 16px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: C.gray, textTransform: 'uppercase', borderBottom: `2px solid ${C.lightGray}`, backgroundColor: C.bg, whiteSpace: 'nowrap' },
-  td: { padding: '12px 16px', fontSize: 13, borderBottom: `1px solid ${C.lightGray}`, color: C.darkBlue },
+  badge: (bg, clr) => ({ display: 'inline-block', padding: '4px 10px', borderRadius: 12, fontSize: 13, fontWeight: 600, backgroundColor: bg, color: clr }),
+  th: { padding: '12px 16px', textAlign: 'left', fontSize: 13, fontWeight: 700, color: C.gray, textTransform: 'uppercase', borderBottom: `2px solid ${C.lightGray}`, backgroundColor: C.bg, whiteSpace: 'nowrap' },
+  td: { padding: '12px 16px', fontSize: 15, borderBottom: `1px solid ${C.lightGray}`, color: C.darkBlue },
   chk: (active, clr) => ({ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderRadius: 8, cursor: 'pointer', border: `1px solid ${active ? clr : C.lightGray}`, backgroundColor: active ? clr + '12' : 'transparent' }),
 };
 
@@ -210,11 +210,11 @@ export default function VictimasTestigos({ perfil }) {
     <div style={{ marginBottom: 20 }}>
       <div style={st.sTitle}><Briefcase size={15} /> Vinculación y Carpeta de Investigación</div>
       <div style={{ padding: 14, backgroundColor: C.lightGold, borderRadius: 10, border: `1px solid ${C.gold}40`, marginBottom: 14 }}>
-        <label style={{ ...st.label, color: C.gold, fontSize: 13 }}>
+        <label style={{ ...st.label, color: C.gold, fontSize: 15 }}>
           <Briefcase size={14} style={{ marginRight: 6, verticalAlign: 'middle' }} />
           Carpeta de Investigación (C.I.)
         </label>
-        <p style={{ fontSize: 11, color: C.gray, margin: '4px 0 8px 0' }}>20 dígitos asignados por el Ministerio Público. Vincula víctimas y testigos al expediente.</p>
+        <p style={{ fontSize: 13, color: C.gray, margin: '4px 0 8px 0' }}>20 dígitos asignados por el Ministerio Público. Vincula víctimas y testigos al expediente.</p>
         <input style={{ ...st.input, fontFamily: 'monospace', fontSize: 15, letterSpacing: 1, textAlign: 'center' }} maxLength={25} placeholder="Ej: 12030290300463130025" value={form.carpeta_investigacion} onChange={e => setField('carpeta_investigacion', e.target.value)} />
       </div>
       <div style={st.grid2}>
@@ -240,11 +240,11 @@ export default function VictimasTestigos({ perfil }) {
   const SeccionArchivos = () => (
     <div style={{ marginBottom: 20 }}>
       <div style={st.sTitle}><Camera size={15} /> Fotografías, Videos y Documentos</div>
-      <p style={{ fontSize: 11, color: C.gray, marginBottom: 10 }}>Formatos: JPG, PNG, PDF, MP4 · Máximo 5MB por archivo</p>
+      <p style={{ fontSize: 13, color: C.gray, marginBottom: 10 }}>Formatos: JPG, PNG, PDF, MP4 · Máximo 5MB por archivo</p>
       <div style={{ border: `2px dashed ${C.lightGray}`, borderRadius: 10, padding: 20, textAlign: 'center', cursor: 'pointer', backgroundColor: C.bg }}
         onClick={() => document.getElementById('file-input-vt').click()}>
         <Upload size={24} color={C.gray} />
-        <p style={{ fontSize: 12, color: C.gray, margin: '6px 0 0 0' }}>Arrastra o haz clic para seleccionar</p>
+        <p style={{ fontSize: 14, color: C.gray, margin: '6px 0 0 0' }}>Arrastra o haz clic para seleccionar</p>
         <input id="file-input-vt" type="file" multiple accept="image/jpeg,image/png,image/webp,application/pdf,video/mp4" style={{ display: 'none' }} onChange={handleFileSelect} />
       </div>
       {archivos.length > 0 && (
@@ -252,7 +252,7 @@ export default function VictimasTestigos({ perfil }) {
           {archivos.map((a, i) => (
             <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '6px 10px', backgroundColor: C.bg, borderRadius: 8, border: `1px solid ${C.lightGray}` }}>
               {a.preview ? <img src={a.preview} alt="" style={{ width: 36, height: 36, borderRadius: 6, objectFit: 'cover' }} /> : <FileText size={16} color={C.gray} />}
-              <div style={{ flex: 1 }}><div style={{ fontSize: 12, fontWeight: 600 }}>{a.nombre}</div><div style={{ fontSize: 10, color: C.gray }}>{(a.tamano / 1024).toFixed(0)} KB</div></div>
+              <div style={{ flex: 1 }}><div style={{ fontSize: 14, fontWeight: 600 }}>{a.nombre}</div><div style={{ fontSize: 12, color: C.gray }}>{(a.tamano / 1024).toFixed(0)} KB</div></div>
               <button onClick={() => removeArchivo(i)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><Trash2 size={14} color={C.red} /></button>
             </div>
           ))}
@@ -270,7 +270,7 @@ export default function VictimasTestigos({ perfil }) {
           <h2 style={{ fontSize: 22, fontWeight: 700, color: C.darkBlue, display: 'flex', alignItems: 'center', gap: 10, margin: 0 }}>
             <Users size={22} color={C.gold} /> Víctimas y Testigos
           </h2>
-          <p style={{ fontSize: 13, color: C.gray, margin: '4px 0 0 0' }}>Módulo 2 · Tab 5 · Enfoque diferencial y medidas de protección</p>
+          <p style={{ fontSize: 15, color: C.gray, margin: '4px 0 0 0' }}>Módulo 2 · Tab 5 · Enfoque diferencial y medidas de protección</p>
         </div>
         <div style={{ display: 'flex', gap: 10 }}>
           <button style={st.btnOutline} onClick={refetch}><RefreshCw size={15} /></button>
@@ -294,7 +294,7 @@ export default function VictimasTestigos({ perfil }) {
         ].map((s2, i) => (
           <div key={i} style={{ backgroundColor: C.white, borderRadius: 10, padding: 16, boxShadow: '0 1px 4px rgba(0,0,0,0.08)', display: 'flex', alignItems: 'center', gap: 12 }}>
             <div style={{ width: 42, height: 42, borderRadius: 10, backgroundColor: s2.color + '18', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><s2.icon size={20} color={s2.color} /></div>
-            <div><div style={{ fontSize: 22, fontWeight: 700, color: C.darkBlue }}>{s2.value}</div><div style={{ fontSize: 12, color: C.gray }}>{s2.label}</div></div>
+            <div><div style={{ fontSize: 22, fontWeight: 700, color: C.darkBlue }}>{s2.value}</div><div style={{ fontSize: 14, color: C.gray }}>{s2.label}</div></div>
           </div>
         ))}
       </div>
@@ -302,7 +302,7 @@ export default function VictimasTestigos({ perfil }) {
       {/* VISTA TOGGLE */}
       <div style={{ display: 'flex', gap: 6, marginBottom: 16 }}>
         {[{ key: 'victimas', label: 'Víctimas', icon: Heart, count: stats.totalVictimas }, { key: 'testigos', label: 'Testigos', icon: Users, count: stats.totalTestigos }].map(t => (
-          <button key={t.key} onClick={() => setVista(t.key)} style={{ padding: '10px 20px', borderRadius: 8, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, border: vista === t.key ? `2px solid ${C.gold}` : `1px solid ${C.lightGray}`, backgroundColor: vista === t.key ? C.lightGold : C.white, color: vista === t.key ? C.darkBlue : C.gray, fontSize: 14, fontWeight: 700 }}>
+          <button key={t.key} onClick={() => setVista(t.key)} style={{ padding: '14px 24px', borderRadius: 8, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, border: vista === t.key ? `2px solid ${C.gold}` : `1px solid ${C.lightGray}`, backgroundColor: vista === t.key ? C.lightGold : C.white, color: vista === t.key ? C.darkBlue : C.gray, fontSize: 16, fontWeight: 700 }}>
             <t.icon size={16} /> {t.label} ({t.count})
           </button>
         ))}
@@ -312,7 +312,7 @@ export default function VictimasTestigos({ perfil }) {
       <div style={{ backgroundColor: C.white, borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.08)', overflow: 'hidden' }}>
         <div style={{ padding: '16px 20px', display: 'flex', alignItems: 'center', gap: 8, borderBottom: `1px solid ${C.lightGray}` }}>
           <Search size={16} color={C.gray} />
-          <input type="text" placeholder="Buscar por nombre, C.I...." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} style={{ border: 'none', outline: 'none', fontSize: 14, backgroundColor: 'transparent', flex: 1, fontFamily: 'inherit' }} />
+          <input type="text" placeholder="Buscar por nombre, C.I...." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} style={{ border: 'none', outline: 'none', fontSize: 16, backgroundColor: 'transparent', flex: 1, fontFamily: 'inherit' }} />
           {searchTerm && <X size={14} color={C.gray} style={{ cursor: 'pointer' }} onClick={() => setSearchTerm('')} />}
         </div>
 
@@ -342,25 +342,25 @@ export default function VictimasTestigos({ perfil }) {
                     onClick={() => { setShowDetail(r); setDetailType(vista === 'victimas' ? 'victima' : 'testigo'); }}>
                     <td style={st.td}>
                       <div style={{ fontWeight: 600 }}>{r.nombre || (r.tipo_agravio === 'sociedad' ? 'La sociedad' : 'Quien resulte')}</div>
-                      {r.edad && <span style={{ fontSize: 11, color: C.gray }}>{r.edad} años · {r.sexo || '—'}</span>}
+                      {r.edad && <span style={{ fontSize: 13, color: C.gray }}>{r.edad} años · {r.sexo || '—'}</span>}
                     </td>
                     {vista === 'victimas' && (
                       <td style={st.td}>
-                        {(() => { const es = ESTADO_SALUD.find(e => e.key === r.estado_salud); return es ? <span style={st.badge(es.color + '18', es.color)}>{es.label}</span> : <span style={{ fontSize: 11, color: C.gray }}>{r.tipo_agravio}</span>; })()}
+                        {(() => { const es = ESTADO_SALUD.find(e => e.key === r.estado_salud); return es ? <span style={st.badge(es.color + '18', es.color)}>{es.label}</span> : <span style={{ fontSize: 13, color: C.gray }}>{r.tipo_agravio}</span>; })()}
                       </td>
                     )}
                     {vista === 'testigos' && <td style={st.td}><span style={st.badge(C.darkBlue + '15', C.darkBlue)}>{CALIDADES_TESTIGO.find(c => c.key === r.calidad)?.label || r.calidad}</span></td>}
-                    <td style={{ ...st.td, fontFamily: 'monospace', fontSize: 11 }}>{r.carpeta_investigacion || '—'}</td>
+                    <td style={{ ...st.td, fontFamily: 'monospace', fontSize: 13 }}>{r.carpeta_investigacion || '—'}</td>
                     {vista === 'victimas' && (
                       <td style={st.td}>
                         {hayVulnerabilidad(r) ? (
-                          <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>{VULNERABILIDADES.filter(v => r[v.key]).map(v => <span key={v.key} style={{ fontSize: 10 }}>{v.icon}</span>)}</div>
-                        ) : <span style={{ color: C.gray, fontSize: 11 }}>—</span>}
+                          <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>{VULNERABILIDADES.filter(v => r[v.key]).map(v => <span key={v.key} style={{ fontSize: 12 }}>{v.icon}</span>)}</div>
+                        ) : <span style={{ color: C.gray, fontSize: 13 }}>—</span>}
                       </td>
                     )}
                     {vista === 'testigos' && <td style={st.td}>{r.disponible_declarar ? <span style={{ color: C.green }}>✅ Sí</span> : <span style={{ color: C.red }}>❌ No</span>}</td>}
                     <td style={st.td}>
-                      <button style={{ ...st.btnOutline, padding: '4px 10px', fontSize: 11 }} onClick={e => { e.stopPropagation(); setShowDetail(r); setDetailType(vista === 'victimas' ? 'victima' : 'testigo'); }}>
+                      <button style={{ ...st.btnOutline, padding: '4px 10px', fontSize: 13 }} onClick={e => { e.stopPropagation(); setShowDetail(r); setDetailType(vista === 'victimas' ? 'victima' : 'testigo'); }}>
                         <Eye size={13} /> Ver
                       </button>
                     </td>
@@ -397,7 +397,7 @@ export default function VictimasTestigos({ perfil }) {
                     <div style={st.sTitle}><Heart size={15} /> Tipo de Agravio</div>
                     <div style={{ display: 'flex', gap: 8 }}>
                       {[{ k: 'identificada', l: 'Persona identificada' }, { k: 'sociedad', l: 'La sociedad' }, { k: 'quien_resulte', l: 'Quien resulte' }].map(t => (
-                        <button key={t.k} onClick={() => setV('tipo_agravio', t.k)} style={{ flex: 1, padding: '10px', borderRadius: 8, cursor: 'pointer', border: vForm.tipo_agravio === t.k ? `2px solid ${C.pink}` : `1px solid ${C.lightGray}`, backgroundColor: vForm.tipo_agravio === t.k ? C.pink + '12' : C.white, color: vForm.tipo_agravio === t.k ? C.pink : C.gray, fontSize: 12, fontWeight: 700 }}>
+                        <button key={t.k} onClick={() => setV('tipo_agravio', t.k)} style={{ flex: 1, padding: '10px', borderRadius: 8, cursor: 'pointer', border: vForm.tipo_agravio === t.k ? `2px solid ${C.pink}` : `1px solid ${C.lightGray}`, backgroundColor: vForm.tipo_agravio === t.k ? C.pink + '12' : C.white, color: vForm.tipo_agravio === t.k ? C.pink : C.gray, fontSize: 14, fontWeight: 700 }}>
                           {t.l}
                         </button>
                       ))}
@@ -445,7 +445,7 @@ export default function VictimasTestigos({ perfil }) {
                           {VULNERABILIDADES.map(vul => (
                             <div key={vul.key} style={st.chk(vForm[vul.key], vul.color)} onClick={() => setV(vul.key, !vForm[vul.key])}>
                               <input type="checkbox" checked={vForm[vul.key]} readOnly style={{ width: 14, height: 14 }} />
-                              <span style={{ fontSize: 12, fontWeight: 600, color: vForm[vul.key] ? vul.color : C.gray }}>{vul.icon} {vul.label}</span>
+                              <span style={{ fontSize: 14, fontWeight: 600, color: vForm[vul.key] ? vul.color : C.gray }}>{vul.icon} {vul.label}</span>
                             </div>
                           ))}
                         </div>
@@ -462,15 +462,15 @@ export default function VictimasTestigos({ perfil }) {
                         </div>
                         {(vForm.estado_salud === 'defuncion_doloso' || vForm.estado_salud === 'defuncion_culposo') && (
                           <div style={{ marginTop: 10, padding: 12, backgroundColor: '#ffebee', borderRadius: 8, border: `1px solid ${C.red}30` }}>
-                            <div style={{ fontSize: 12, fontWeight: 700, color: '#b71c1c' }}>⚠ Víctima con defunción registrada</div>
-                            <div style={{ fontSize: 11, color: '#795548', marginTop: 4 }}>Se activará protocolo de cadáver. Verificar protocolo de feminicidio si aplica.</div>
+                            <div style={{ fontSize: 14, fontWeight: 700, color: '#b71c1c' }}>⚠ Víctima con defunción registrada</div>
+                            <div style={{ fontSize: 13, color: '#795548', marginTop: 4 }}>Se activará protocolo de cadáver. Verificar protocolo de feminicidio si aplica.</div>
                           </div>
                         )}
                         <div style={{ display: 'flex', gap: 12, marginTop: 12 }}>
                           {[{ k: 'tiene_lesiones', l: 'Presenta lesiones', c: C.red }, { k: 'requiere_atencion_medica', l: 'Requiere atención médica', c: C.orange }].map(opt => (
                             <div key={opt.k} style={st.chk(vForm[opt.k], opt.c)} onClick={() => setV(opt.k, !vForm[opt.k])}>
                               <input type="checkbox" checked={vForm[opt.k]} readOnly style={{ width: 14, height: 14 }} />
-                              <span style={{ fontSize: 12, fontWeight: 600, color: vForm[opt.k] ? opt.c : C.gray }}>{opt.l}</span>
+                              <span style={{ fontSize: 14, fontWeight: 600, color: vForm[opt.k] ? opt.c : C.gray }}>{opt.l}</span>
                             </div>
                           ))}
                         </div>
@@ -483,7 +483,7 @@ export default function VictimasTestigos({ perfil }) {
                           {[{ k: 'lectura_derechos_realizada', l: 'Lectura de derechos realizada' }, { k: 'constancia_firmada', l: 'Constancia firmada' }].map(opt => (
                             <div key={opt.k} style={st.chk(vForm[opt.k], C.green)} onClick={() => setV(opt.k, !vForm[opt.k])}>
                               <input type="checkbox" checked={vForm[opt.k]} readOnly style={{ width: 14, height: 14 }} />
-                              <span style={{ fontSize: 12, fontWeight: 600, color: vForm[opt.k] ? '#1b5e20' : C.gray }}>{opt.l}</span>
+                              <span style={{ fontSize: 14, fontWeight: 600, color: vForm[opt.k] ? '#1b5e20' : C.gray }}>{opt.l}</span>
                             </div>
                           ))}
                         </div>
@@ -536,8 +536,8 @@ export default function VictimasTestigos({ perfil }) {
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
                       {CALIDADES_TESTIGO.map(c => (
                         <button key={c.key} onClick={() => setT('calidad', c.key)} style={{ textAlign: 'left', padding: '10px 14px', borderRadius: 8, cursor: 'pointer', border: tForm.calidad === c.key ? `2px solid ${C.gold}` : `1px solid ${C.lightGray}`, backgroundColor: tForm.calidad === c.key ? C.lightGold : C.white }}>
-                          <div style={{ fontSize: 13, fontWeight: 700, color: tForm.calidad === c.key ? C.darkBlue : C.gray }}>{c.label}</div>
-                          <div style={{ fontSize: 11, color: C.gray }}>{c.desc}</div>
+                          <div style={{ fontSize: 15, fontWeight: 700, color: tForm.calidad === c.key ? C.darkBlue : C.gray }}>{c.label}</div>
+                          <div style={{ fontSize: 13, color: C.gray }}>{c.desc}</div>
                         </button>
                       ))}
                     </div>
@@ -547,11 +547,11 @@ export default function VictimasTestigos({ perfil }) {
                     <div style={{ display: 'flex', gap: 12 }}>
                       <div style={st.chk(tForm.entrevista_realizada, C.green)} onClick={() => setT('entrevista_realizada', !tForm.entrevista_realizada)}>
                         <input type="checkbox" checked={tForm.entrevista_realizada} readOnly style={{ width: 14, height: 14 }} />
-                        <span style={{ fontSize: 12, fontWeight: 600, color: tForm.entrevista_realizada ? '#1b5e20' : C.gray }}>Entrevista realizada</span>
+                        <span style={{ fontSize: 14, fontWeight: 600, color: tForm.entrevista_realizada ? '#1b5e20' : C.gray }}>Entrevista realizada</span>
                       </div>
                       <div style={st.chk(!tForm.disponible_declarar, C.red)} onClick={() => setT('disponible_declarar', !tForm.disponible_declarar)}>
                         <input type="checkbox" checked={!tForm.disponible_declarar} readOnly style={{ width: 14, height: 14 }} />
-                        <span style={{ fontSize: 12, fontWeight: 600, color: !tForm.disponible_declarar ? C.red : C.gray }}>No disponible para declarar</span>
+                        <span style={{ fontSize: 14, fontWeight: 600, color: !tForm.disponible_declarar ? C.red : C.gray }}>No disponible para declarar</span>
                       </div>
                     </div>
                     {tForm.entrevista_realizada && <div style={{ ...st.fg, marginTop: 10 }}><label style={st.label}>Resumen de declaración</label><textarea style={st.textarea} value={tForm.resumen_declaracion} onChange={e => setT('resumen_declaracion', e.target.value)} rows={3} /></div>}
@@ -563,14 +563,14 @@ export default function VictimasTestigos({ perfil }) {
               <SeccionArchivos />
 
               {mensaje && (
-                <div style={{ padding: '10px 14px', borderRadius: 8, backgroundColor: mensaje.tipo === 'ok' ? '#e8f5e9' : '#ffebee', color: mensaje.tipo === 'ok' ? '#1b5e20' : '#b71c1c', fontSize: 13, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 8, marginTop: 8 }}>
+                <div style={{ padding: '10px 14px', borderRadius: 8, backgroundColor: mensaje.tipo === 'ok' ? '#e8f5e9' : '#ffebee', color: mensaje.tipo === 'ok' ? '#1b5e20' : '#b71c1c', fontSize: 15, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 8, marginTop: 8 }}>
                   {mensaje.tipo === 'ok' ? <CheckCircle2 size={16} /> : <AlertTriangle size={16} />} {mensaje.texto}
                 </div>
               )}
             </div>
 
             <div style={{ padding: '16px 24px', borderTop: `1px solid ${C.lightGray}`, display: 'flex', justifyContent: 'flex-end', gap: 12 }}>
-              <button onClick={() => setShowForm(false)} style={{ backgroundColor: 'transparent', color: C.gray, border: `1px solid ${C.lightGray}`, borderRadius: 8, padding: '10px 20px', fontSize: 14, cursor: 'pointer' }}>Cancelar</button>
+              <button onClick={() => setShowForm(false)} style={{ backgroundColor: 'transparent', color: C.gray, border: `1px solid ${C.lightGray}`, borderRadius: 8, padding: '14px 24px', fontSize: 16, cursor: 'pointer' }}>Cancelar</button>
               <button style={{ ...st.btn(formType === 'victima' ? C.pink : C.gold, C.white), opacity: saving ? 0.6 : 1 }} onClick={formType === 'victima' ? handleSubmitVictima : handleSubmitTestigo} disabled={saving}>
                 <Send size={15} /> {saving ? 'Guardando...' : 'Registrar'}
               </button>
@@ -587,13 +587,13 @@ export default function VictimasTestigos({ perfil }) {
             <div style={{ backgroundColor: detailType === 'victima' ? C.pink : C.darkBlue, color: C.white, padding: '18px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
                 <div style={{ fontSize: 16, fontWeight: 700 }}>{showDetail.nombre || (showDetail.tipo_agravio === 'sociedad' ? 'En agravio de la sociedad' : 'Quien resulte')}</div>
-                <div style={{ fontSize: 12, opacity: 0.8 }}>{detailType === 'victima' ? 'Víctima' : 'Testigo'}</div>
+                <div style={{ fontSize: 14, opacity: 0.8 }}>{detailType === 'victima' ? 'Víctima' : 'Testigo'}</div>
               </div>
               <X size={20} style={{ cursor: 'pointer' }} onClick={() => { setShowDetail(null); setShowMedForm(false); }} />
             </div>
 
             {detailType === 'victima' && hayVulnerabilidad(showDetail) && (
-              <div style={{ padding: '10px 20px', backgroundColor: '#fff3e0', borderBottom: `1px solid ${C.orange}30`, display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+              <div style={{ padding: '14px 24px', backgroundColor: '#fff3e0', borderBottom: `1px solid ${C.orange}30`, display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                 {VULNERABILIDADES.filter(v => showDetail[v.key]).map(v => <span key={v.key} style={st.badge(v.color + '20', v.color)}>{v.icon} {v.label}</span>)}
               </div>
             )}
@@ -621,37 +621,37 @@ export default function VictimasTestigos({ perfil }) {
                 { label: 'Declaración', value: showDetail.resumen_declaracion },
               ]),
             ].filter(r => r.value).map((row, i) => (
-              <div key={i} style={{ padding: '10px 20px', borderBottom: `1px solid ${C.lightGray}`, display: 'flex', justifyContent: 'space-between', gap: 12 }}>
-                <span style={{ fontSize: 11, fontWeight: 600, color: C.gray, textTransform: 'uppercase', minWidth: 110 }}>{row.label}</span>
-                <span style={{ fontSize: 14, color: C.darkBlue, textAlign: 'right', flex: 1, wordBreak: 'break-word' }}>{row.value}</span>
+              <div key={i} style={{ padding: '14px 24px', borderBottom: `1px solid ${C.lightGray}`, display: 'flex', justifyContent: 'space-between', gap: 12 }}>
+                <span style={{ fontSize: 13, fontWeight: 600, color: C.gray, textTransform: 'uppercase', minWidth: 110 }}>{row.label}</span>
+                <span style={{ fontSize: 16, color: C.darkBlue, textAlign: 'right', flex: 1, wordBreak: 'break-word' }}>{row.value}</span>
               </div>
             ))}
 
             {detailType === 'victima' && (
               <div style={{ padding: '16px 20px', borderTop: `2px solid ${C.gold}` }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: C.gold, textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: 8 }}><Shield size={15} /> Medidas de Protección ({medidas.length})</div>
-                  <button onClick={() => setShowMedForm(v => !v)} style={{ backgroundColor: C.lightGold, border: `1px solid ${C.gold}55`, borderRadius: 8, padding: '6px 12px', color: C.gold, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
+                  <div style={{ fontSize: 15, fontWeight: 700, color: C.gold, textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: 8 }}><Shield size={15} /> Medidas de Protección ({medidas.length})</div>
+                  <button onClick={() => setShowMedForm(v => !v)} style={{ backgroundColor: C.lightGold, border: `1px solid ${C.gold}55`, borderRadius: 8, padding: '6px 12px', color: C.gold, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
                     {showMedForm ? '✕ Cancelar' : '+ Medida'}
                   </button>
                 </div>
 
                 {showMedForm && (
                   <div style={{ backgroundColor: C.bg, borderRadius: 8, padding: 14, marginBottom: 14, border: `1px solid ${C.lightGray}` }}>
-                    <div style={st.fg}><label style={{ ...st.label, fontSize: 10 }}>Tipo de medida *</label>
-                      <select style={{ ...st.select, fontSize: 12 }} value={mForm.tipo_medida} onChange={e => setMForm(p => ({ ...p, tipo_medida: e.target.value }))}>
+                    <div style={st.fg}><label style={{ ...st.label, fontSize: 12 }}>Tipo de medida *</label>
+                      <select style={{ ...st.select, fontSize: 14 }} value={mForm.tipo_medida} onChange={e => setMForm(p => ({ ...p, tipo_medida: e.target.value }))}>
                         <option value="">— Seleccionar —</option>
                         {TIPOS_MEDIDA.map(t => <option key={t} value={t}>{t}</option>)}
                       </select>
                     </div>
-                    <div style={{ ...st.fg, marginTop: 8 }}><label style={{ ...st.label, fontSize: 10 }}>Descripción *</label><textarea style={{ ...st.textarea, fontSize: 12 }} value={mForm.descripcion} onChange={e => setMForm(p => ({ ...p, descripcion: e.target.value }))} rows={2} /></div>
-                    <div style={{ ...st.fg, marginTop: 8 }}><label style={{ ...st.label, fontSize: 10 }}>Institución responsable</label><input style={{ ...st.input, fontSize: 12 }} value={mForm.institucion_responsable} onChange={e => setMForm(p => ({ ...p, institucion_responsable: e.target.value }))} /></div>
-                    <button onClick={handleMedida} style={{ ...st.btn(C.gold, C.white), width: '100%', justifyContent: 'center', marginTop: 10, fontSize: 12 }}><Send size={13} /> Registrar Medida</button>
+                    <div style={{ ...st.fg, marginTop: 8 }}><label style={{ ...st.label, fontSize: 12 }}>Descripción *</label><textarea style={{ ...st.textarea, fontSize: 14 }} value={mForm.descripcion} onChange={e => setMForm(p => ({ ...p, descripcion: e.target.value }))} rows={2} /></div>
+                    <div style={{ ...st.fg, marginTop: 8 }}><label style={{ ...st.label, fontSize: 12 }}>Institución responsable</label><input style={{ ...st.input, fontSize: 14 }} value={mForm.institucion_responsable} onChange={e => setMForm(p => ({ ...p, institucion_responsable: e.target.value }))} /></div>
+                    <button onClick={handleMedida} style={{ ...st.btn(C.gold, C.white), width: '100%', justifyContent: 'center', marginTop: 10, fontSize: 14 }}><Send size={13} /> Registrar Medida</button>
                   </div>
                 )}
 
                 {medidas.length === 0 ? (
-                  <div style={{ color: C.red, fontSize: 12, textAlign: 'center', padding: 16, backgroundColor: '#ffebee', borderRadius: 8 }}>⚠ Sin medidas de protección registradas.</div>
+                  <div style={{ color: C.red, fontSize: 14, textAlign: 'center', padding: 16, backgroundColor: '#ffebee', borderRadius: 8 }}>⚠ Sin medidas de protección registradas.</div>
                 ) : (
                   medidas.map(m => (
                     <div key={m.id} style={{ backgroundColor: C.bg, borderRadius: 8, padding: 12, marginBottom: 8, border: `1px solid ${C.lightGray}` }}>
@@ -659,8 +659,8 @@ export default function VictimasTestigos({ perfil }) {
                         <span style={st.badge(C.green + '20', '#1b5e20')}>{m.tipo_medida}</span>
                         <span style={st.badge(m.estatus === 'activa' ? '#e8f5e9' : '#eceff1', m.estatus === 'activa' ? '#1b5e20' : '#546e7a')}>{m.estatus}</span>
                       </div>
-                      <div style={{ fontSize: 13, color: C.darkBlue, marginTop: 6 }}>{m.descripcion}</div>
-                      {m.institucion_responsable && <div style={{ fontSize: 11, color: C.gray, marginTop: 4 }}>Responsable: {m.institucion_responsable}</div>}
+                      <div style={{ fontSize: 15, color: C.darkBlue, marginTop: 6 }}>{m.descripcion}</div>
+                      {m.institucion_responsable && <div style={{ fontSize: 13, color: C.gray, marginTop: 4 }}>Responsable: {m.institucion_responsable}</div>}
                     </div>
                   ))
                 )}
