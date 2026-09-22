@@ -19,19 +19,19 @@ const cardStyle = {
   boxShadow: '0 2px 8px rgba(0,0,0,0.07)', marginBottom: 14
 };
 const labelStyle = {
-  display: 'block', fontWeight: 600, fontSize: 13, color: COLORS.primary, marginBottom: 4
+  display: 'block', fontWeight: 700, fontSize: 15, color: COLORS.primary, marginBottom: 6
 };
 const inputStyle = {
-  width: '100%', padding: '9px 12px', borderRadius: 7,
-  border: '1.5px solid #c7cfe0', fontSize: 14, boxSizing: 'border-box',
-  outline: 'none', fontFamily: 'inherit'
+  width: '100%', padding: '13px 14px', borderRadius: 7,
+  border: '2px solid #c7cfe0', fontSize: 16, boxSizing: 'border-box',
+  outline: 'none', fontFamily: 'inherit', minHeight: 44
 };
 const selectStyle = { ...inputStyle, background: COLORS.white };
 const textareaStyle = { ...inputStyle, minHeight: 70, resize: 'vertical' };
 const btnPrimary = {
   background: COLORS.gold, color: COLORS.white, border: 'none', borderRadius: 7,
-  padding: '10px 22px', fontWeight: 700, fontSize: 14, cursor: 'pointer',
-  display: 'inline-flex', alignItems: 'center', gap: 7
+  padding: '14px 26px', fontWeight: 700, fontSize: 16, cursor: 'pointer',
+  display: 'inline-flex', alignItems: 'center', gap: 8, minHeight: 44
 };
 const btnSecondary = {
   ...btnPrimary, background: 'transparent', color: COLORS.primary,
@@ -39,7 +39,7 @@ const btnSecondary = {
 };
 const badge = (color) => ({
   display: 'inline-block', padding: '3px 10px', borderRadius: 12,
-  fontSize: 11, fontWeight: 700, color: COLORS.white, background: color,
+  fontSize: 13, fontWeight: 700, color: COLORS.white, background: color,
   textTransform: 'uppercase', letterSpacing: 0.5
 });
 
@@ -117,7 +117,7 @@ const [showMapa, setShowMapa] = useState(false);
             <div key={f.key} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
               <div style={{
                 width: 28, height: 28, borderRadius: '50%', display: 'flex',
-                alignItems: 'center', justifyContent: 'center', fontSize: 12,
+                alignItems: 'center', justifyContent: 'center', fontSize: 14,
                 background: completada ? f.color : esActual ? f.color + '22' : '#e5e7eb',
                 color: completada ? COLORS.white : esActual ? f.color : '#9ca3af',
                 border: esActual ? `2px solid ${f.color}` : '2px solid transparent',
@@ -134,7 +134,7 @@ const [showMapa, setShowMapa] = useState(false);
             </div>
           );
         })}
-        <span style={{ fontSize: 11, color: '#6b7280', marginLeft: 6 }}>{progreso}%</span>
+        <span style={{ fontSize: 13, color: '#6b7280', marginLeft: 6 }}>{progreso}%</span>
       </div>
     );
   };
@@ -150,7 +150,7 @@ const [showMapa, setShowMapa] = useState(false);
             <Target size={22} color={COLORS.gold} />
             Análisis SARA
           </h2>
-          <div style={{ fontSize: 12, color: '#6b7280' }}>
+          <div style={{ fontSize: 14, color: '#6b7280' }}>
             Problem-Solving Policing · Scanning → Analysis → Response → Assessment
           </div>
         </div>
@@ -194,7 +194,7 @@ const [showMapa, setShowMapa] = useState(false);
               onClick={() => setFiltroFase(filtroFase === f.key ? 'todos' : f.key)}>
               <div style={{ fontSize: 20, marginBottom: 2 }}>{f.icon}</div>
               <div style={{ fontSize: 20, fontWeight: 900, color: f.color }}>{count}</div>
-              <div style={{ fontSize: 11, color: '#6b7280', fontWeight: 600 }}>{f.label}</div>
+              <div style={{ fontSize: 13, color: '#6b7280', fontWeight: 600 }}>{f.label}</div>
             </div>
           );
         })}
@@ -204,7 +204,7 @@ const [showMapa, setShowMapa] = useState(false);
       {proyectos.length === 0 ? (
         <div style={{ ...cardStyle, textAlign: 'center', padding: 40, color: '#9ca3af' }}>
           <Target size={40} style={{ marginBottom: 10, opacity: 0.4 }} />
-          <div style={{ fontSize: 14 }}>No hay proyectos SARA. Crea uno para iniciar el análisis cross-case.</div>
+          <div style={{ fontSize: 16 }}>No hay proyectos SARA. Crea uno para iniciar el análisis cross-case.</div>
         </div>
       ) : (
         proyectos.map(p => {
@@ -221,16 +221,16 @@ const [showMapa, setShowMapa] = useState(false);
                     <span style={badge(faseInfo.color)}>{faseInfo.icon} {faseInfo.label}</span>
                     <span style={badge(getPrioridadColor(p.prioridad))}>{p.prioridad}</span>
                   </div>
-                  <div style={{ fontSize: 12, color: '#374151', marginBottom: 4 }}>
+                  <div style={{ fontSize: 14, color: '#374151', marginBottom: 4 }}>
                     <strong>Delito:</strong> {p.categoria_delito}
                     {p.zona_geografica && <> · <strong>Zona:</strong> {p.zona_geografica}</>}
                   </div>
-                  {p.descripcion && <div style={{ fontSize: 12, color: '#6b7280' }}>{p.descripcion.substring(0, 100)}{p.descripcion.length > 100 ? '...' : ''}</div>}
+                  {p.descripcion && <div style={{ fontSize: 14, color: '#6b7280' }}>{p.descripcion.substring(0, 100)}{p.descripcion.length > 100 ? '...' : ''}</div>}
                 </div>
                 <div style={{ textAlign: 'right' }}>
                   {renderProgreso(p)}
-                  <div style={{ fontSize: 11, color: '#9ca3af', marginTop: 6 }}>{formatFecha(p.created_at)}</div>
-                  <div style={{ fontSize: 11, color: '#6b7280' }}>{p.nombre_creador}</div>
+                  <div style={{ fontSize: 13, color: '#9ca3af', marginTop: 6 }}>{formatFecha(p.created_at)}</div>
+                  <div style={{ fontSize: 13, color: '#6b7280' }}>{p.nombre_creador}</div>
                 </div>
               </div>
             </div>
@@ -341,10 +341,10 @@ const [showMapa, setShowMapa] = useState(false);
                     }}>
                       {completada ? '✓' : f.icon}
                     </div>
-                    <div style={{ fontSize: 12, fontWeight: esActual ? 800 : 500, color: esActual ? f.color : completada ? f.color : '#9ca3af' }}>
+                    <div style={{ fontSize: 14, fontWeight: esActual ? 800 : 500, color: esActual ? f.color : completada ? f.color : '#9ca3af' }}>
                       {f.label}
                     </div>
-                    <div style={{ fontSize: 10, color: '#9ca3af' }}>{f.desc}</div>
+                    <div style={{ fontSize: 12, color: '#9ca3af' }}>{f.desc}</div>
                     {p[`${f.key}_fecha_completado`] && (
                       <div style={{ fontSize: 9, color: '#6b7280', marginTop: 2 }}>
                         {formatFecha(p[`${f.key}_fecha_completado`])}
@@ -370,7 +370,7 @@ const [showMapa, setShowMapa] = useState(false);
         {/* Botón avanzar fase */}
         {p.fase_actual !== 'cerrado' && (
           <div style={{ ...cardStyle, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: 13, color: '#6b7280' }}>
+            <span style={{ fontSize: 15, color: '#6b7280' }}>
               Cuando completes esta fase, avanza a la siguiente
             </span>
             <button style={{ ...btnPrimary, background: faseInfo.color }} onClick={handleAvanzar}>
@@ -614,7 +614,7 @@ const [showMapa, setShowMapa] = useState(false);
     <div style={{ ...cardStyle, background: '#f9fafb', textAlign: 'center', padding: 30 }}>
       <CheckCircle size={40} color="#10b981" style={{ marginBottom: 10 }} />
       <div style={{ fontSize: 16, fontWeight: 800, color: COLORS.primary, marginBottom: 6 }}>Proyecto SARA Completado</div>
-      <div style={{ fontSize: 13, color: '#6b7280' }}>
+      <div style={{ fontSize: 15, color: '#6b7280' }}>
         Las 4 fases fueron completadas. {p.assessment_requiere_nuevo_ciclo ? 'Se recomienda iniciar un nuevo ciclo SARA.' : 'El problema fue abordado exitosamente.'}
       </div>
     </div>
@@ -627,14 +627,14 @@ const [showMapa, setShowMapa] = useState(false);
     <div style={{ padding: '10px 0' }}>
       {error && (
         <div style={{ ...cardStyle, background: '#fef2f2', borderLeft: '4px solid #ef4444', display: 'flex', justifyContent: 'space-between' }}>
-          <span style={{ color: '#dc2626', fontSize: 13 }}>{error}</span>
+          <span style={{ color: '#dc2626', fontSize: 15 }}>{error}</span>
           <button onClick={() => setError(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#dc2626' }}>✕</button>
         </div>
       )}
 
 {/* Mapa de Calor */}
       <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 10 }}>
-        <button onClick={() => setShowMapa(!showMapa)} style={{ ...btnSecondary, padding: '8px 16px', fontSize: 13 }}>
+        <button onClick={() => setShowMapa(!showMapa)} style={{ ...btnSecondary, padding: '12px 20px', fontSize: 15 }}>
           <MapPin size={15} /> {showMapa ? 'Ocultar Mapa de Calor' : 'Mapa de Calor'}
         </button>
       </div>
