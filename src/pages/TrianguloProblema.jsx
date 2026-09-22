@@ -25,16 +25,16 @@ function contarCampo(arr, campo) {
 }
 
 function BarraHorizontal({ items, maxVal, color }) {
-  if (items.length === 0) return <div style={{ fontSize: 12, color: C.gray, textAlign: 'center', padding: 10 }}>Sin datos</div>;
+  if (items.length === 0) return <div style={{ fontSize: 14, color: C.gray, textAlign: 'center', padding: 10 }}>Sin datos</div>;
   return items.slice(0, 7).map(function(item, i) {
     var label = item[0]; var count = item[1];
     return (
       <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
         <div style={{ flex: 1, position: 'relative', height: 22, backgroundColor: C.bg, borderRadius: 5, overflow: 'hidden' }}>
           <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: (count / maxVal * 100) + '%', backgroundColor: i === 0 ? color : color + '80', borderRadius: 5 }} />
-          <span style={{ position: 'relative', zIndex: 1, fontSize: 10, fontWeight: 600, color: C.darkBlue, padding: '0 6px', lineHeight: '22px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'block' }}>{label}</span>
+          <span style={{ position: 'relative', zIndex: 1, fontSize: 12, fontWeight: 600, color: C.darkBlue, padding: '0 6px', lineHeight: '22px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'block' }}>{label}</span>
         </div>
-        <span style={{ fontSize: 12, fontWeight: 700, color: C.darkBlue, minWidth: 24, textAlign: 'right' }}>{count}</span>
+        <span style={{ fontSize: 14, fontWeight: 700, color: C.darkBlue, minWidth: 24, textAlign: 'right' }}>{count}</span>
       </div>
     );
   });
@@ -115,12 +115,12 @@ export default function TrianguloProblema() {
           <Target size={18} color={C.gold} />
           <span style={{ fontWeight: 700, fontSize: 16, color: C.darkBlue }}>Triángulo del Problema — Análisis Criminal</span>
         </div>
-        <button onClick={cargarDatos} style={{ background: 'none', border: '1.5px solid ' + C.darkBlue, borderRadius: 7, padding: '6px 14px', display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', color: C.darkBlue, fontSize: 12, fontWeight: 600 }}>
+        <button onClick={cargarDatos} style={{ background: 'none', border: '1.5px solid ' + C.darkBlue, borderRadius: 7, padding: '6px 14px', display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', color: C.darkBlue, fontSize: 14, fontWeight: 600 }}>
           <RefreshCw size={13} /> Actualizar
         </button>
       </div>
 
-      <p style={{ fontSize: 12, color: C.gray, marginBottom: 16 }}>
+      <p style={{ fontSize: 14, color: C.gray, marginBottom: 16 }}>
         Teoría de la Actividad Rutinaria (Cohen & Felson): un delito ocurre cuando convergen un <strong>agresor motivado</strong>, una <strong>víctima vulnerable</strong> y un <strong>lugar propicio</strong> sin vigilancia adecuada. Identificar patrones en cada vértice permite diseñar intervenciones focalizadas.
       </p>
 
@@ -129,50 +129,50 @@ export default function TrianguloProblema() {
         <div style={{ background: C.white, borderRadius: 10, padding: 16, boxShadow: '0 1px 4px rgba(0,0,0,0.08)', textAlign: 'center', borderTop: '4px solid ' + C.red }}>
           <User size={24} color={C.red} />
           <div style={{ fontSize: 28, fontWeight: 700, color: C.darkBlue, marginTop: 6 }}>{victimas.length}</div>
-          <div style={{ fontSize: 12, color: C.gray }}>Víctimas registradas</div>
-          {vicVulnerables > 0 && <div style={{ fontSize: 11, color: C.orange, fontWeight: 600, marginTop: 4 }}>⚠ {vicVulnerables} en condición vulnerable</div>}
+          <div style={{ fontSize: 14, color: C.gray }}>Víctimas registradas</div>
+          {vicVulnerables > 0 && <div style={{ fontSize: 13, color: C.orange, fontWeight: 600, marginTop: 4 }}>⚠ {vicVulnerables} en condición vulnerable</div>}
         </div>
         <div style={{ background: C.white, borderRadius: 10, padding: 16, boxShadow: '0 1px 4px rgba(0,0,0,0.08)', textAlign: 'center', borderTop: '4px solid ' + C.darkBlue }}>
           <Target size={24} color={C.darkBlue} />
           <div style={{ fontSize: 28, fontWeight: 700, color: C.darkBlue, marginTop: 6 }}>{agresores.length}</div>
-          <div style={{ fontSize: 12, color: C.gray }}>Agresores identificados</div>
-          <div style={{ fontSize: 11, color: C.gray, marginTop: 4 }}>{agresores.filter(function(a) { return a.fuente === 'Detenido'; }).length} detenidos · {agresores.filter(function(a) { return a.fuente === 'Investigado'; }).length} investigados</div>
+          <div style={{ fontSize: 14, color: C.gray }}>Agresores identificados</div>
+          <div style={{ fontSize: 13, color: C.gray, marginTop: 4 }}>{agresores.filter(function(a) { return a.fuente === 'Detenido'; }).length} detenidos · {agresores.filter(function(a) { return a.fuente === 'Investigado'; }).length} investigados</div>
         </div>
         <div style={{ background: C.white, borderRadius: 10, padding: 16, boxShadow: '0 1px 4px rgba(0,0,0,0.08)', textAlign: 'center', borderTop: '4px solid ' + C.gold }}>
           <MapPin size={24} color={C.gold} />
           <div style={{ fontSize: 28, fontWeight: 700, color: C.darkBlue, marginTop: 6 }}>{lugares.length}</div>
-          <div style={{ fontSize: 12, color: C.gray }}>Lugares documentados</div>
-          {escenasContaminadas > 0 && <div style={{ fontSize: 11, color: C.red, fontWeight: 600, marginTop: 4 }}>⚠ {escenasContaminadas} escena{escenasContaminadas > 1 ? 's' : ''} contaminada{escenasContaminadas > 1 ? 's' : ''}</div>}
+          <div style={{ fontSize: 14, color: C.gray }}>Lugares documentados</div>
+          {escenasContaminadas > 0 && <div style={{ fontSize: 13, color: C.red, fontWeight: 600, marginTop: 4 }}>⚠ {escenasContaminadas} escena{escenasContaminadas > 1 ? 's' : ''} contaminada{escenasContaminadas > 1 ? 's' : ''}</div>}
         </div>
       </div>
 
       {/* VÉRTICE 1: VÍCTIMA */}
       <div style={{ background: C.white, borderRadius: 10, marginBottom: 14, boxShadow: '0 1px 4px rgba(0,0,0,0.08)', overflow: 'hidden' }}>
         <button onClick={function() { toggleExpand('victima'); }} style={{ width: '100%', padding: '14px 18px', background: C.red + '10', border: 'none', borderLeft: '4px solid ' + C.red, cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ fontSize: 14, fontWeight: 700, color: C.red, display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{ fontSize: 16, fontWeight: 700, color: C.red, display: 'flex', alignItems: 'center', gap: 8 }}>
             <User size={16} /> VÉRTICE 1 — VÍCTIMA ({victimas.length})
           </span>
           {expandido.victima ? <ChevronUp size={16} color={C.red} /> : <ChevronDown size={16} color={C.red} />}
         </button>
         {expandido.victima && (
           <div style={{ padding: 18 }}>
-            <p style={{ fontSize: 11, color: C.gray, marginBottom: 12 }}>¿Quiénes son las víctimas? ¿Hay un perfil recurrente? ¿Qué las hace vulnerables?</p>
+            <p style={{ fontSize: 13, color: C.gray, marginBottom: 12 }}>¿Quiénes son las víctimas? ¿Hay un perfil recurrente? ¿Qué las hace vulnerables?</p>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16 }}>
               <div>
-                <div style={{ fontSize: 12, fontWeight: 700, color: C.darkBlue, marginBottom: 8 }}>Por sexo</div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: C.darkBlue, marginBottom: 8 }}>Por sexo</div>
                 <BarraHorizontal items={vicSexo} maxVal={vicSexo.length > 0 ? vicSexo[0][1] : 1} color={C.red} />
               </div>
               <div>
-                <div style={{ fontSize: 12, fontWeight: 700, color: C.darkBlue, marginBottom: 8 }}>Estado de salud</div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: C.darkBlue, marginBottom: 8 }}>Estado de salud</div>
                 <BarraHorizontal items={vicEstado} maxVal={vicEstado.length > 0 ? vicEstado[0][1] : 1} color={C.orange} />
               </div>
               <div>
-                <div style={{ fontSize: 12, fontWeight: 700, color: C.darkBlue, marginBottom: 8 }}>Municipio de domicilio</div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: C.darkBlue, marginBottom: 8 }}>Municipio de domicilio</div>
                 <BarraHorizontal items={vicMunicipio} maxVal={vicMunicipio.length > 0 ? vicMunicipio[0][1] : 1} color={C.gold} />
               </div>
             </div>
             {vicVulnerables > 0 && (
-              <div style={{ marginTop: 12, padding: 10, background: '#fff3e0', borderRadius: 8, fontSize: 12, color: '#e65100' }}>
+              <div style={{ marginTop: 12, padding: 10, background: '#fff3e0', borderRadius: 8, fontSize: 14, color: '#e65100' }}>
                 <strong>{vicVulnerables}</strong> de {victimas.length} víctimas ({victimas.length > 0 ? Math.round(vicVulnerables / victimas.length * 100) : 0}%) presentan al menos un factor de vulnerabilidad (menor de edad, mujer, indígena, migrante, discapacidad, adulto mayor, LGBTI+). Esto indica la necesidad de enfoque diferencial en las intervenciones.
               </div>
             )}
@@ -183,29 +183,29 @@ export default function TrianguloProblema() {
       {/* VÉRTICE 2: AGRESOR */}
       <div style={{ background: C.white, borderRadius: 10, marginBottom: 14, boxShadow: '0 1px 4px rgba(0,0,0,0.08)', overflow: 'hidden' }}>
         <button onClick={function() { toggleExpand('agresor'); }} style={{ width: '100%', padding: '14px 18px', background: C.darkBlue + '10', border: 'none', borderLeft: '4px solid ' + C.darkBlue, cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ fontSize: 14, fontWeight: 700, color: C.darkBlue, display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{ fontSize: 16, fontWeight: 700, color: C.darkBlue, display: 'flex', alignItems: 'center', gap: 8 }}>
             <Target size={16} /> VÉRTICE 2 — AGRESOR ({agresores.length})
           </span>
           {expandido.agresor ? <ChevronUp size={16} color={C.darkBlue} /> : <ChevronDown size={16} color={C.darkBlue} />}
         </button>
         {expandido.agresor && (
           <div style={{ padding: 18 }}>
-            <p style={{ fontSize: 11, color: C.gray, marginBottom: 12 }}>¿Quiénes cometen los delitos? ¿Hay reincidencia? ¿Qué modus operandi predomina?</p>
+            <p style={{ fontSize: 13, color: C.gray, marginBottom: 12 }}>¿Quiénes cometen los delitos? ¿Hay reincidencia? ¿Qué modus operandi predomina?</p>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
               <div>
-                <div style={{ fontSize: 12, fontWeight: 700, color: C.darkBlue, marginBottom: 8 }}>Por delito</div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: C.darkBlue, marginBottom: 8 }}>Por delito</div>
                 <BarraHorizontal items={agrDelito} maxVal={agrDelito.length > 0 ? agrDelito[0][1] : 1} color={C.darkBlue} />
               </div>
               <div>
-                <div style={{ fontSize: 12, fontWeight: 700, color: C.darkBlue, marginBottom: 8 }}>Tipo de detención</div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: C.darkBlue, marginBottom: 8 }}>Tipo de detención</div>
                 <BarraHorizontal items={agrTipo} maxVal={agrTipo.length > 0 ? agrTipo[0][1] : 1} color={C.purple} />
               </div>
               <div>
-                <div style={{ fontSize: 12, fontWeight: 700, color: C.darkBlue, marginBottom: 8 }}>Rol en los hechos</div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: C.darkBlue, marginBottom: 8 }}>Rol en los hechos</div>
                 <BarraHorizontal items={agrRol} maxVal={agrRol.length > 0 ? agrRol[0][1] : 1} color={C.orange} />
               </div>
               <div>
-                <div style={{ fontSize: 12, fontWeight: 700, color: C.darkBlue, marginBottom: 8 }}>Estatus investigado</div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: C.darkBlue, marginBottom: 8 }}>Estatus investigado</div>
                 <BarraHorizontal items={agrEstatus} maxVal={agrEstatus.length > 0 ? agrEstatus[0][1] : 1} color={C.red} />
               </div>
             </div>
@@ -216,34 +216,34 @@ export default function TrianguloProblema() {
       {/* VÉRTICE 3: LUGAR */}
       <div style={{ background: C.white, borderRadius: 10, marginBottom: 14, boxShadow: '0 1px 4px rgba(0,0,0,0.08)', overflow: 'hidden' }}>
         <button onClick={function() { toggleExpand('lugar'); }} style={{ width: '100%', padding: '14px 18px', background: C.gold + '10', border: 'none', borderLeft: '4px solid ' + C.gold, cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ fontSize: 14, fontWeight: 700, color: C.gold, display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{ fontSize: 16, fontWeight: 700, color: C.gold, display: 'flex', alignItems: 'center', gap: 8 }}>
             <MapPin size={16} /> VÉRTICE 3 — LUGAR ({lugares.length})
           </span>
           {expandido.lugar ? <ChevronUp size={16} color={C.gold} /> : <ChevronDown size={16} color={C.gold} />}
         </button>
         {expandido.lugar && (
           <div style={{ padding: 18 }}>
-            <p style={{ fontSize: 11, color: C.gray, marginBottom: 12 }}>¿Dónde ocurren los hechos? ¿Qué condiciones del lugar facilitan el delito? ¿Hay vigilancia?</p>
+            <p style={{ fontSize: 13, color: C.gray, marginBottom: 12 }}>¿Dónde ocurren los hechos? ¿Qué condiciones del lugar facilitan el delito? ¿Hay vigilancia?</p>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
               <div>
-                <div style={{ fontSize: 12, fontWeight: 700, color: C.darkBlue, marginBottom: 8 }}>Por municipio</div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: C.darkBlue, marginBottom: 8 }}>Por municipio</div>
                 <BarraHorizontal items={lugMunicipio} maxVal={lugMunicipio.length > 0 ? lugMunicipio[0][1] : 1} color={C.gold} />
               </div>
               <div>
-                <div style={{ fontSize: 12, fontWeight: 700, color: C.darkBlue, marginBottom: 8 }}>Tipo de incidencia</div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: C.darkBlue, marginBottom: 8 }}>Tipo de incidencia</div>
                 <BarraHorizontal items={lugTipo} maxVal={lugTipo.length > 0 ? lugTipo[0][1] : 1} color={C.orange} />
               </div>
               <div>
-                <div style={{ fontSize: 12, fontWeight: 700, color: C.darkBlue, marginBottom: 8 }}>Condiciones climáticas</div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: C.darkBlue, marginBottom: 8 }}>Condiciones climáticas</div>
                 <BarraHorizontal items={lugClima} maxVal={lugClima.length > 0 ? lugClima[0][1] : 1} color='#1565c0' />
               </div>
               <div>
-                <div style={{ fontSize: 12, fontWeight: 700, color: C.darkBlue, marginBottom: 8 }}>Iluminación</div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: C.darkBlue, marginBottom: 8 }}>Iluminación</div>
                 <BarraHorizontal items={lugIluminacion} maxVal={lugIluminacion.length > 0 ? lugIluminacion[0][1] : 1} color='#546e7a' />
               </div>
             </div>
             {(escenasContaminadas > 0 || escenasNoPreservadas > 0) && (
-              <div style={{ marginTop: 12, padding: 10, background: '#ffebee', borderRadius: 8, fontSize: 12, color: '#b71c1c' }}>
+              <div style={{ marginTop: 12, padding: 10, background: '#ffebee', borderRadius: 8, fontSize: 14, color: '#b71c1c' }}>
                 {escenasContaminadas > 0 && <div><strong>{escenasContaminadas}</strong> escena{escenasContaminadas > 1 ? 's' : ''} con contaminación detectada.</div>}
                 {escenasNoPreservadas > 0 && <div><strong>{escenasNoPreservadas}</strong> escena{escenasNoPreservadas > 1 ? 's' : ''} sin preservación adecuada.</div>}
                 <div style={{ marginTop: 4, fontStyle: 'italic', color: '#795548' }}>Estos factores afectan la calidad de la evidencia y deben abordarse en la fase de Response del SARA.</div>
@@ -255,10 +255,10 @@ export default function TrianguloProblema() {
 
       {/* Resumen de convergencia */}
       <div style={{ background: C.lightGold, borderRadius: 10, padding: 16, border: '1px solid ' + C.gold + '40' }}>
-        <div style={{ fontSize: 13, fontWeight: 700, color: C.gold, textTransform: 'uppercase', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
+        <div style={{ fontSize: 15, fontWeight: 700, color: C.gold, textTransform: 'uppercase', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
           <BarChart3 size={14} /> Convergencia del Triángulo — Puntos de Intervención
         </div>
-        <div style={{ fontSize: 13, color: C.darkBlue, lineHeight: 1.7 }}>
+        <div style={{ fontSize: 15, color: C.darkBlue, lineHeight: 1.7 }}>
           {victimas.length > 0 && agresores.length > 0 && lugares.length > 0 ? (
             <div>
               <p>Con <strong>{victimas.length}</strong> víctimas, <strong>{agresores.length}</strong> agresores y <strong>{lugares.length}</strong> lugares documentados, el análisis sugiere:</p>
