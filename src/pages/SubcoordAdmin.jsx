@@ -13,14 +13,14 @@ import { useSubcoordAdmin } from '../hooks/useSubcoordAdmin';
 
 const COLORS = { primary: '#001a4d', gold: '#b69054', white: '#ffffff', bg: '#f4f6fb' };
 const cardStyle = { background: COLORS.white, borderRadius: 10, padding: 18, boxShadow: '0 2px 8px rgba(0,0,0,0.07)', marginBottom: 14 };
-const labelStyle = { display: 'block', fontWeight: 600, fontSize: 13, color: COLORS.primary, marginBottom: 4 };
-const inputStyle = { width: '100%', padding: '9px 12px', borderRadius: 7, border: '1.5px solid #c7cfe0', fontSize: 14, boxSizing: 'border-box', outline: 'none', fontFamily: 'inherit' };
+const labelStyle = { display: 'block', fontWeight: 600, fontSize: 15, color: COLORS.primary, marginBottom: 4 };
+const inputStyle = { width: '100%', padding: '9px 12px', borderRadius: 7, border: '1.5px solid #c7cfe0', fontSize: 16, boxSizing: 'border-box', outline: 'none', fontFamily: 'inherit' };
 const selectStyle = { ...inputStyle, background: COLORS.white };
 const textareaStyle = { ...inputStyle, minHeight: 60, resize: 'vertical' };
-const btnPrimary = { background: COLORS.gold, color: COLORS.white, border: 'none', borderRadius: 7, padding: '10px 22px', fontWeight: 700, fontSize: 14, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 7 };
+const btnPrimary = { background: COLORS.gold, color: COLORS.white, border: 'none', borderRadius: 7, padding: '10px 22px', fontWeight: 700, fontSize: 16, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 7 };
 const btnSecondary = { ...btnPrimary, background: 'transparent', color: COLORS.primary, border: `1.5px solid ${COLORS.primary}` };
-const badge = (color) => ({ display: 'inline-block', padding: '3px 10px', borderRadius: 12, fontSize: 11, fontWeight: 700, color: COLORS.white, background: color, textTransform: 'uppercase', letterSpacing: 0.5 });
-const tituloSeccion = { color: COLORS.gold, fontSize: 13, fontWeight: 800, letterSpacing: 1.5, marginBottom: 14, paddingBottom: 10, borderBottom: '2px solid #b69054', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: 8 };
+const badge = (color) => ({ display: 'inline-block', padding: '3px 10px', borderRadius: 12, fontSize: 13, fontWeight: 700, color: COLORS.white, background: color, textTransform: 'uppercase', letterSpacing: 0.5 });
+const tituloSeccion = { color: COLORS.gold, fontSize: 15, fontWeight: 800, letterSpacing: 1.5, marginBottom: 14, paddingBottom: 10, borderBottom: '2px solid #b69054', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: 8 };
 
 const REGIONES = ['Región Centro','Región Montaña','Región Costa Grande','Región Costa Chica','Región Tierra Caliente','Región Acapulco','Región Norte'];
 
@@ -78,7 +78,7 @@ export default function SubcoordAdmin({ perfil }) {
     return (
       <div style={{ ...cardStyle, textAlign: 'center', padding: 40 }}>
         <Lock size={40} color="#9ca3af" style={{ marginBottom: 10 }} />
-        <div style={{ color: '#9ca3af', fontSize: 14 }}>Acceso restringido a la Subcoordinación Administrativa y Director General.</div>
+        <div style={{ color: '#9ca3af', fontSize: 16 }}>Acceso restringido a la Subcoordinación Administrativa y Director General.</div>
       </div>
     );
   }
@@ -110,7 +110,7 @@ export default function SubcoordAdmin({ perfil }) {
           <div key={i} style={{ ...cardStyle, padding: 14, textAlign: 'center', borderLeft: `4px solid ${c.color}`, marginBottom: 0 }}>
             <c.icon size={20} color={c.color} style={{ marginBottom: 4 }} />
             <div style={{ fontSize: 22, fontWeight: 800, color: c.color }}>{c.value}</div>
-            <div style={{ fontSize: 11, color: '#6b7280', fontWeight: 600 }}>{c.label}</div>
+            <div style={{ fontSize: 13, color: '#6b7280', fontWeight: 600 }}>{c.label}</div>
           </div>
         ))}
       </div>
@@ -163,7 +163,7 @@ export default function SubcoordAdmin({ perfil }) {
       {elementos.length === 0 ? (
         <div style={{ ...cardStyle, textAlign: 'center', padding: 40, color: '#9ca3af' }}>
           <Users size={40} style={{ marginBottom: 10, opacity: 0.4 }} />
-          <div style={{ fontSize: 14 }}>No se encontró personal con los filtros actuales</div>
+          <div style={{ fontSize: 16 }}>No se encontró personal con los filtros actuales</div>
         </div>
       ) : (
         elementos.map(e => (
@@ -187,12 +187,12 @@ export default function SubcoordAdmin({ perfil }) {
                       {e.activo === false && <span style={badge('#ef4444')}>Inactivo</span>}
                     </div>
                   </div>
-                  <div style={{ textAlign: 'right', fontSize: 11, color: '#9ca3af' }}>
+                  <div style={{ textAlign: 'right', fontSize: 13, color: '#9ca3af' }}>
                     {e.numero_empleado && <div>No. {e.numero_empleado}</div>}
                     {e.region && <div>{e.region.replace('Región ', '')}</div>}
                   </div>
                 </div>
-                <div style={{ fontSize: 12, color: '#6b7280', marginTop: 4 }}>
+                <div style={{ fontSize: 14, color: '#6b7280', marginTop: 4 }}>
                   {e.zona && <span>{e.zona} · </span>}
                   {e.coordinacion_especializada && <span style={{ color: '#8b5cf6' }}>{e.coordinacion_especializada} · </span>}
                   {e.cuip && <span style={{ fontFamily: 'monospace' }}>CUIP: {e.cuip}</span>}
@@ -229,7 +229,7 @@ export default function SubcoordAdmin({ perfil }) {
 
         <div style={{ display: 'flex', gap: 4, marginBottom: 14, flexWrap: 'wrap' }}>
           {tabs.map(t => (
-            <button key={t.key} style={{ padding: '8px 16px', borderRadius: 7, border: 'none', cursor: 'pointer', fontWeight: 700, fontSize: 13, display: 'flex', alignItems: 'center', gap: 6, background: subTab === t.key ? COLORS.primary : '#e5e7eb', color: subTab === t.key ? COLORS.white : '#374151', transition: 'all 0.2s' }}
+            <button key={t.key} style={{ padding: '12px 20px', borderRadius: 7, border: 'none', cursor: 'pointer', fontWeight: 700, fontSize: 15, display: 'flex', alignItems: 'center', gap: 6, background: subTab === t.key ? COLORS.primary : '#e5e7eb', color: subTab === t.key ? COLORS.white : '#374151', transition: 'all 0.2s' }}
               onClick={() => setSubTab(t.key)}><t.icon size={14} /> {t.label}</button>
           ))}
         </div>
@@ -281,7 +281,7 @@ export default function SubcoordAdmin({ perfil }) {
           <div>
             <input ref={inputFotoRef} type="file" accept="image/*" style={{ display: 'none' }}
               onChange={async (ev) => { const f = ev.target.files[0]; if (f) { await subirFotoCredencial(e, f); const { data } = await fetchElementos(); } ev.target.value = ''; }} />
-            <button style={{ ...btnSecondary, padding: '6px 12px', fontSize: 11 }} onClick={() => inputFotoRef.current.click()}>
+            <button style={{ ...btnSecondary, padding: '6px 12px', fontSize: 13 }} onClick={() => inputFotoRef.current.click()}>
               <Camera size={13} /> {e.foto_credencial_url ? 'Cambiar foto' : 'Subir credencial'}
             </button>
           </div>
@@ -290,16 +290,16 @@ export default function SubcoordAdmin({ perfil }) {
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
           {campos.filter(f => f[1]).map(([label, value, Icon], i) => (
             <div key={i} style={{ padding: '8px 0', borderBottom: '1px solid #f3f4f6' }}>
-              <div style={{ fontSize: 11, color: '#9ca3af', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}><Icon size={12} /> {label}</div>
-              <div style={{ fontSize: 14, color: COLORS.primary, fontWeight: 500, marginTop: 2 }}>{value || '—'}</div>
+              <div style={{ fontSize: 13, color: '#9ca3af', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}><Icon size={12} /> {label}</div>
+              <div style={{ fontSize: 16, color: COLORS.primary, fontWeight: 500, marginTop: 2 }}>{value || '—'}</div>
             </div>
           ))}
         </div>
 
         {e.domicilio && (
           <div style={{ marginTop: 12, padding: 10, background: '#f9fafb', borderRadius: 7 }}>
-            <div style={{ fontSize: 11, color: '#9ca3af', fontWeight: 600 }}>Domicilio</div>
-            <div style={{ fontSize: 13, color: '#374151', marginTop: 2 }}>{e.domicilio}</div>
+            <div style={{ fontSize: 13, color: '#9ca3af', fontWeight: 600 }}>Domicilio</div>
+            <div style={{ fontSize: 15, color: '#374151', marginTop: 2 }}>{e.domicilio}</div>
           </div>
         )}
 
@@ -309,7 +309,7 @@ export default function SubcoordAdmin({ perfil }) {
           </button>
         ) : (
           <div style={{ marginTop: 14 }}>
-            <div style={{ fontSize: 12, color: '#ef4444', marginBottom: 6 }}>Baja: {formatFecha(e.fecha_baja)} — {e.motivo_baja}</div>
+            <div style={{ fontSize: 14, color: '#ef4444', marginBottom: 6 }}>Baja: {formatFecha(e.fecha_baja)} — {e.motivo_baja}</div>
             <button style={{ ...btnPrimary, background: '#10b981' }} onClick={async () => { await reactivar(e, 'Reactivación autorizada'); const { data } = await fetchElementos(); }}>
               <CheckCircle size={14} /> Reactivar elemento
             </button>
@@ -341,7 +341,7 @@ export default function SubcoordAdmin({ perfil }) {
         {/* Cambio de cargo */}
         <div style={cardStyle}>
           <div style={tituloSeccion}><Briefcase size={15} /> Cambio de Cargo / Comisión</div>
-          <div style={{ fontSize: 13, color: '#374151', marginBottom: 10 }}>Cargo actual: <strong>{getCargoLabel(e.cargo || e.rol)}</strong> · Grado: <strong>{e.grado || '—'}</strong></div>
+          <div style={{ fontSize: 15, color: '#374151', marginBottom: 10 }}>Cargo actual: <strong>{getCargoLabel(e.cargo || e.rol)}</strong> · Grado: <strong>{e.grado || '—'}</strong></div>
           {!showCambioCargo ? (
             <button style={btnSecondary} onClick={() => { setFormCargo({ cargo: e.cargo || e.rol, motivo: '', oficio: '' }); setShowCambioCargo(true); }}>
               <ArrowRightLeft size={14} /> Cambiar cargo
@@ -372,7 +372,7 @@ export default function SubcoordAdmin({ perfil }) {
         {/* Cambio de región/zona */}
         <div style={cardStyle}>
           <div style={tituloSeccion}><MapPin size={15} /> Cambio de Adscripción (Región / Zona)</div>
-          <div style={{ fontSize: 13, color: '#374151', marginBottom: 10 }}>
+          <div style={{ fontSize: 15, color: '#374151', marginBottom: 10 }}>
             Región: <strong>{e.region || '—'}</strong> · Zona: <strong>{e.zona || '—'}</strong>
             {e.coordinacion_especializada && <span> · Especializada: <strong style={{ color: '#8b5cf6' }}>{e.coordinacion_especializada}</strong></span>}
           </div>
@@ -412,7 +412,7 @@ export default function SubcoordAdmin({ perfil }) {
                 }} disabled={loading}>Confirmar cambio</button>
                 <button style={btnSecondary} onClick={() => setShowCambioRegion(false)}>Cancelar</button>
               </div>
-              <div style={{ fontSize: 11, color: '#854f0b', marginTop: 8 }}>Al cambiar de región, el RLS automáticamente le mostrará datos de la nueva región y dejará de ver la anterior.</div>
+              <div style={{ fontSize: 13, color: '#854f0b', marginTop: 8 }}>Al cambiar de región, el RLS automáticamente le mostrará datos de la nueva región y dejará de ver la anterior.</div>
             </div>
           )}
         </div>
@@ -420,16 +420,16 @@ export default function SubcoordAdmin({ perfil }) {
         {/* Cambio de grado */}
         <div style={cardStyle}>
           <div style={tituloSeccion}><Star size={15} /> Grado Escalafonario</div>
-          <div style={{ fontSize: 13, color: '#374151', marginBottom: 10 }}>Grado actual: <strong>{e.grado || '—'}</strong></div>
+          <div style={{ fontSize: 15, color: '#374151', marginBottom: 10 }}>Grado actual: <strong>{e.grado || '—'}</strong></div>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             {GRADOS.map(g => (
-              <button key={g} style={{ ...btnSecondary, padding: '6px 14px', fontSize: 12, background: e.grado === g ? COLORS.primary : 'transparent', color: e.grado === g ? COLORS.white : COLORS.primary }}
+              <button key={g} style={{ ...btnSecondary, padding: '6px 14px', fontSize: 14, background: e.grado === g ? COLORS.primary : 'transparent', color: e.grado === g ? COLORS.white : COLORS.primary }}
                 onClick={async () => { if (g !== e.grado) { await cambiarGrado(e, g, 'Cambio de grado'); abrirFicha({ ...e, grado: g }); } }}>
                 {g}
               </button>
             ))}
           </div>
-          <div style={{ fontSize: 11, color: '#6b7280', marginTop: 8 }}>El grado es escalafonario (RH). El cargo/comisión es lo que define los permisos en el sistema.</div>
+          <div style={{ fontSize: 13, color: '#6b7280', marginTop: 8 }}>El grado es escalafonario (RH). El cargo/comisión es lo que define los permisos en el sistema.</div>
         </div>
       </div>
     );
@@ -441,8 +441,8 @@ export default function SubcoordAdmin({ perfil }) {
     return (
       <div>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-          <span style={{ fontWeight: 700, color: COLORS.primary, fontSize: 14 }}>Expediente Digital — {e.nombre_completo}</span>
-          <button style={{ ...btnPrimary, padding: '7px 14px', fontSize: 13 }} onClick={() => { setFormDoc({ tipo: '', descripcion: '', fecha: '', vigencia: '' }); setArchivoDoc(null); setShowSubirDoc(!showSubirDoc); }}>
+          <span style={{ fontWeight: 700, color: COLORS.primary, fontSize: 16 }}>Expediente Digital — {e.nombre_completo}</span>
+          <button style={{ ...btnPrimary, padding: '7px 14px', fontSize: 15 }} onClick={() => { setFormDoc({ tipo: '', descripcion: '', fecha: '', vigencia: '' }); setArchivoDoc(null); setShowSubirDoc(!showSubirDoc); }}>
             <FileText size={14} /> {showSubirDoc ? 'Cancelar' : '+ Subir documento'}
           </button>
         </div>
@@ -465,10 +465,10 @@ export default function SubcoordAdmin({ perfil }) {
               <div style={{ border: '2px dashed #c7cfe0', borderRadius: 10, padding: 16, textAlign: 'center', cursor: 'pointer', background: COLORS.bg }}
                 onClick={() => document.getElementById('file-rh').click()}>
                 <FileText size={22} color="#999" />
-                <p style={{ fontSize: 12, color: '#999', margin: '4px 0 0 0' }}>Clic para seleccionar archivo (PDF, JPG, PNG)</p>
+                <p style={{ fontSize: 14, color: '#999', margin: '4px 0 0 0' }}>Clic para seleccionar archivo (PDF, JPG, PNG)</p>
                 <input id="file-rh" type="file" accept="image/*,.pdf" style={{ display: 'none' }} onChange={ev => { if (ev.target.files[0]) setArchivoDoc(ev.target.files[0]); }} />
               </div>
-              {archivoDoc && <div style={{ marginTop: 6, fontSize: 12, color: '#085041' }}>{archivoDoc.name} ({(archivoDoc.size / 1024).toFixed(0)} KB)</div>}
+              {archivoDoc && <div style={{ marginTop: 6, fontSize: 14, color: '#085041' }}>{archivoDoc.name} ({(archivoDoc.size / 1024).toFixed(0)} KB)</div>}
             </div>
             <button style={{ ...btnPrimary, marginTop: 12, width: '100%' }} onClick={async () => {
               if (!formDoc.tipo || !archivoDoc) { setError('Selecciona tipo y archivo'); return; }
@@ -484,9 +484,9 @@ export default function SubcoordAdmin({ perfil }) {
           documentos.map(d => (
             <a key={d.id} href={d.url_archivo} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', ...cardStyle, textDecoration: 'none', cursor: 'pointer', marginBottom: 8 }}>
               <div>
-                <div style={{ color: COLORS.primary, fontSize: 13, fontWeight: 700 }}>{d.tipo_documento.replace(/_/g, ' ')}</div>
-                <div style={{ color: '#6b7280', fontSize: 11 }}>{d.nombre_archivo}{d.descripcion ? ` — ${d.descripcion}` : ''}</div>
-                <div style={{ color: '#9ca3af', fontSize: 10, marginTop: 2 }}>
+                <div style={{ color: COLORS.primary, fontSize: 15, fontWeight: 700 }}>{d.tipo_documento.replace(/_/g, ' ')}</div>
+                <div style={{ color: '#6b7280', fontSize: 13 }}>{d.nombre_archivo}{d.descripcion ? ` — ${d.descripcion}` : ''}</div>
+                <div style={{ color: '#9ca3af', fontSize: 12, marginTop: 2 }}>
                   {d.fecha_documento && `Fecha: ${d.fecha_documento} · `}
                   {d.vigencia_hasta && `Vigencia: ${d.vigencia_hasta} · `}
                   Subido por: {d.subido_por} · {formatFecha(d.created_at)}
@@ -503,7 +503,7 @@ export default function SubcoordAdmin({ perfil }) {
   // ── Sub: Bitácora del elemento ─────────────────────────────────
   const renderBitacoraElemento = () => (
     <div>
-      <div style={{ fontWeight: 700, color: COLORS.primary, fontSize: 14, marginBottom: 10 }}><Clock size={16} style={{ verticalAlign: 'middle', marginRight: 6 }} />Historial de Cambios</div>
+      <div style={{ fontWeight: 700, color: COLORS.primary, fontSize: 16, marginBottom: 10 }}><Clock size={16} style={{ verticalAlign: 'middle', marginRight: 6 }} />Historial de Cambios</div>
       {bitacora.length === 0 ? (
         <div style={{ ...cardStyle, textAlign: 'center', padding: 30, color: '#9ca3af' }}>Sin movimientos registrados</div>
       ) : (
@@ -518,14 +518,14 @@ export default function SubcoordAdmin({ perfil }) {
                 <div style={{ ...cardStyle, marginBottom: 0, padding: 12, borderLeft: `3px solid ${c}` }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                     <div>
-                      <div style={{ fontWeight: 700, fontSize: 13, color: COLORS.primary }}>{b.tipo_cambio.replace(/_/g, ' ').toUpperCase()}</div>
-                      {b.campo_modificado && <div style={{ fontSize: 12, color: '#6b7280', marginTop: 2 }}>Campo: {b.campo_modificado}</div>}
-                      {b.valor_anterior && <div style={{ fontSize: 12, color: '#ef4444', marginTop: 2 }}>Anterior: {b.valor_anterior}</div>}
-                      {b.valor_nuevo && <div style={{ fontSize: 12, color: '#10b981', marginTop: 2 }}>Nuevo: {b.valor_nuevo}</div>}
-                      {b.motivo && <div style={{ fontSize: 12, color: '#374151', marginTop: 4, fontStyle: 'italic' }}>"{b.motivo}"</div>}
-                      {b.numero_oficio_comision && <div style={{ fontSize: 11, color: '#6b7280', marginTop: 2 }}>Oficio: {b.numero_oficio_comision}</div>}
+                      <div style={{ fontWeight: 700, fontSize: 15, color: COLORS.primary }}>{b.tipo_cambio.replace(/_/g, ' ').toUpperCase()}</div>
+                      {b.campo_modificado && <div style={{ fontSize: 14, color: '#6b7280', marginTop: 2 }}>Campo: {b.campo_modificado}</div>}
+                      {b.valor_anterior && <div style={{ fontSize: 14, color: '#ef4444', marginTop: 2 }}>Anterior: {b.valor_anterior}</div>}
+                      {b.valor_nuevo && <div style={{ fontSize: 14, color: '#10b981', marginTop: 2 }}>Nuevo: {b.valor_nuevo}</div>}
+                      {b.motivo && <div style={{ fontSize: 14, color: '#374151', marginTop: 4, fontStyle: 'italic' }}>"{b.motivo}"</div>}
+                      {b.numero_oficio_comision && <div style={{ fontSize: 13, color: '#6b7280', marginTop: 2 }}>Oficio: {b.numero_oficio_comision}</div>}
                     </div>
-                    <div style={{ textAlign: 'right', fontSize: 11, color: '#9ca3af', minWidth: 100 }}>
+                    <div style={{ textAlign: 'right', fontSize: 13, color: '#9ca3af', minWidth: 100 }}>
                       <div>{formatFecha(b.created_at)}</div>
                       <div>{b.autorizado_por}</div>
                     </div>
@@ -557,11 +557,11 @@ export default function SubcoordAdmin({ perfil }) {
 
         {altaExito && (
           <div style={{ ...cardStyle, background: '#f0fdf4', borderLeft: '4px solid #10b981' }}>
-            <div style={{ fontWeight: 700, color: '#085041', fontSize: 14, marginBottom: 6 }}>✅ Elemento registrado exitosamente</div>
-            <div style={{ fontSize: 13, color: '#374151' }}>Nombre: <strong>{altaExito.nombre}</strong></div>
-            <div style={{ fontSize: 13, color: '#374151' }}>Correo: <strong>{altaExito.email}</strong></div>
-            <div style={{ fontSize: 13, color: '#dc2626', fontFamily: 'monospace', fontWeight: 700, marginTop: 6 }}>Contraseña temporal: {altaExito.password}</div>
-            <div style={{ fontSize: 11, color: '#6b7280', marginTop: 6 }}>Entregue estas credenciales al elemento. Al iniciar sesión por primera vez deberá cambiar su contraseña.</div>
+            <div style={{ fontWeight: 700, color: '#085041', fontSize: 16, marginBottom: 6 }}>✅ Elemento registrado exitosamente</div>
+            <div style={{ fontSize: 15, color: '#374151' }}>Nombre: <strong>{altaExito.nombre}</strong></div>
+            <div style={{ fontSize: 15, color: '#374151' }}>Correo: <strong>{altaExito.email}</strong></div>
+            <div style={{ fontSize: 15, color: '#dc2626', fontFamily: 'monospace', fontWeight: 700, marginTop: 6 }}>Contraseña temporal: {altaExito.password}</div>
+            <div style={{ fontSize: 13, color: '#6b7280', marginTop: 6 }}>Entregue estas credenciales al elemento. Al iniciar sesión por primera vez deberá cambiar su contraseña.</div>
           </div>
         )}
 
@@ -575,7 +575,7 @@ export default function SubcoordAdmin({ perfil }) {
             <div><label style={labelStyle}>Teléfono personal</label><input style={inputStyle} placeholder="7471234567" value={formAlta.telefono_personal} onChange={e => setFormAlta({ ...formAlta, telefono_personal: e.target.value })} /></div>
 
             <div style={{ gridColumn: '1 / -1', borderTop: '2px solid #e8ecf1', paddingTop: 14 }}>
-              <div style={{ fontWeight: 700, color: COLORS.gold, fontSize: 13, marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 }}>Adscripción</div>
+              <div style={{ fontWeight: 700, color: COLORS.gold, fontSize: 15, marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 }}>Adscripción</div>
             </div>
             <div>
               <label style={labelStyle}>Grado escalafonario</label>
@@ -606,15 +606,15 @@ export default function SubcoordAdmin({ perfil }) {
             </div>
 
             <div style={{ gridColumn: '1 / -1', borderTop: '2px solid #e8ecf1', paddingTop: 14 }}>
-              <div style={{ fontWeight: 700, color: COLORS.gold, fontSize: 13, marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 }}>Credenciales de acceso</div>
+              <div style={{ fontWeight: 700, color: COLORS.gold, fontSize: 15, marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 }}>Credenciales de acceso</div>
             </div>
             <div>
               <label style={labelStyle}>Contraseña temporal *</label>
               <div style={{ display: 'flex', gap: 8 }}>
                 <input style={{ ...inputStyle, fontFamily: 'monospace', flex: 1, width: 'auto' }} value={passTemp} onChange={e => setPassTemp(e.target.value)} placeholder="FGE-59793-2026" />
-                <button type="button" style={{ ...btnSecondary, padding: '8px 14px', fontSize: 12, whiteSpace: 'nowrap' }} onClick={generarPass}>Generar</button>
+                <button type="button" style={{ ...btnSecondary, padding: '8px 14px', fontSize: 14, whiteSpace: 'nowrap' }} onClick={generarPass}>Generar</button>
               </div>
-              <div style={{ fontSize: 11, color: '#6b7280', marginTop: 4 }}>El elemento deberá cambiar esta contraseña en su primer ingreso.</div>
+              <div style={{ fontSize: 13, color: '#6b7280', marginTop: 4 }}>El elemento deberá cambiar esta contraseña en su primer ingreso.</div>
             </div>
           </div>
 
@@ -647,7 +647,7 @@ export default function SubcoordAdmin({ perfil }) {
     <div style={{ padding: '10px 0' }}>
       {error && (
         <div style={{ ...cardStyle, background: '#fef2f2', borderLeft: '4px solid #ef4444', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ color: '#dc2626', fontSize: 13 }}>{error}</span>
+          <span style={{ color: '#dc2626', fontSize: 15 }}>{error}</span>
           <button onClick={() => setError(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#dc2626' }}>✕</button>
         </div>
       )}
