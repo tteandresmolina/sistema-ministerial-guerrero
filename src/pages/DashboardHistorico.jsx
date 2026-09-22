@@ -92,7 +92,7 @@ export default function DashboardHistorico() {
               </span>
             </div>
             {perfil && (
-              <div style={{ color: C.gris, fontSize: 12, marginTop: 6, display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+              <div style={{ color: C.gris, fontSize: 14, marginTop: 6, display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                 <Shield size={13} color={C.dorado} />
                 <span style={{ color: C.doradoClaro }}>{perfil.nombre_completo}</span>
                 <span style={{ color: C.gris }}>·</span>
@@ -104,7 +104,7 @@ export default function DashboardHistorico() {
                     <span style={{
                       background: 'rgba(182,144,84,0.2)',
                       color: C.dorado,
-                      fontSize: 10,
+                      fontSize: 12,
                       padding: '2px 8px',
                       borderRadius: 10,
                       fontWeight: 600,
@@ -125,7 +125,7 @@ export default function DashboardHistorico() {
                 value={tipoPeriodo}
                 onChange={(e) => setTipoPeriodo(e.target.value)}
                 style={{
-                  fontSize: 12, border: `1px solid rgba(255,255,255,0.15)`, borderRadius: 8,
+                  fontSize: 14, border: `1px solid rgba(255,255,255,0.15)`, borderRadius: 8,
                   padding: '7px 12px 7px 30px', background: 'rgba(255,255,255,0.08)', color: C.blanco,
                   cursor: 'pointer', outline: 'none', appearance: 'none',
                 }}
@@ -145,7 +145,7 @@ export default function DashboardHistorico() {
                   value={fechaRef}
                   onChange={(e) => setFechaRef(e.target.value)}
                   style={{
-                    fontSize: 12, border: `1px solid rgba(255,255,255,0.15)`, borderRadius: 8,
+                    fontSize: 14, border: `1px solid rgba(255,255,255,0.15)`, borderRadius: 8,
                     padding: '7px 12px 7px 30px', background: 'rgba(255,255,255,0.08)', color: C.blanco,
                     outline: 'none',
                   }}
@@ -157,7 +157,7 @@ export default function DashboardHistorico() {
                   value={fechaRef.split('-')[0]}
                   onChange={(e) => setFechaRef(`${e.target.value}-01`)}
                   style={{
-                    fontSize: 12, border: `1px solid rgba(255,255,255,0.15)`, borderRadius: 8,
+                    fontSize: 14, border: `1px solid rgba(255,255,255,0.15)`, borderRadius: 8,
                     padding: '7px 12px 7px 30px', background: 'rgba(255,255,255,0.08)', color: C.blanco,
                     width: 90, outline: 'none',
                   }}
@@ -169,7 +169,7 @@ export default function DashboardHistorico() {
               onClick={recargar}
               disabled={loading}
               style={{
-                fontSize: 12, padding: '7px 16px', background: C.dorado, color: C.blanco,
+                fontSize: 14, padding: '7px 16px', background: C.dorado, color: C.blanco,
                 border: 'none', borderRadius: 8, cursor: loading ? 'wait' : 'pointer',
                 fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6,
                 opacity: loading ? 0.6 : 1, transition: 'opacity 0.2s',
@@ -185,14 +185,14 @@ export default function DashboardHistorico() {
         <div style={{ marginTop: 12, display: 'flex', gap: 8 }}>
           <span style={{
             background: 'rgba(182,144,84,0.15)', color: C.dorado,
-            fontSize: 11, fontWeight: 600, padding: '4px 12px', borderRadius: 20,
+            fontSize: 13, fontWeight: 600, padding: '4px 12px', borderRadius: 20,
           }}>
             {rango.label}
           </span>
           {!esRolSuperior && (
             <span style={{
               background: 'rgba(255,255,255,0.08)', color: C.gris,
-              fontSize: 11, padding: '4px 12px', borderRadius: 20,
+              fontSize: 13, padding: '4px 12px', borderRadius: 20,
             }}>
               Incluye historial de otras regiones
             </span>
@@ -206,7 +206,7 @@ export default function DashboardHistorico() {
         {error && (
           <div style={{
             background: C.rojoClaro, border: `1px solid ${C.rojo}33`, color: C.rojo,
-            padding: '12px 16px', borderRadius: 10, fontSize: 13, marginBottom: 16,
+            padding: '12px 16px', borderRadius: 10, fontSize: 15, marginBottom: 16,
           }}>
             Error al cargar datos: {error}
           </div>
@@ -235,11 +235,11 @@ export default function DashboardHistorico() {
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke={C.grisClaro} />
-                  <XAxis dataKey="fecha" tick={{ fontSize: 10, fill: C.textoSuave }}
+                  <XAxis dataKey="fecha" tick={{ fontSize: 12, fill: C.textoSuave }}
                     tickFormatter={(v) => { const d = new Date(v + 'T00:00:00'); return `${d.getDate()}/${d.getMonth()+1}`; }}
                   />
-                  <YAxis tick={{ fontSize: 10, fill: C.textoSuave }} allowDecimals={false} />
-                  <Tooltip contentStyle={{ fontSize: 11, borderRadius: 8, border: `1px solid ${C.borde}` }}
+                  <YAxis tick={{ fontSize: 12, fill: C.textoSuave }} allowDecimals={false} />
+                  <Tooltip contentStyle={{ fontSize: 13, borderRadius: 8, border: `1px solid ${C.borde}` }}
                     labelFormatter={(v) => { const d = new Date(v+'T00:00:00'); return d.toLocaleDateString('es-MX',{weekday:'short',day:'numeric',month:'short'}); }}
                   />
                   <Area type="monotone" dataKey="cantidad" stroke={C.azulOscuro} strokeWidth={2} fill="url(#gradArea)" name="Detenciones" />
@@ -257,12 +257,12 @@ export default function DashboardHistorico() {
                     <Pie data={dataPie} cx="50%" cy="50%" innerRadius={40} outerRadius={65} dataKey="value" strokeWidth={2} stroke={C.blanco}>
                       {dataPie.map((entry, i) => <Cell key={i} fill={entry.color} />)}
                     </Pie>
-                    <Tooltip contentStyle={{ fontSize: 11, borderRadius: 8 }} />
+                    <Tooltip contentStyle={{ fontSize: 13, borderRadius: 8 }} />
                   </PieChart>
                 </ResponsiveContainer>
                 <div style={{ marginTop: 8 }}>
                   {dataPie.map((item, i) => (
-                    <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '4px 0', fontSize: 12 }}>
+                    <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '4px 0', fontSize: 14 }}>
                       <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                         <span style={{ width: 8, height: 8, borderRadius: '50%', background: item.color, display: 'inline-block' }} />
                         <span style={{ color: C.textoNormal }}>{item.name}</span>
@@ -285,9 +285,9 @@ export default function DashboardHistorico() {
                 <ResponsiveContainer width="100%" height={240}>
                   <BarChart data={dataRegiones} layout="vertical" margin={{ left: 10 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke={C.grisClaro} horizontal={false} />
-                    <XAxis type="number" tick={{ fontSize: 10, fill: C.textoSuave }} allowDecimals={false} />
-                    <YAxis dataKey="name" type="category" tick={{ fontSize: 10, fill: C.textoSuave }} width={120} />
-                    <Tooltip contentStyle={{ fontSize: 11, borderRadius: 8 }} />
+                    <XAxis type="number" tick={{ fontSize: 12, fill: C.textoSuave }} allowDecimals={false} />
+                    <YAxis dataKey="name" type="category" tick={{ fontSize: 12, fill: C.textoSuave }} width={120} />
+                    <Tooltip contentStyle={{ fontSize: 13, borderRadius: 8 }} />
                     <Bar dataKey="cantidad" radius={[0, 4, 4, 0]} name="Detenciones">
                       {dataRegiones.map((entry, i) => (
                         <Cell key={i} fill={entry.esMia ? C.azulOscuro : C.gris} fillOpacity={entry.esMia ? 1 : 0.5} />
@@ -296,7 +296,7 @@ export default function DashboardHistorico() {
                   </BarChart>
                 </ResponsiveContainer>
                 {!esRolSuperior && (
-                  <div style={{ display: 'flex', gap: 16, marginTop: 8, fontSize: 10, color: C.textoSuave }}>
+                  <div style={{ display: 'flex', gap: 16, marginTop: 8, fontSize: 12, color: C.textoSuave }}>
                     <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                       <span style={{ width: 10, height: 10, borderRadius: 2, background: C.azulOscuro }} /> Mi región (completo)
                     </span>
@@ -317,7 +317,7 @@ export default function DashboardHistorico() {
                   const pct = metricas.total > 0 ? Math.round((d.cantidad / metricas.total) * 100) : 0;
                   return (
                     <div key={i} style={{ marginBottom: 10 }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 4 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14, marginBottom: 4 }}>
                         <span style={{ color: C.textoNormal, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '70%' }}>{d.nombre}</span>
                         <span style={{ color: C.textoSuave, whiteSpace: 'nowrap' }}>
                           {d.cantidad} <span style={{ color: C.gris }}>({pct}%)</span>
@@ -339,7 +339,7 @@ export default function DashboardHistorico() {
 
         {/* ─── Tabla de registros ─────────────────────── */}
         <Panel titulo={`Últimos registros del periodo`} icono={<Shield size={14} color={C.dorado} />}
-          extra={<span style={{ fontSize: 11, color: C.textoSuave }}>{detenidos.length} registros</span>}>
+          extra={<span style={{ fontSize: 13, color: C.textoSuave }}>{detenidos.length} registros</span>}>
           <div style={{ overflowX: 'auto' }}>
             <TablaDetenidos
               detenidos={detenidos.slice(0, 25)}
@@ -371,8 +371,8 @@ function Tarjeta({ icono, titulo, valor, color, bgIcon, subtexto, variante = 'no
         {icono}
       </div>
       <div style={{ fontSize: 26, fontWeight: 800, color: color, lineHeight: 1 }}>{valor}</div>
-      <div style={{ fontSize: 11, color: C.textoSuave, fontWeight: 500 }}>{titulo}</div>
-      {subtexto && <div style={{ fontSize: 10, color: C.gris, marginTop: -4 }}>{subtexto}</div>}
+      <div style={{ fontSize: 13, color: C.textoSuave, fontWeight: 500 }}>{titulo}</div>
+      {subtexto && <div style={{ fontSize: 12, color: C.gris, marginTop: -4 }}>{subtexto}</div>}
     </div>
   );
 }
@@ -389,7 +389,7 @@ function Panel({ titulo, icono, children, extra }) {
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           {icono}
-          <span style={{ fontSize: 13, fontWeight: 700, color: C.textoFuerte, letterSpacing: 0.3 }}>{titulo}</span>
+          <span style={{ fontSize: 15, fontWeight: 700, color: C.textoFuerte, letterSpacing: 0.3 }}>{titulo}</span>
         </div>
         {extra}
       </div>
@@ -401,16 +401,16 @@ function Panel({ titulo, icono, children, extra }) {
 }
 
 function TablaDetenidos({ detenidos, getEstatus, esRolSuperior, loading }) {
-  if (loading) return <div style={{ padding: '40px 0', textAlign: 'center', fontSize: 13, color: C.textoSuave }}>Cargando…</div>;
-  if (!detenidos.length) return <div style={{ padding: '40px 0', textAlign: 'center', fontSize: 13, color: C.textoSuave }}>Sin registros en este periodo</div>;
+  if (loading) return <div style={{ padding: '40px 0', textAlign: 'center', fontSize: 15, color: C.textoSuave }}>Cargando…</div>;
+  if (!detenidos.length) return <div style={{ padding: '40px 0', textAlign: 'center', fontSize: 15, color: C.textoSuave }}>Sin registros en este periodo</div>;
 
   const thStyle = {
-    padding: '10px 12px', fontSize: 10, fontWeight: 700, color: C.textoSuave,
+    padding: '13px 14px', fontSize: 12, fontWeight: 700, color: C.textoSuave,
     textTransform: 'uppercase', letterSpacing: 1, textAlign: 'left',
     borderBottom: `2px solid ${C.grisClaro}`, whiteSpace: 'nowrap',
     background: C.grisClaro,
   };
-  const tdBase = { padding: '10px 12px', fontSize: 12, borderBottom: `1px solid ${C.grisClaro}`, verticalAlign: 'middle' };
+  const tdBase = { padding: '13px 14px', fontSize: 14, borderBottom: `1px solid ${C.grisClaro}`, verticalAlign: 'middle' };
 
   return (
     <table style={{ width: '100%', borderCollapse: 'collapse' }}>
@@ -435,12 +435,12 @@ function TablaDetenidos({ detenidos, getEstatus, esRolSuperior, loading }) {
             <tr key={d.id} style={{ background: esMia ? C.blanco : '#fafbfc' }}>
               <td style={{ ...tdBase, fontWeight: 600, color: C.textoFuerte }}>{d.nombre || '—'}</td>
               <td style={{ ...tdBase, color: C.textoNormal }}>{d.alias || '—'}</td>
-              <td style={{ ...tdBase, color: C.textoNormal, fontFamily: 'monospace', fontSize: 11 }}>{d.carpeta_investigacion || '—'}</td>
+              <td style={{ ...tdBase, color: C.textoNormal, fontFamily: 'monospace', fontSize: 13 }}>{d.carpeta_investigacion || '—'}</td>
               <td style={{ ...tdBase, color: C.textoNormal, maxWidth: 180, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{d.delito || '—'}</td>
               <td style={tdBase}>
                 <span style={{
                   display: 'inline-flex', alignItems: 'center', gap: 4,
-                  fontSize: 10, fontWeight: 600, padding: '3px 10px', borderRadius: 20,
+                  fontSize: 12, fontWeight: 600, padding: '3px 10px', borderRadius: 20,
                   background: esMia ? C.azulClaro : C.grisClaro,
                   color: esMia ? C.azulOscuro : C.textoSuave,
                   border: esMia ? `1px solid ${C.azulOscuro}22` : `1px solid ${C.borde}`,
@@ -456,7 +456,7 @@ function TablaDetenidos({ detenidos, getEstatus, esRolSuperior, loading }) {
               </td>
               <td style={tdBase}>
                 <span style={{
-                  display: 'inline-block', fontSize: 10, fontWeight: 600,
+                  display: 'inline-block', fontSize: 12, fontWeight: 600,
                   padding: '3px 10px', borderRadius: 20,
                   background: est.color + '18', color: est.color,
                   border: `1px solid ${est.color}33`,
@@ -464,24 +464,24 @@ function TablaDetenidos({ detenidos, getEstatus, esRolSuperior, loading }) {
                   {est.nombre}
                 </span>
               </td>
-              <td style={{ ...tdBase, fontSize: 11, color: C.textoSuave }}>
+              <td style={{ ...tdBase, fontSize: 13, color: C.textoSuave }}>
                 {d.fecha_limite_48h
                   ? new Date(d.fecha_limite_48h).toLocaleString('es-MX', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })
                   : (!esMia && !esRolSuperior
-                    ? <span style={{ color: C.gris, fontStyle: 'italic', fontSize: 10 }}>restringido</span>
+                    ? <span style={{ color: C.gris, fontStyle: 'italic', fontSize: 12 }}>restringido</span>
                     : '—')
                 }
               </td>
               <td style={tdBase}>
                 {esMia || esRolSuperior ? (
                   <span style={{
-                    fontSize: 10, fontWeight: 700, color: C.verde,
+                    fontSize: 12, fontWeight: 700, color: C.verde,
                     background: C.verdeClaro, padding: '3px 10px', borderRadius: 20,
                     border: `1px solid ${C.verde}33`,
                   }}>Completo</span>
                 ) : (
                   <span style={{
-                    fontSize: 10, fontWeight: 600, color: C.textoSuave,
+                    fontSize: 12, fontWeight: 600, color: C.textoSuave,
                     background: C.grisClaro, padding: '3px 10px', borderRadius: 20,
                     border: `1px solid ${C.borde}`,
                   }}>General</span>
@@ -497,7 +497,7 @@ function TablaDetenidos({ detenidos, getEstatus, esRolSuperior, loading }) {
 
 function Vacio({ loading }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 150, fontSize: 13, color: C.textoSuave }}>
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 150, fontSize: 15, color: C.textoSuave }}>
       {loading ? 'Cargando datos…' : 'Sin datos para este periodo'}
     </div>
   );
