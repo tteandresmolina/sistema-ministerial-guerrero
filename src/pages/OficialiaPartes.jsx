@@ -13,13 +13,13 @@ import { useOficialiaPartes } from '../hooks/useOficialiaPartes';
 
 const COLORS = { primary: '#001a4d', gold: '#b69054', white: '#ffffff', bg: '#f4f6fb' };
 const cardStyle = { background: COLORS.white, borderRadius: 10, padding: 18, boxShadow: '0 2px 8px rgba(0,0,0,0.07)', marginBottom: 14 };
-const labelStyle = { display: 'block', fontWeight: 600, fontSize: 13, color: COLORS.primary, marginBottom: 4 };
-const inputStyle = { width: '100%', padding: '9px 12px', borderRadius: 7, border: '1.5px solid #c7cfe0', fontSize: 14, boxSizing: 'border-box', outline: 'none', fontFamily: 'inherit' };
+const labelStyle = { display: 'block', fontWeight: 700, fontSize: 15, color: COLORS.primary, marginBottom: 6 };
+const inputStyle = { width: '100%', padding: '13px 14px', borderRadius: 7, border: '2px solid #c7cfe0', fontSize: 16, boxSizing: 'border-box', outline: 'none', fontFamily: 'inherit', minHeight: 44 };
 const selectStyle = { ...inputStyle, background: COLORS.white };
 const textareaStyle = { ...inputStyle, minHeight: 70, resize: 'vertical' };
-const btnPrimary = { background: COLORS.gold, color: COLORS.white, border: 'none', borderRadius: 7, padding: '10px 22px', fontWeight: 700, fontSize: 14, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 7 };
+const btnPrimary = { background: COLORS.gold, color: COLORS.white, border: 'none', borderRadius: 7, padding: '14px 26px', fontWeight: 700, fontSize: 16, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 8, minHeight: 44 };
 const btnSecondary = { ...btnPrimary, background: 'transparent', color: COLORS.primary, border: `1.5px solid ${COLORS.primary}` };
-const badge = (color) => ({ display: 'inline-block', padding: '3px 10px', borderRadius: 12, fontSize: 11, fontWeight: 700, color: COLORS.white, background: color, textTransform: 'uppercase', letterSpacing: 0.5 });
+const badge = (color) => ({ display: 'inline-block', padding: '3px 10px', borderRadius: 12, fontSize: 13, fontWeight: 700, color: COLORS.white, background: color, textTransform: 'uppercase', letterSpacing: 0.5 });
 
 const TIPOS_DOC = [
   { value: 'oficio_investigacion', label: 'Oficio de Investigación del MP', icon: FileText, desc: 'Instrucciones del MP al PIM — se asigna al agente de guardia' },
@@ -101,7 +101,7 @@ export default function OficialiaPartes({ perfil }) {
           <div key={i} style={{ ...cardStyle, padding: 14, textAlign: 'center', borderLeft: `4px solid ${c.color}`, marginBottom: 0 }}>
             <c.icon size={20} color={c.color} style={{ marginBottom: 4 }} />
             <div style={{ fontSize: 22, fontWeight: 800, color: c.color }}>{c.value}</div>
-            <div style={{ fontSize: 11, color: '#6b7280', fontWeight: 600 }}>{c.label}</div>
+            <div style={{ fontSize: 13, color: '#6b7280', fontWeight: 600 }}>{c.label}</div>
           </div>
         ))}
       </div>
@@ -120,12 +120,12 @@ export default function OficialiaPartes({ perfil }) {
       <div style={{ ...cardStyle, background: '#fef2f2', borderLeft: '4px solid #ef4444' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
           <AlertTriangle size={18} color="#ef4444" />
-          <span style={{ fontWeight: 700, color: '#dc2626', fontSize: 14 }}>{criticos.length} documento(s) vencido(s) o por vencer</span>
+          <span style={{ fontWeight: 700, color: '#dc2626', fontSize: 16 }}>{criticos.length} documento(s) vencido(s) o por vencer</span>
         </div>
         {criticos.slice(0, 4).map((d, i) => {
           const h = horasRestantes(d.fecha_limite);
           return (
-            <div key={i} style={{ fontSize: 12, color: '#7f1d1d', marginBottom: 4 }}>
+            <div key={i} style={{ fontSize: 14, color: '#7f1d1d', marginBottom: 4 }}>
               <strong>{d.folio_interno}</strong> — {getTipoLabel(d.tipo_documento)} · {d.nombre_asignado || 'Sin asignar'}
               <span style={{ marginLeft: 6, color: h < 0 ? '#dc2626' : '#f59e0b', fontWeight: 700 }}>
                 ({h < 0 ? `Venció hace ${Math.abs(Math.round(h))}h` : `${Math.round(h)}h restantes`})
@@ -181,7 +181,7 @@ export default function OficialiaPartes({ perfil }) {
       {documentos.length === 0 ? (
         <div style={{ ...cardStyle, textAlign: 'center', padding: 40, color: '#9ca3af' }}>
           <Inbox size={40} style={{ marginBottom: 10, opacity: 0.4 }} />
-          <div style={{ fontSize: 14 }}>{esMando ? 'No hay documentos con los filtros actuales' : 'No tienes documentos asignados'}</div>
+          <div style={{ fontSize: 16 }}>{esMando ? 'No hay documentos con los filtros actuales' : 'No tienes documentos asignados'}</div>
         </div>
       ) : (
         documentos.map(d => {
@@ -196,25 +196,25 @@ export default function OficialiaPartes({ perfil }) {
                 <div style={{ flex: 1, minWidth: 220 }}>
                   <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 6, flexWrap: 'wrap' }}>
                     <TipoIcon size={16} color={getTipoColor(d.tipo_documento)} />
-                    <span style={{ fontWeight: 800, fontSize: 14, color: COLORS.primary, fontFamily: 'monospace' }}>{d.folio_interno}</span>
+                    <span style={{ fontWeight: 800, fontSize: 16, color: COLORS.primary, fontFamily: 'monospace' }}>{d.folio_interno}</span>
                     <span style={badge(getEstatusColor(d.estatus))}>{(d.estatus || '').replace('_', ' ')}</span>
                     {d.prioridad !== 'normal' && <span style={badge(getPrioridadColor(d.prioridad))}>{d.prioridad}</span>}
                   </div>
-                  <div style={{ fontSize: 13, color: '#374151', fontWeight: 600, marginBottom: 4 }}>{d.asunto}</div>
-                  <div style={{ fontSize: 12, color: '#6b7280' }}>
+                  <div style={{ fontSize: 15, color: '#374151', fontWeight: 600, marginBottom: 4 }}>{d.asunto}</div>
+                  <div style={{ fontSize: 14, color: '#6b7280' }}>
                     {getTipoLabel(d.tipo_documento)}
                     {d.carpeta_investigacion && <span style={{ fontFamily: 'monospace' }}> · C.I. {d.carpeta_investigacion}</span>}
                     {d.numero_oficio && <span> · Oficio #{d.numero_oficio}</span>}
                   </div>
-                  <div style={{ fontSize: 12, color: '#6b7280', marginTop: 2 }}>
+                  <div style={{ fontSize: 14, color: '#6b7280', marginTop: 2 }}>
                     <User size={11} style={{ verticalAlign: 'middle' }} /> Asignado: <strong>{d.nombre_asignado || 'Sin asignar'}</strong>
                     {d.fecha_acuse && <span style={{ color: '#3b82f6' }}> · ✓ Enterado {formatFecha(d.fecha_acuse)}</span>}
                   </div>
                 </div>
                 <div style={{ textAlign: 'right', minWidth: 130 }}>
-                  <div style={{ fontSize: 11, color: '#9ca3af' }}>Recibido: {formatFecha(d.fecha_recepcion)}</div>
+                  <div style={{ fontSize: 13, color: '#9ca3af' }}>Recibido: {formatFecha(d.fecha_recepcion)}</div>
                   {d.fecha_limite && d.estatus !== 'concluido' && (
-                    <div style={{ fontSize: 11, marginTop: 4, fontWeight: 700, color: h < 0 ? '#dc2626' : h < 12 ? '#f59e0b' : '#6b7280' }}>
+                    <div style={{ fontSize: 13, marginTop: 4, fontWeight: 700, color: h < 0 ? '#dc2626' : h < 12 ? '#f59e0b' : '#6b7280' }}>
                       <Clock size={12} style={{ verticalAlign: 'middle' }} />
                       {h < 0 ? ` Venció hace ${Math.abs(Math.round(h))}h` : ` ${Math.round(h)}h restantes`}
                     </div>
@@ -240,7 +240,7 @@ export default function OficialiaPartes({ perfil }) {
 
         <div style={cardStyle}>
           {/* Selector de tipo */}
-          <div style={{ fontWeight: 700, color: COLORS.gold, fontSize: 13, marginBottom: 10, textTransform: 'uppercase', letterSpacing: 1 }}>Tipo de Documento</div>
+          <div style={{ fontWeight: 700, color: COLORS.gold, fontSize: 15, marginBottom: 10, textTransform: 'uppercase', letterSpacing: 1 }}>Tipo de Documento</div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 10, marginBottom: 16 }}>
             {TIPOS_DOC.map(t => (
               <button key={t.value} type="button" onClick={() => setForm({ ...form, tipo_documento: t.value })}
@@ -249,16 +249,16 @@ export default function OficialiaPartes({ perfil }) {
                   border: form.tipo_documento === t.value ? `2px solid ${getTipoColor(t.value)}` : '1.5px solid #c7cfe0',
                   background: form.tipo_documento === t.value ? getTipoColor(t.value) + '10' : COLORS.white,
                 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontWeight: 700, fontSize: 13, color: getTipoColor(t.value) }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontWeight: 700, fontSize: 15, color: getTipoColor(t.value) }}>
                   <t.icon size={16} /> {t.label}
                 </div>
-                <div style={{ fontSize: 11, color: '#6b7280', marginTop: 4 }}>{t.desc}</div>
+                <div style={{ fontSize: 13, color: '#6b7280', marginTop: 4 }}>{t.desc}</div>
               </button>
             ))}
           </div>
 
           {form.tipo_documento === 'amparo_judicial' && (
-            <div style={{ background: '#fef2f2', border: '1px solid #ef444440', borderRadius: 8, padding: 10, marginBottom: 14, fontSize: 12, color: '#7f1d1d', display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div style={{ background: '#fef2f2', border: '1px solid #ef444440', borderRadius: 8, padding: 10, marginBottom: 14, fontSize: 14, color: '#7f1d1d', display: 'flex', alignItems: 'center', gap: 8 }}>
               <Scale size={16} color="#dc2626" />
               Los amparos y requerimientos judiciales tienen plazo legal obligatorio. Captura el plazo en horas para activar el semáforo.
             </div>
@@ -281,7 +281,7 @@ export default function OficialiaPartes({ perfil }) {
             <div style={{ gridColumn: '1 / -1' }}><label style={labelStyle}>Descripción / Instrucciones</label><textarea style={textareaStyle} placeholder="Detalle de las instrucciones contenidas en el documento..." value={form.descripcion} onChange={e => setForm({ ...form, descripcion: e.target.value })} /></div>
 
             <div style={{ gridColumn: '1 / -1', borderTop: '2px solid #e8ecf1', paddingTop: 14 }}>
-              <div style={{ fontWeight: 700, color: COLORS.gold, fontSize: 13, marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 }}>Prioridad, Plazo y Asignación</div>
+              <div style={{ fontWeight: 700, color: COLORS.gold, fontSize: 15, marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 }}>Prioridad, Plazo y Asignación</div>
             </div>
             <div>
               <label style={labelStyle}>Prioridad</label>
@@ -301,20 +301,20 @@ export default function OficialiaPartes({ perfil }) {
                 <option value="">— Seleccionar agente —</option>
                 {agentes.map(a => <option key={a.id} value={a.id}>{a.nombre_completo}{a.grado ? ` — ${a.grado}` : ''}{a.zona ? ` (${a.zona})` : ''}</option>)}
               </select>
-              <div style={{ fontSize: 11, color: '#6b7280', marginTop: 4 }}>El agente recibirá el documento en su bandeja y deberá confirmar ENTERADO.</div>
+              <div style={{ fontSize: 13, color: '#6b7280', marginTop: 4 }}>El agente recibirá el documento en su bandeja y deberá confirmar ENTERADO.</div>
             </div>
           </div>
 
           {/* Archivo escaneado */}
           <div style={{ borderTop: '2px solid #e8ecf1', paddingTop: 14, marginTop: 18 }}>
-            <div style={{ fontWeight: 700, color: COLORS.gold, fontSize: 13, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6, textTransform: 'uppercase', letterSpacing: 1 }}>
+            <div style={{ fontWeight: 700, color: COLORS.gold, fontSize: 15, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6, textTransform: 'uppercase', letterSpacing: 1 }}>
               <FileText size={14} /> Documento Escaneado
             </div>
-            <p style={{ fontSize: 11, color: '#666', marginBottom: 10 }}>Sube el documento debidamente acusado con sellos y firmas. Formatos: PDF, JPG, PNG · Máximo 5MB</p>
+            <p style={{ fontSize: 13, color: '#666', marginBottom: 10 }}>Sube el documento debidamente acusado con sellos y firmas. Formatos: PDF, JPG, PNG · Máximo 5MB</p>
             <div style={{ border: '2px dashed #c7cfe0', borderRadius: 10, padding: 20, textAlign: 'center', cursor: 'pointer', background: COLORS.bg }}
               onClick={() => document.getElementById('file-opv').click()}>
               <FileText size={24} color="#999" />
-              <p style={{ fontSize: 12, color: '#999', margin: '6px 0 0 0' }}>Clic para seleccionar archivo</p>
+              <p style={{ fontSize: 14, color: '#999', margin: '6px 0 0 0' }}>Clic para seleccionar archivo</p>
               <input id="file-opv" type="file" accept="image/jpeg,image/png,application/pdf" style={{ display: 'none' }}
                 onChange={e => {
                   const f = e.target.files[0];
@@ -326,8 +326,8 @@ export default function OficialiaPartes({ perfil }) {
             </div>
             {archivo && (
               <div style={{ marginTop: 8, padding: '8px 12px', background: '#f0fdf4', borderRadius: 8, border: '1px solid #22c55e44', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <span style={{ fontSize: 12, color: '#085041' }}>{archivo.name} ({(archivo.size / 1024).toFixed(0)} KB)</span>
-                <button onClick={() => setArchivo(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#dc3545', fontSize: 12 }}>✕</button>
+                <span style={{ fontSize: 14, color: '#085041' }}>{archivo.name} ({(archivo.size / 1024).toFixed(0)} KB)</span>
+                <button onClick={() => setArchivo(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#dc3545', fontSize: 14 }}>✕</button>
               </div>
             )}
           </div>
@@ -376,7 +376,7 @@ export default function OficialiaPartes({ perfil }) {
         {d.fecha_limite && d.estatus !== 'concluido' && (
           <div style={{ ...cardStyle, background: h < 0 ? '#fef2f2' : h < 12 ? '#fffbeb' : '#f0fdf4', borderLeft: `4px solid ${h < 0 ? '#ef4444' : h < 12 ? '#f59e0b' : '#22c55e'}`, display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px' }}>
             <Clock size={16} color={h < 0 ? '#dc2626' : h < 12 ? '#b45309' : '#085041'} />
-            <span style={{ fontSize: 13, fontWeight: 700, color: h < 0 ? '#dc2626' : h < 12 ? '#b45309' : '#085041' }}>
+            <span style={{ fontSize: 15, fontWeight: 700, color: h < 0 ? '#dc2626' : h < 12 ? '#b45309' : '#085041' }}>
               {h < 0 ? `PLAZO VENCIDO hace ${Math.abs(Math.round(h))} horas` : `Plazo: ${Math.round(h)} horas restantes (límite ${formatFecha(d.fecha_limite)})`}
             </span>
           </div>
@@ -384,18 +384,18 @@ export default function OficialiaPartes({ perfil }) {
 
         <div style={cardStyle}>
           <div style={{ fontSize: 15, fontWeight: 700, color: COLORS.primary, marginBottom: 10 }}>{d.asunto}</div>
-          {d.descripcion && <div style={{ fontSize: 13, color: '#374151', lineHeight: 1.6, marginBottom: 14, padding: 12, background: '#f9fafb', borderRadius: 7 }}>{d.descripcion}</div>}
+          {d.descripcion && <div style={{ fontSize: 15, color: '#374151', lineHeight: 1.6, marginBottom: 14, padding: 12, background: '#f9fafb', borderRadius: 7 }}>{d.descripcion}</div>}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
             {fields.filter(f => f[1]).map(([label, value, Icon], i) => (
               <div key={i} style={{ padding: '8px 0', borderBottom: '1px solid #f3f4f6' }}>
-                <div style={{ fontSize: 11, color: '#9ca3af', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}><Icon size={12} /> {label}</div>
-                <div style={{ fontSize: 14, color: COLORS.primary, fontWeight: 500, marginTop: 2 }}>{value}</div>
+                <div style={{ fontSize: 13, color: '#9ca3af', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}><Icon size={12} /> {label}</div>
+                <div style={{ fontSize: 16, color: COLORS.primary, fontWeight: 500, marginTop: 2 }}>{value}</div>
               </div>
             ))}
           </div>
           {d.archivo_url && (
             <a href={d.archivo_url} target="_blank" rel="noopener noreferrer"
-              style={{ display: 'inline-flex', alignItems: 'center', gap: 6, marginTop: 14, background: '#f5ede0', border: '1px solid #b6905440', borderRadius: 7, padding: '10px 16px', color: COLORS.primary, fontSize: 13, fontWeight: 700, textDecoration: 'none' }}>
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 6, marginTop: 14, background: '#f5ede0', border: '1px solid #b6905440', borderRadius: 7, padding: '10px 16px', color: COLORS.primary, fontSize: 15, fontWeight: 700, textDecoration: 'none' }}>
               <Eye size={15} color={COLORS.gold} /> Ver documento escaneado {d.nombre_archivo ? `(${d.nombre_archivo})` : ''}
             </a>
           )}
@@ -403,7 +403,7 @@ export default function OficialiaPartes({ perfil }) {
 
         {/* ── ACCIONES según rol y estatus ── */}
         <div style={cardStyle}>
-          <div style={{ fontWeight: 700, color: COLORS.gold, fontSize: 13, marginBottom: 12, textTransform: 'uppercase', letterSpacing: 1 }}>Acciones</div>
+          <div style={{ fontWeight: 700, color: COLORS.gold, fontSize: 15, marginBottom: 12, textTransform: 'uppercase', letterSpacing: 1 }}>Acciones</div>
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
 
             {esAsignado && d.estatus === 'pendiente' && (
@@ -432,7 +432,7 @@ export default function OficialiaPartes({ perfil }) {
           </div>
 
           {d.estatus === 'pendiente' && !esAsignado && (
-            <div style={{ marginTop: 10, fontSize: 12, color: '#6b7280' }}>Esperando acuse de enterado de <strong>{d.nombre_asignado}</strong>.</div>
+            <div style={{ marginTop: 10, fontSize: 14, color: '#6b7280' }}>Esperando acuse de enterado de <strong>{d.nombre_asignado}</strong>.</div>
           )}
 
           {reasignando && (
@@ -445,7 +445,7 @@ export default function OficialiaPartes({ perfil }) {
                 </select>
                 <button style={btnPrimary} onClick={handleReasignar} disabled={loading}><ArrowRightLeft size={15} /> Confirmar</button>
               </div>
-              <div style={{ fontSize: 11, color: '#854f0b', marginTop: 6 }}>Al reasignar, el estatus regresa a PENDIENTE y el nuevo agente deberá confirmar enterado.</div>
+              <div style={{ fontSize: 13, color: '#854f0b', marginTop: 6 }}>Al reasignar, el estatus regresa a PENDIENTE y el nuevo agente deberá confirmar enterado.</div>
             </div>
           )}
         </div>
@@ -458,7 +458,7 @@ export default function OficialiaPartes({ perfil }) {
     <div style={{ padding: '10px 0' }}>
       {error && (
         <div style={{ ...cardStyle, background: '#fef2f2', borderLeft: '4px solid #ef4444', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ color: '#dc2626', fontSize: 13 }}>{error}</span>
+          <span style={{ color: '#dc2626', fontSize: 15 }}>{error}</span>
           <button onClick={() => setError(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#dc2626' }}>✕</button>
         </div>
       )}
