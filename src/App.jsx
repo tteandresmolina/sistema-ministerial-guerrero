@@ -384,24 +384,24 @@ export default function App() {
 
   return (
     <div style={{ minHeight: "100vh", background: "#f4f6f9", fontFamily: "'Trebuchet MS', sans-serif", color: "#4a5268" }}>
-      <div style={{ background: "#001a4d", borderBottom: "3px solid #b69054", padding: "12px 20px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+      <div style={{ background: "#001a4d", borderBottom: "3px solid #b69054", padding: "16px 22px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <img src="/logo-fge.png" alt="FGE Guerrero" style={{ width: 42, height: 42, borderRadius: "50%", border: "2px solid #b69054" }} />
+          <img src="/logo-fge.png" alt="FGE Guerrero" style={{ width: 48, height: 48, borderRadius: "50%", border: "2px solid #b69054" }} />
           <div>
-            <div style={{ color: "#ffffff", fontSize: 14, fontWeight: 700 }}>FGE GUERRERO — SISTEMA MINISTERIAL</div>
-<div style={{ color: "#b69054", fontSize: 9, letterSpacing: 2 }}>{["registro911","primerrespondiente","escenacrimen","indicios","victimastestigos","expediente"].includes(tabApp) ? "EXPEDIENTE DE INVESTIGACIÓN POLICIAL" : ["busqueda","detenidos"].includes(tabApp) ? "INDIVIDUALIZACIÓN DE DETENIDOS" : "ANÁLISIS E INTELIGENCIA CRIMINAL"}</div>
+            <div style={{ color: "#ffffff", fontSize: 19, fontWeight: 700 }}>FGE GUERRERO — SISTEMA MINISTERIAL</div>
+<div style={{ color: "#b69054", fontSize: 13, fontWeight: 600, letterSpacing: 1.5, marginTop: 2 }}>{["registro911","primerrespondiente","escenacrimen","indicios","victimastestigos","expediente"].includes(tabApp) ? "EXPEDIENTE DE INVESTIGACIÓN POLICIAL" : ["busqueda","detenidos"].includes(tabApp) ? "INDIVIDUALIZACIÓN DE DETENIDOS" : "ANÁLISIS E INTELIGENCIA CRIMINAL"}</div>
           </div>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
           {perfil && (
             <div style={{ textAlign: "right" }}>
-              <div style={{ color: "#ffffff", fontSize: 12, fontWeight: 600 }}>{perfil.nombre_completo}</div>
-              <span style={{ background: (rolColor[perfil.rol] || "#6b7280") + "22", color: rolColor[perfil.rol] || "#6b7280", border: `1px solid ${(rolColor[perfil.rol] || "#6b7280")}55`, borderRadius: 4, padding: "1px 8px", fontSize: 10, fontWeight: 700 }}>
+              <div style={{ color: "#ffffff", fontSize: 15, fontWeight: 700 }}>{perfil.nombre_completo}</div>
+              <span style={{ background: (rolColor[perfil.rol] || "#6b7280") + "22", color: rolColor[perfil.rol] || "#6b7280", border: `1px solid ${(rolColor[perfil.rol] || "#6b7280")}55`, borderRadius: 4, padding: "2px 10px", fontSize: 12, fontWeight: 700 }}>
                 {rolLabel[perfil.rol] || perfil.rol}
               </span>
             </div>
           )}
-          <button onClick={cerrarSesion} style={{ background: "transparent", border: "1px solid rgba(255,255,255,0.4)", borderRadius: 7, padding: "6px 12px", color: "#ffffff", fontSize: 11, fontWeight: 700, cursor: "pointer" }}>SALIR</button>
+          <button onClick={cerrarSesion} style={{ background: "transparent", border: "1.5px solid rgba(255,255,255,0.5)", borderRadius: 7, padding: "10px 18px", color: "#ffffff", fontSize: 14, fontWeight: 700, cursor: "pointer", minHeight: 44 }}>SALIR</button>
         </div>
       </div>
 
