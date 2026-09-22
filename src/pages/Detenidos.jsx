@@ -32,14 +32,21 @@ const tipologiaColor = { "Balístico": "#ef4444", "Narcóticos": "#a78bfa", "Tec
 // ESTILOS BASE — HOMOLOGADOS AL MÓDULO 2
 // ============================================================================
 const COLORS = { primary: '#001a4d', gold: '#b69054', white: '#ffffff', bg: '#f4f6fb' };
-const cardStyle = { background: COLORS.white, borderRadius: 10, padding: 18, boxShadow: '0 2px 8px rgba(0,0,0,0.07)', marginBottom: 14 };
-const labelStyle = { display: 'block', fontWeight: 600, fontSize: 13, color: COLORS.primary, marginBottom: 4 };
-const inputStyle = { width: '100%', padding: '9px 12px', borderRadius: 7, border: '1.5px solid #c7cfe0', fontSize: 14, boxSizing: 'border-box', outline: 'none', fontFamily: 'inherit', color: '#33394d', background: COLORS.white };
+
+// ============================================================================
+// ACCESIBILIDAD — mayoría de ministeriales en Guerrero son adultos mayores.
+// Tipografía más grande (16-18px mínimo), campos/botones más altos (44px+,
+// estándar táctil), mayor peso de fuente para mejor lectura en pantalla,
+// más aire entre elementos. La paleta de color NO se toca — ya pasa WCAG AA.
+// ============================================================================
+const cardStyle = { background: COLORS.white, borderRadius: 10, padding: 22, boxShadow: '0 2px 8px rgba(0,0,0,0.07)', marginBottom: 18 };
+const labelStyle = { display: 'block', fontWeight: 700, fontSize: 15, color: COLORS.primary, marginBottom: 6 };
+const inputStyle = { width: '100%', padding: '13px 14px', borderRadius: 7, border: '2px solid #c7cfe0', fontSize: 17, boxSizing: 'border-box', outline: 'none', fontFamily: 'inherit', color: '#1a1a1a', background: COLORS.white, minHeight: 44 };
 const selectStyle = { ...inputStyle };
-const textareaStyle = { ...inputStyle, minHeight: 60, resize: 'vertical' };
-const btnPrimary = { background: COLORS.gold, color: COLORS.white, border: 'none', borderRadius: 7, padding: '10px 22px', fontWeight: 700, fontSize: 14, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 7, justifyContent: 'center' };
-const btnSecondary = { ...btnPrimary, background: 'transparent', color: COLORS.primary, border: `1.5px solid ${COLORS.primary}` };
-const tituloSeccion = { color: COLORS.gold, fontSize: 13, fontWeight: 800, letterSpacing: 1.5, marginBottom: 14, paddingBottom: 10, borderBottom: '2px solid #b69054', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: 8 };
+const textareaStyle = { ...inputStyle, minHeight: 72, resize: 'vertical' };
+const btnPrimary = { background: COLORS.gold, color: COLORS.white, border: 'none', borderRadius: 7, padding: '14px 26px', fontWeight: 700, fontSize: 16, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 8, justifyContent: 'center', minHeight: 44 };
+const btnSecondary = { ...btnPrimary, background: 'transparent', color: COLORS.primary, border: `2px solid ${COLORS.primary}` };
+const tituloSeccion = { color: COLORS.gold, fontSize: 15, fontWeight: 800, letterSpacing: 1, marginBottom: 16, paddingBottom: 12, borderBottom: '2px solid #b69054', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: 9 };
 
 // ============================================================================
 // URLs FIRMADAS — FIX C3
