@@ -12,7 +12,7 @@ import {
 import { useIndiciosEvidencia } from '../hooks/useIndiciosEvidencia';
 
 const C = {
-  darkBlue: '#001a4d', gold: '#b69054', lightGold: '#f5ede0',
+  darkBlue: '#001a4d', darkBlueSoft: '#0a2a63', gold: '#b69054', lightGold: '#f5ede0',
   white: '#ffffff', bg: '#f4f6fb', gray: '#666666', lightGray: '#e8ecf1',
   green: '#28a745', yellow: '#ffc107', red: '#dc3545', orange: '#fd7e14',
 };
@@ -257,7 +257,7 @@ export default function IndiciosEvidencia({ perfil }) {
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,26,77,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'flex-start', paddingTop: 30, zIndex: 1000, overflowY: 'auto' }} onClick={() => setShowForm(false)}>
           <div style={{ backgroundColor: C.white, borderRadius: 14, width: '100%', maxWidth: 700, boxShadow: '0 8px 32px rgba(0,0,0,0.2)', marginBottom: 40 }} onClick={e => e.stopPropagation()}>
 
-            <div style={{ backgroundColor: C.darkBlue, color: C.white, padding: '18px 24px', borderRadius: '14px 14px 0 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ backgroundColor: C.darkBlueSoft, color: C.white, padding: '18px 24px', borderRadius: '14px 14px 0 0', boxShadow: '0 3px 10px rgba(0,0,0,0.15)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}><Package size={20} /><span style={{ fontSize: 16, fontWeight: 700 }}>Nuevo Indicio / Evidencia</span></div>
               <X size={20} style={{ cursor: 'pointer' }} onClick={() => setShowForm(false)} />
             </div>
