@@ -3,8 +3,9 @@
 // Consulta rápida por apellidos + Registro con fotos e identificación visual
 // Fundamento: CNPP, Mandamientos Ministeriales FGE Guerrero
 // v3 — Fotos, carpeta judicial, terminología dual (acusatorio + inquisitivo)
+// v4 — Fix C3-secundario: bucket 'ordenes-aprehension' ahora privado, URLs firmadas
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Search, Plus, User, AlertTriangle, CheckCircle2, X, Send, RefreshCw,
   Eye, FileText, Shield, ChevronLeft, ChevronRight, Camera, Upload,
@@ -32,6 +33,48 @@ const st = {
   badge: (bg, clr) => ({ display: 'inline-block', padding: '4px 10px', borderRadius: 12, fontSize: 11, fontWeight: 600, backgroundColor: bg, color: clr }),
 };
 
+// ============================================================================
+// URLs FIRMADAS — el bucket 'ordenes-aprehension' ahora es PRIVADO.
+// Mismo mecanismo que en Detenidos.jsx: las URLs guardadas en la base tienen
+// el formato de getPublicUrl() pero ya no sirven directamente; hay que
+// canjearlas por una URL firmada temporal antes de mostrarlas. No se toca
+// la subida — getPublicUrl() solo arma un string, no hace ninguna llamada
+// de red, así que sigue funcionando igual para construir lo que se guarda.
+// ============================================================================
+const BUCKET_ORDENES = 'ordenes-aprehension';
+const RUTA_PUBLICA_PREFIJO_ORDENES = `/storage/v1/object/public/${BUCKET_ORDENES}/`;
+
+function rutaDesdeUrlPublicaOrdenes(urlPublica) {
+  if (!urlPublica) return null;
+  const idx = urlPublica.indexOf(RUTA_PUBLICA_PREFIJO_ORDENES);
+  if (idx === -1) return null;
+  return decodeURIComponent(urlPublica.slice(idx + RUTA_PUBLICA_PREFIJO_ORDENES.length));
+}
+
+async function firmarUrlsOrdenes(urlsPublicas, expiresIn = 3600) {
+  const pares = (urlsPublicas || [])
+    .map((url) => ({ url, ruta: rutaDesdeUrlPublicaOrdenes(url) }))
+    .filter((p) => p.ruta);
+  if (pares.length === 0) return {};
+  const { data, error } = await supabase.storage
+    .from(BUCKET_ORDENES)
+    .createSignedUrls(pares.map((p) => p.ruta), expiresIn);
+  if (error || !data) return {};
+  const mapa = {};
+  data.forEach((item, i) => {
+    if (item.signedUrl) mapa[pares[i].url] = item.signedUrl;
+  });
+  return mapa;
+}
+
+async function firmarUrlUnicaOrdenes(urlPublica, expiresIn = 3600) {
+  const ruta = rutaDesdeUrlPublicaOrdenes(urlPublica);
+  if (!ruta) return null;
+  const { data, error } = await supabase.storage.from(BUCKET_ORDENES).createSignedUrl(ruta, expiresIn);
+  if (error || !data) return null;
+  return data.signedUrl;
+}
+
 export default function OrdenesAprehension({ perfil }) {
   const { ordenes, loading, stats, buscarPorApellidos, crearOrden, actualizarOrden, fetchStats } = useOrdenesAprehension();
 
@@ -43,6 +86,20 @@ export default function OrdenesAprehension({ perfil }) {
   const [fotoFrente, setFotoFrente] = useState(null);
   const [fotoPerfil, setFotoPerfil] = useState(null);
   const [oficioArchivo, setOficioArchivo] = useState(null);
+  const [urlsFirmadas, setUrlsFirmadas] = useState({});
+
+  // Cada vez que llega o cambia la lista de resultados, firma de un jalón
+  // todas las URLs de fotos/oficios que traigan esos registros.
+  useEffect(() => {
+    if (!ordenes || ordenes.length === 0) { setUrlsFirmadas({}); return; }
+    const todasLasUrls = [];
+    ordenes.forEach((o) => {
+      if (o.foto_frente_url) todasLasUrls.push(o.foto_frente_url);
+      if (o.foto_perfil_url) todasLasUrls.push(o.foto_perfil_url);
+      if (o.oficio_mp_juez_url) todasLasUrls.push(o.oficio_mp_juez_url);
+    });
+    firmarUrlsOrdenes(todasLasUrls).then(setUrlsFirmadas);
+  }, [ordenes]);
 
   const emptyForm = {
     anio: new Date().getFullYear(), folio: '', comandancia: '',
@@ -95,7 +152,17 @@ export default function OrdenesAprehension({ perfil }) {
       if (fotoFrente) { const url = await subirArchivo(fotoFrente, 'fotos_frente', id); if (url) updates.foto_frente_url = url; }
       if (fotoPerfil) { const url = await subirArchivo(fotoPerfil, 'fotos_perfil', id); if (url) updates.foto_perfil_url = url; }
       if (oficioArchivo) { const url = await subirArchivo(oficioArchivo, 'oficios', id); if (url) updates.oficio_mp_juez_url = url; }
-      if (Object.keys(updates).length > 0) await actualizarOrden(id, updates);
+      if (Object.keys(updates).length > 0) {
+        await actualizarOrden(id, updates);
+        // Firma de inmediato las URLs recién subidas para que, si el usuario
+        // vuelve a buscar sin recargar, ya se muestren bien.
+        const nuevasFirmadas = {};
+        for (const url of Object.values(updates)) {
+          const firmada = await firmarUrlUnicaOrdenes(url);
+          if (firmada) nuevasFirmadas[url] = firmada;
+        }
+        setUrlsFirmadas((prev) => ({ ...prev, ...nuevasFirmadas }));
+      }
       setSaving(false);
       setMensaje({ tipo: 'ok', texto: 'Orden registrada con archivos adjuntos' });
       setForm(emptyForm); setFotoFrente(null); setFotoPerfil(null); setOficioArchivo(null);
@@ -195,7 +262,7 @@ export default function OrdenesAprehension({ perfil }) {
                   <div style={{ display: 'flex', gap: 20, alignItems: 'flex-start' }}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 8, flexShrink: 0 }}>
                       {ordenActual.foto_frente_url ? (
-                        <img src={ordenActual.foto_frente_url} alt="Frente" style={{ width: 120, height: 150, objectFit: 'cover', borderRadius: 10, border: `2px solid ${C.lightGray}` }} />
+                        <img src={urlsFirmadas[ordenActual.foto_frente_url] || ordenActual.foto_frente_url} alt="Frente" style={{ width: 120, height: 150, objectFit: 'cover', borderRadius: 10, border: `2px solid ${C.lightGray}` }} />
                       ) : (
                         <div style={{ width: 120, height: 150, borderRadius: 10, backgroundColor: C.bg, border: `2px dashed ${C.lightGray}`, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: C.gray }}>
                           <User size={40} />
@@ -203,7 +270,7 @@ export default function OrdenesAprehension({ perfil }) {
                         </div>
                       )}
                       {ordenActual.foto_perfil_url && (
-                        <img src={ordenActual.foto_perfil_url} alt="Perfil" style={{ width: 120, height: 90, objectFit: 'cover', borderRadius: 8, border: `1px solid ${C.lightGray}` }} />
+                        <img src={urlsFirmadas[ordenActual.foto_perfil_url] || ordenActual.foto_perfil_url} alt="Perfil" style={{ width: 120, height: 90, objectFit: 'cover', borderRadius: 8, border: `1px solid ${C.lightGray}` }} />
                       )}
                     </div>
                     <div style={{ flex: 1 }}>
@@ -245,7 +312,7 @@ export default function OrdenesAprehension({ perfil }) {
                         <div style={{ marginTop: 10, fontSize: 12, color: C.gray }}>Obs: {ordenActual.observaciones}</div>
                       )}
                       {ordenActual.oficio_mp_juez_url && (
-                        <a href={ordenActual.oficio_mp_juez_url} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, marginTop: 10, fontSize: 12, color: C.gold, textDecoration: 'none' }}>
+                        <a href={urlsFirmadas[ordenActual.oficio_mp_juez_url] || ordenActual.oficio_mp_juez_url} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, marginTop: 10, fontSize: 12, color: C.gold, textDecoration: 'none' }}>
                           <FileText size={13} /> Ver oficio MP→Juez (PDF)
                         </a>
                       )}
