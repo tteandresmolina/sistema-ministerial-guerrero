@@ -13,7 +13,7 @@ import {
 import { usePrimerRespondiente } from '../hooks/usePrimerRespondiente';
 
 const C = {
-  darkBlue: '#001a4d', gold: '#b69054', lightGold: '#f5ede0',
+  darkBlue: '#001a4d', darkBlueSoft: '#0a2a63', gold: '#b69054', lightGold: '#f5ede0',
   white: '#ffffff', bg: '#f4f6fb', gray: '#666666', lightGray: '#e8ecf1',
   green: '#28a745', yellow: '#ffc107', red: '#dc3545', orange: '#fd7e14',
 };
@@ -340,7 +340,7 @@ export default function PrimerRespondiente({ perfil }) {
     btnOutline: { backgroundColor: 'transparent', color: C.darkBlue, border: `2px solid ${C.darkBlue}`, borderRadius: 8, padding: '12px 20px', fontSize: 15, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 },
     overlay: { position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,26,77,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'flex-start', paddingTop: 30, zIndex: 1000, overflowY: 'auto' },
     card: { backgroundColor: C.white, borderRadius: 14, width: '100%', maxWidth: 750, boxShadow: '0 8px 32px rgba(0,0,0,0.2)', marginBottom: 40 },
-    cardHeader: { backgroundColor: C.darkBlue, color: C.white, padding: '18px 24px', borderRadius: '14px 14px 0 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
+    cardHeader: { backgroundColor: C.darkBlueSoft, color: C.white, padding: '18px 24px', borderRadius: '14px 14px 0 0', boxShadow: '0 3px 10px rgba(0,0,0,0.15)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
     body: { padding: 24 },
     section: { marginBottom: 20 },
     sectionTitle: { fontSize: 16, fontWeight: 700, color: C.gold, marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8, textTransform: 'uppercase', letterSpacing: 0.5 },
