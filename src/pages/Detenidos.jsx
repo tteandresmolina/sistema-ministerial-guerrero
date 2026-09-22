@@ -42,6 +42,51 @@ const btnSecondary = { ...btnPrimary, background: 'transparent', color: COLORS.p
 const tituloSeccion = { color: COLORS.gold, fontSize: 13, fontWeight: 800, letterSpacing: 1.5, marginBottom: 14, paddingBottom: 10, borderBottom: '2px solid #b69054', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: 8 };
 
 // ============================================================================
+// URLs FIRMADAS — FIX C3
+// El bucket 'expedientes' ahora es PRIVADO. Las URLs que ya están guardadas
+// en la base tienen el formato de getPublicUrl() (…/object/public/expedientes/…)
+// pero ya no sirven directamente para ver el archivo: hay que canjearlas por
+// una URL firmada temporal (createSignedUrl/createSignedUrls) cada vez que se
+// van a mostrar. No se tocó ninguna función de SUBIDA — getPublicUrl() solo
+// arma un string, no hace ninguna llamada de red, así que sigue funcionando
+// igual para construir el valor que se guarda en la base.
+// ============================================================================
+const RUTA_PUBLICA_PREFIJO = "/storage/v1/object/public/expedientes/";
+
+function rutaDesdeUrlPublica(urlPublica) {
+  if (!urlPublica) return null;
+  const idx = urlPublica.indexOf(RUTA_PUBLICA_PREFIJO);
+  if (idx === -1) return null;
+  return decodeURIComponent(urlPublica.slice(idx + RUTA_PUBLICA_PREFIJO.length));
+}
+
+// Firma varias URLs de una sola vez (una llamada a Supabase en vez de una por archivo)
+async function firmarUrls(urlsPublicas, expiresIn = 3600) {
+  const pares = (urlsPublicas || [])
+    .map((url) => ({ url, ruta: rutaDesdeUrlPublica(url) }))
+    .filter((p) => p.ruta);
+  if (pares.length === 0) return {};
+  const { data, error } = await supabase.storage
+    .from("expedientes")
+    .createSignedUrls(pares.map((p) => p.ruta), expiresIn);
+  if (error || !data) return {};
+  const mapa = {};
+  data.forEach((item, i) => {
+    if (item.signedUrl) mapa[pares[i].url] = item.signedUrl;
+  });
+  return mapa;
+}
+
+// Firma una sola URL (para el caso de un archivo recién subido)
+async function firmarUrlUnica(urlPublica, expiresIn = 3600) {
+  const ruta = rutaDesdeUrlPublica(urlPublica);
+  if (!ruta) return null;
+  const { data, error } = await supabase.storage.from("expedientes").createSignedUrl(ruta, expiresIn);
+  if (error || !data) return null;
+  return data.signedUrl;
+}
+
+// ============================================================================
 // SEMÁFORO DE 48 HORAS
 // ============================================================================
 export const SEMAFORO = {
@@ -441,7 +486,7 @@ function FotoSlot({ slot, detenidoId, perfil, archivos, onSubido }) {
       {existentes.length > 0 && (
         <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 8 }}>
           {existentes.map((a) => (
-            <img key={a.id} src={a.url_archivo} alt={slot.label} style={{ width: 56, height: 56, objectFit: "cover", borderRadius: 6, border: "1px solid #c7cfe0" }} />
+            <img key={a.id} src={a.url_archivo_firmada || a.url_archivo} alt={slot.label} style={{ width: 56, height: 56, objectFit: "cover", borderRadius: 6, border: "1px solid #c7cfe0" }} />
           ))}
         </div>
       )}
@@ -524,7 +569,7 @@ function DocumentosExpediente({ detenidoId, perfil, archivos, onSubido }) {
         <div style={{ color: "#9ca3af", fontSize: 12, textAlign: "center", padding: 16 }}>Aún no se han integrado documentos a este expediente.</div>
       ) : (
         documentos.map((d) => (
-          <a key={d.id} href={d.url_archivo} target="_blank" rel="noreferrer" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "#f9fafb", borderRadius: 8, padding: "10px 12px", marginBottom: 6, textDecoration: "none", border: "1px solid #e8ecf1" }}>
+          <a key={d.id} href={d.url_archivo_firmada || d.url_archivo} target="_blank" rel="noreferrer" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "#f9fafb", borderRadius: 8, padding: "10px 12px", marginBottom: 6, textDecoration: "none", border: "1px solid #e8ecf1" }}>
             <div>
               <div style={{ color: COLORS.primary, fontSize: 12, fontWeight: 600 }}>{d.tipo_documento}</div>
               <div style={{ color: "#6b7280", fontSize: 10 }}>{d.nombre_archivo}</div>
@@ -593,8 +638,14 @@ function IndicioCard({ indicio, perfil, detenidoId, onActualizado }) {
       subido_por_id: perfil?.id || null,
     }]).select().single();
 
-    if (errorInsert) alert("Error al registrar archivo: " + errorInsert.message);
-    else setArchivos((prev) => [...prev, nuevoArchivo]);
+    if (errorInsert) {
+      alert("Error al registrar archivo: " + errorInsert.message);
+    } else {
+      // Firma la URL de inmediato para que se muestre bien sin esperar
+      // al refresco completo del listado de indicios.
+      const urlFirmada = await firmarUrlUnica(nuevoArchivo.url_archivo);
+      setArchivos((prev) => [...prev, { ...nuevoArchivo, url_archivo_firmada: urlFirmada }]);
+    }
 
     setSubiendo(false);
     if (onActualizado) onActualizado();
@@ -625,9 +676,9 @@ function IndicioCard({ indicio, perfil, detenidoId, onActualizado }) {
             <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 10 }}>
               {archivos.map((a) => (
                 a.tipo_archivo === "video" ? (
-                  <video key={a.id} src={a.url_archivo} controls style={{ width: 100, height: 70, borderRadius: 6, border: "1px solid #c7cfe0" }} />
+                  <video key={a.id} src={a.url_archivo_firmada || a.url_archivo} controls style={{ width: 100, height: 70, borderRadius: 6, border: "1px solid #c7cfe0" }} />
                 ) : (
-                  <img key={a.id} src={a.url_archivo} alt="indicio" style={{ width: 70, height: 70, objectFit: "cover", borderRadius: 6, border: "1px solid #c7cfe0" }} />
+                  <img key={a.id} src={a.url_archivo_firmada || a.url_archivo} alt="indicio" style={{ width: 70, height: 70, objectFit: "cover", borderRadius: 6, border: "1px solid #c7cfe0" }} />
                 )
               ))}
             </div>
@@ -694,7 +745,10 @@ function IndiciosAsegurados({ detenidoId, perfil }) {
     if (indiciosData && indiciosData.length > 0) {
       const ids = indiciosData.map((i) => i.id);
       const { data: archivosData } = await supabase.from("indicios_archivos").select("*").in("indicio_id", ids);
-      const conArchivos = indiciosData.map((i) => ({ ...i, _archivos: (archivosData || []).filter((a) => a.indicio_id === i.id) }));
+      const listaArchivos = archivosData || [];
+      const mapaFirmadas = await firmarUrls(listaArchivos.map((a) => a.url_archivo));
+      const archivosFirmados = listaArchivos.map((a) => ({ ...a, url_archivo_firmada: mapaFirmadas[a.url_archivo] }));
+      const conArchivos = indiciosData.map((i) => ({ ...i, _archivos: archivosFirmados.filter((a) => a.indicio_id === i.id) }));
       setIndicios(conArchivos);
     } else {
       setIndicios([]);
@@ -1227,8 +1281,10 @@ export function BusquedaOperativa({ perfil, onAbrirDetenido }) {
     if (lista.length > 0) {
       const ids = lista.map((d) => d.id);
       const { data: fotos } = await supabase.from("documentos_expediente").select("detenido_id, url_archivo").eq("categoria", "foto_frente").in("detenido_id", ids);
+      const listaFotos = fotos || [];
+      const mapaFirmadas = await firmarUrls(listaFotos.map((f) => f.url_archivo));
       const mapaFotos = {};
-      (fotos || []).forEach((f) => { if (!mapaFotos[f.detenido_id]) mapaFotos[f.detenido_id] = f.url_archivo; });
+      listaFotos.forEach((f) => { if (!mapaFotos[f.detenido_id]) mapaFotos[f.detenido_id] = mapaFirmadas[f.url_archivo] || null; });
       setDetenidos(lista.map((d) => ({ ...d, _fotoFrente: mapaFotos[d.id] })));
     } else {
       setDetenidos(lista);
@@ -1572,8 +1628,10 @@ export default function ModuloDetenidos({ perfil, detenidoInicial, onDetenidoIni
     if (lista.length > 0) {
       const ids = lista.map((d) => d.id);
       const { data: fotos } = await supabase.from("documentos_expediente").select("detenido_id, url_archivo").eq("categoria", "foto_frente").in("detenido_id", ids);
+      const listaFotos = fotos || [];
+      const mapaFirmadas = await firmarUrls(listaFotos.map((f) => f.url_archivo));
       const mapaFotos = {};
-      (fotos || []).forEach((f) => { if (!mapaFotos[f.detenido_id]) mapaFotos[f.detenido_id] = f.url_archivo; });
+      listaFotos.forEach((f) => { if (!mapaFotos[f.detenido_id]) mapaFotos[f.detenido_id] = mapaFirmadas[f.url_archivo] || null; });
       setDetenidos(lista.map((d) => ({ ...d, _fotoFrente: mapaFotos[d.id] })));
     } else {
       setDetenidos(lista);
@@ -1583,7 +1641,9 @@ export default function ModuloDetenidos({ perfil, detenidoInicial, onDetenidoIni
 
   const cargarArchivos = async (detenidoId) => {
     const { data } = await supabase.from("documentos_expediente").select("*").eq("detenido_id", detenidoId).order("creado_en", { ascending: false });
-    setArchivos(data || []);
+    const lista = data || [];
+    const mapaFirmadas = await firmarUrls(lista.map((a) => a.url_archivo));
+    setArchivos(lista.map((a) => ({ ...a, url_archivo_firmada: mapaFirmadas[a.url_archivo] })));
   };
 
   useEffect(() => { if (vista === "lista") cargarDetenidos(); }, [vista]);
@@ -1644,7 +1704,7 @@ export default function ModuloDetenidos({ perfil, detenidoInicial, onDetenidoIni
 
     if (esVistaRestringida) {
       const fotoFrente = archivos.find((a) => a.categoria === "foto_frente");
-      return <FichaBasicaRestringida detenido={{ ...detenidoActivo, _fotoFrente: fotoFrente?.url_archivo }} perfil={perfil} onVolver={() => { setDetenidoActivo(null); setForm(initialForm); setMensaje(null); }} />;
+      return <FichaBasicaRestringida detenido={{ ...detenidoActivo, _fotoFrente: fotoFrente?.url_archivo_firmada || fotoFrente?.url_archivo }} perfil={perfil} onVolver={() => { setDetenidoActivo(null); setForm(initialForm); setMensaje(null); }} />;
     }
 
     return (
@@ -1679,7 +1739,7 @@ export default function ModuloDetenidos({ perfil, detenidoInicial, onDetenidoIni
             {(() => {
               const fotoFrente = archivos.find((a) => a.categoria === "foto_frente");
               return fotoFrente ? (
-                <img src={fotoFrente.url_archivo} alt={detenidoActivo.nombre} style={{ width: 64, height: 64, objectFit: "cover", borderRadius: 8, border: "1px solid #c7cfe0", flexShrink: 0 }} />
+                <img src={fotoFrente.url_archivo_firmada || fotoFrente.url_archivo} alt={detenidoActivo.nombre} style={{ width: 64, height: 64, objectFit: "cover", borderRadius: 8, border: "1px solid #c7cfe0", flexShrink: 0 }} />
               ) : (
                 <div style={{ width: 64, height: 64, borderRadius: 8, background: "#f9fafb", border: "1px solid #c7cfe0", display: "flex", alignItems: "center", justifyContent: "center", color: "#c7cfe0", flexShrink: 0 }}><User size={26} /></div>
               );
