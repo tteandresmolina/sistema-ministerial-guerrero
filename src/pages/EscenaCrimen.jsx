@@ -124,29 +124,29 @@ function Hora24Selector({ hh, mm, onChangeHH, onChangeMM, selectStyle }) {
       <select style={{ ...selectStyle, flex: 1, textAlign: 'center' }} value={mm} onChange={e => onChangeMM(e.target.value)}>
         {MINUTOS_60.map(m => <option key={m} value={m}>{m}</option>)}
       </select>
-      <span style={{ fontSize: 11, color: C.gray, marginLeft: 4 }}>hrs</span>
+      <span style={{ fontSize: 13, color: C.gray, marginLeft: 4 }}>hrs</span>
     </div>
   );
 }
 
 const st = {
-  btn: (bg, clr) => ({ backgroundColor: bg, color: clr, border: 'none', borderRadius: 8, padding: '10px 20px', fontSize: 14, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }),
-  btnOutline: { backgroundColor: 'transparent', color: C.darkBlue, border: `2px solid ${C.darkBlue}`, borderRadius: 8, padding: '8px 16px', fontSize: 13, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 },
-  input: { padding: '10px 12px', border: `1px solid ${C.lightGray}`, borderRadius: 8, fontSize: 14, outline: 'none', fontFamily: 'inherit', width: '100%', boxSizing: 'border-box' },
-  select: { padding: '10px 12px', border: `1px solid ${C.lightGray}`, borderRadius: 8, fontSize: 14, outline: 'none', backgroundColor: C.white, fontFamily: 'inherit', cursor: 'pointer', width: '100%', boxSizing: 'border-box' },
-  textarea: { padding: '10px 12px', border: `1px solid ${C.lightGray}`, borderRadius: 8, fontSize: 14, outline: 'none', fontFamily: 'inherit', resize: 'vertical', minHeight: 70, width: '100%', boxSizing: 'border-box' },
-  label: { fontSize: 12, fontWeight: 600, color: C.darkBlue, marginBottom: 4, display: 'block' },
+  btn: (bg, clr) => ({ backgroundColor: bg, color: clr, border: 'none', borderRadius: 8, padding: '14px 24px', fontSize: 16, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }),
+  btnOutline: { backgroundColor: 'transparent', color: C.darkBlue, border: `2px solid ${C.darkBlue}`, borderRadius: 8, padding: '12px 20px', fontSize: 15, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 },
+  input: { padding: '13px 14px', border: `1px solid ${C.lightGray}`, borderRadius: 8, fontSize: 16, outline: 'none', fontFamily: 'inherit', width: '100%', boxSizing: 'border-box' },
+  select: { padding: '13px 14px', border: `1px solid ${C.lightGray}`, borderRadius: 8, fontSize: 16, outline: 'none', backgroundColor: C.white, fontFamily: 'inherit', cursor: 'pointer', width: '100%', boxSizing: 'border-box' },
+  textarea: { padding: '13px 14px', border: `1px solid ${C.lightGray}`, borderRadius: 8, fontSize: 16, outline: 'none', fontFamily: 'inherit', resize: 'vertical', minHeight: 70, width: '100%', boxSizing: 'border-box' },
+  label: { fontSize: 14, fontWeight: 600, color: C.darkBlue, marginBottom: 4, display: 'block' },
   req: { color: C.red, marginLeft: 2 },
-  sectionTitle: { fontSize: 14, fontWeight: 700, color: C.gold, marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8, textTransform: 'uppercase', letterSpacing: 0.5 },
+  sectionTitle: { fontSize: 16, fontWeight: 700, color: C.gold, marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8, textTransform: 'uppercase', letterSpacing: 0.5 },
   grid2: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 },
   formGroup: { display: 'flex', flexDirection: 'column', gap: 4 },
-  badge: (bg, clr) => ({ display: 'inline-block', padding: '4px 10px', borderRadius: 12, fontSize: 11, fontWeight: 600, backgroundColor: bg, color: clr }),
+  badge: (bg, clr) => ({ display: 'inline-block', padding: '4px 10px', borderRadius: 12, fontSize: 13, fontWeight: 600, backgroundColor: bg, color: clr }),
   checkbox: (active, clr) => ({
     display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px', borderRadius: 8, cursor: 'pointer',
     border: `1px solid ${active ? clr : C.lightGray}`, backgroundColor: active ? clr + '12' : 'transparent',
   }),
-  th: { padding: '12px 16px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: C.gray, textTransform: 'uppercase', letterSpacing: 0.5, borderBottom: `2px solid ${C.lightGray}`, backgroundColor: C.bg, whiteSpace: 'nowrap' },
-  td: { padding: '12px 16px', fontSize: 13, borderBottom: `1px solid ${C.lightGray}`, color: C.darkBlue },
+  th: { padding: '12px 16px', textAlign: 'left', fontSize: 13, fontWeight: 700, color: C.gray, textTransform: 'uppercase', letterSpacing: 0.5, borderBottom: `2px solid ${C.lightGray}`, backgroundColor: C.bg, whiteSpace: 'nowrap' },
+  td: { padding: '12px 16px', fontSize: 15, borderBottom: `1px solid ${C.lightGray}`, color: C.darkBlue },
 };
 
 export default function EscenaCrimen({ perfil }) {
@@ -288,7 +288,7 @@ export default function EscenaCrimen({ perfil }) {
           <h2 style={{ fontSize: 22, fontWeight: 700, color: C.darkBlue, display: 'flex', alignItems: 'center', gap: 10, margin: 0 }}>
             <Crosshair size={22} color={C.gold} /> Procesamiento del Lugar
           </h2>
-          <p style={{ fontSize: 13, color: C.gray, margin: '4px 0 0 0' }}>Módulo 2 · Tab 3 · Procesamiento del lugar de los hechos o hallazgo</p>
+          <p style={{ fontSize: 15, color: C.gray, margin: '4px 0 0 0' }}>Módulo 2 · Tab 3 · Procesamiento del lugar de los hechos o hallazgo</p>
         </div>
         <div style={{ display: 'flex', gap: 10 }}>
           <button style={st.btnOutline} onClick={refetch}><RefreshCw size={15} /> Actualizar</button>
@@ -313,7 +313,7 @@ export default function EscenaCrimen({ perfil }) {
             </div>
             <div>
               <div style={{ fontSize: 22, fontWeight: 700, color: C.darkBlue }}>{s.value}</div>
-              <div style={{ fontSize: 12, color: C.gray }}>{s.label}</div>
+              <div style={{ fontSize: 14, color: C.gray }}>{s.label}</div>
             </div>
           </div>
         ))}
@@ -325,7 +325,7 @@ export default function EscenaCrimen({ perfil }) {
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, backgroundColor: C.bg, borderRadius: 8, padding: '8px 14px', flex: 1, maxWidth: 350 }}>
             <Search size={16} color={C.gray} />
             <input type="text" placeholder="Buscar por ubicación, C.I., folio..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)}
-              style={{ border: 'none', outline: 'none', fontSize: 14, backgroundColor: 'transparent', flex: 1, fontFamily: 'inherit' }} />
+              style={{ border: 'none', outline: 'none', fontSize: 16, backgroundColor: 'transparent', flex: 1, fontFamily: 'inherit' }} />
             {searchTerm && <X size={14} color={C.gray} style={{ cursor: 'pointer' }} onClick={() => setSearchTerm('')} />}
           </div>
         </div>
@@ -354,16 +354,16 @@ export default function EscenaCrimen({ perfil }) {
                       onMouseLeave={ev => ev.currentTarget.style.backgroundColor = idx % 2 === 0 ? C.white : C.bg}
                       onClick={() => setShowDetail(e)}>
                       <td style={st.td}>
-                        <div style={{ fontFamily: 'monospace', fontWeight: 700, fontSize: 12 }}>{e.carpeta_investigacion || e.registros_911?.folio_911 || '(Pendiente C.I.)'}</div>
+                        <div style={{ fontFamily: 'monospace', fontWeight: 700, fontSize: 14 }}>{e.carpeta_investigacion || e.registros_911?.folio_911 || '(Pendiente C.I.)'}</div>
                       </td>
                       <td style={st.td}><span style={st.badge(C.darkBlue + '15', C.darkBlue)}>{e.tipo_escena || '—'}</span></td>
                       <td style={{ ...st.td, maxWidth: 200 }}>
                         <div style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{e.ubicacion_texto}</div>
-                        {e.municipio && <div style={{ fontSize: 11, color: C.gray }}>{e.municipio}, Guerrero</div>}
+                        {e.municipio && <div style={{ fontSize: 13, color: C.gray }}>{e.municipio}, Guerrero</div>}
                       </td>
                       <td style={st.td}><span style={st.badge(em.bg, em.color)}>{em.label}</span></td>
-                      <td style={st.td}>{protocolos.length > 0 ? protocolos.map((p, i) => <span key={i} style={{ fontSize: 10, marginRight: 4 }}>{p}</span>) : <span style={{ color: C.gray, fontSize: 11 }}>—</span>}</td>
-                      <td style={st.td}><button style={{ ...st.btnOutline, padding: '4px 10px', fontSize: 11 }} onClick={ev => { ev.stopPropagation(); setShowDetail(e); }}><Eye size={13} /> Ver</button></td>
+                      <td style={st.td}>{protocolos.length > 0 ? protocolos.map((p, i) => <span key={i} style={{ fontSize: 12, marginRight: 4 }}>{p}</span>) : <span style={{ color: C.gray, fontSize: 13 }}>—</span>}</td>
+                      <td style={st.td}><button style={{ ...st.btnOutline, padding: '4px 10px', fontSize: 13 }} onClick={ev => { ev.stopPropagation(); setShowDetail(e); }}><Eye size={13} /> Ver</button></td>
                     </tr>
                   );
                 })}
@@ -389,7 +389,7 @@ export default function EscenaCrimen({ perfil }) {
             {hayProtocoloActivo && (
               <div style={{ backgroundColor: '#ffebee', borderBottom: `2px solid ${C.red}`, padding: '10px 24px', display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                 <ShieldAlert size={16} color={C.red} />
-                <span style={{ color: '#b71c1c', fontSize: 12, fontWeight: 700 }}>PROTOCOLOS ESPECIALES ACTIVADOS:</span>
+                <span style={{ color: '#b71c1c', fontSize: 14, fontWeight: 700 }}>PROTOCOLOS ESPECIALES ACTIVADOS:</span>
                 {PROTOCOLO_FLAGS.filter(f => form[f.key]).map(f => <span key={f.key} style={st.badge(f.color + '20', f.color)}>{f.label}</span>)}
               </div>
             )}
@@ -411,7 +411,7 @@ export default function EscenaCrimen({ perfil }) {
                     padding: '8px 14px', borderRadius: 8, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5,
                     border: `1px solid ${seccion === t.n ? C.gold : C.lightGray}`,
                     backgroundColor: seccion === t.n ? C.lightGold : C.white,
-                    color: seccion === t.n ? C.gold : C.gray, fontSize: 11, fontWeight: 700,
+                    color: seccion === t.n ? C.gold : C.gray, fontSize: 13, fontWeight: 700,
                   }}>
                     <t.icon size={13} /> {t.label}
                   </button>
@@ -430,11 +430,11 @@ export default function EscenaCrimen({ perfil }) {
                     </select>
                   </div>
                   <div style={{ ...st.formGroup, marginTop: 14, padding: 14, backgroundColor: C.lightGold, borderRadius: 10, border: `1px solid ${C.gold}40` }}>
-                    <label style={{ ...st.label, color: C.gold, fontSize: 13 }}>
+                    <label style={{ ...st.label, color: C.gold, fontSize: 15 }}>
                       <Briefcase size={14} style={{ marginRight: 6, verticalAlign: 'middle' }} />
                       Carpeta de Investigación (C.I.)
                     </label>
-                    <p style={{ fontSize: 11, color: C.gray, margin: '4px 0 8px 0' }}>20 dígitos asignados por el Ministerio Público.</p>
+                    <p style={{ fontSize: 13, color: C.gray, margin: '4px 0 8px 0' }}>20 dígitos asignados por el Ministerio Público.</p>
                     <input style={{ ...st.input, fontFamily: 'monospace', fontSize: 15, letterSpacing: 1, textAlign: 'center' }} maxLength={25} placeholder="Ej: 12030290300463130025" value={form.carpeta_investigacion} onChange={e => set('carpeta_investigacion', e.target.value)} />
                   </div>
                   <div style={{ ...st.grid2, marginTop: 14 }}>
@@ -468,14 +468,14 @@ export default function EscenaCrimen({ perfil }) {
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 14 }}>
                     {TIPO_ESCENA.map(t => (
                       <button key={t.key} onClick={() => set('tipo_escena', t.key)} style={{ padding: 12, borderRadius: 10, cursor: 'pointer', textAlign: 'left', border: form.tipo_escena === t.key ? `2px solid ${C.gold}` : `1px solid ${C.lightGray}`, backgroundColor: form.tipo_escena === t.key ? C.lightGold : C.white }}>
-                        <div style={{ fontSize: 13, fontWeight: 700, color: form.tipo_escena === t.key ? C.darkBlue : C.gray }}>{t.label}</div>
-                        <div style={{ fontSize: 11, color: C.gray }}>{t.desc}</div>
+                        <div style={{ fontSize: 15, fontWeight: 700, color: form.tipo_escena === t.key ? C.darkBlue : C.gray }}>{t.label}</div>
+                        <div style={{ fontSize: 13, color: C.gray }}>{t.desc}</div>
                       </button>
                     ))}
                   </div>
                   <div style={{ ...st.checkbox(form.escena_primaria, C.green), marginBottom: 14 }} onClick={() => set('escena_primaria', !form.escena_primaria)}>
                     <input type="checkbox" checked={form.escena_primaria} readOnly style={{ width: 16, height: 16 }} />
-                    <span style={{ color: form.escena_primaria ? '#1b5e20' : C.gray, fontWeight: 600, fontSize: 13 }}>{form.escena_primaria ? 'Escena primaria (lugar principal)' : 'Escena secundaria (lugar relacionado)'}</span>
+                    <span style={{ color: form.escena_primaria ? '#1b5e20' : C.gray, fontWeight: 600, fontSize: 15 }}>{form.escena_primaria ? 'Escena primaria (lugar principal)' : 'Escena secundaria (lugar relacionado)'}</span>
                   </div>
                   <div style={st.formGroup}>
                     <label style={st.label}>Ubicación / Dirección <span style={st.req}>*</span></label>
@@ -499,7 +499,7 @@ export default function EscenaCrimen({ perfil }) {
                     </div>
                   </div>
                   {form.coordenadas_lat && form.coordenadas_lng && (
-                    <a href={buildGoogleMapsUrl(form.coordenadas_lat, form.coordenadas_lng)} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, marginTop: 8, fontSize: 12, color: C.gold, textDecoration: 'none' }}>
+                    <a href={buildGoogleMapsUrl(form.coordenadas_lat, form.coordenadas_lng)} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, marginTop: 8, fontSize: 14, color: C.gold, textDecoration: 'none' }}>
                       <ExternalLink size={13} /> Ver en Google Maps
                     </a>
                   )}
@@ -518,7 +518,7 @@ export default function EscenaCrimen({ perfil }) {
                     ].map(opt => (
                       <div key={opt.key} style={st.checkbox(form[opt.key], opt.color)} onClick={() => set(opt.key, !form[opt.key])}>
                         <input type="checkbox" checked={form[opt.key]} readOnly style={{ width: 16, height: 16 }} />
-                        <span style={{ color: form[opt.key] ? opt.color : C.gray, fontWeight: 600, fontSize: 13 }}>{opt.label}</span>
+                        <span style={{ color: form[opt.key] ? opt.color : C.gray, fontWeight: 600, fontSize: 15 }}>{opt.label}</span>
                       </div>
                     ))}
                   </div>
@@ -552,12 +552,12 @@ export default function EscenaCrimen({ perfil }) {
                   {/* PRIORIZACIÓN — Nuevo */}
                   <div style={{ borderTop: `2px solid ${C.lightGray}`, paddingTop: 14, marginTop: 10 }}>
                     <div style={st.sectionTitle}><Zap size={15} /> Priorización del Primer Respondiente</div>
-                    <p style={{ fontSize: 11, color: C.gray, marginBottom: 10 }}>
+                    <p style={{ fontSize: 13, color: C.gray, marginBottom: 10 }}>
                       Conforme al Protocolo de Primer Respondiente, PCP y Cadena de Custodia: cuando las condiciones sociales o climatológicas representen riesgo de pérdida de indicios, el PR puede priorizar la recolección sin esperar al perito.
                     </p>
                     <div style={st.checkbox(form.priorizacion_realizada, C.orange)} onClick={() => set('priorizacion_realizada', !form.priorizacion_realizada)}>
                       <input type="checkbox" checked={form.priorizacion_realizada} readOnly style={{ width: 16, height: 16 }} />
-                      <span style={{ color: form.priorizacion_realizada ? C.orange : C.gray, fontWeight: 600, fontSize: 13 }}>El primer respondiente realizó priorización de indicios</span>
+                      <span style={{ color: form.priorizacion_realizada ? C.orange : C.gray, fontWeight: 600, fontSize: 15 }}>El primer respondiente realizó priorización de indicios</span>
                     </div>
                     {form.priorizacion_realizada && (
                       <div style={{ marginTop: 12, padding: 14, backgroundColor: '#fff8e1', borderRadius: 10, border: `1px solid ${C.orange}30` }}>
@@ -578,7 +578,7 @@ export default function EscenaCrimen({ perfil }) {
                         </div>
                         <div style={{ ...st.checkbox(form.priorizacion_sin_perito, C.red), marginTop: 10 }} onClick={() => set('priorizacion_sin_perito', !form.priorizacion_sin_perito)}>
                           <input type="checkbox" checked={form.priorizacion_sin_perito} readOnly style={{ width: 16, height: 16 }} />
-                          <span style={{ color: form.priorizacion_sin_perito ? C.red : C.gray, fontWeight: 600, fontSize: 13 }}>No fue necesaria la participación del perito</span>
+                          <span style={{ color: form.priorizacion_sin_perito ? C.red : C.gray, fontWeight: 600, fontSize: 15 }}>No fue necesaria la participación del perito</span>
                         </div>
                       </div>
                     )}
@@ -610,8 +610,8 @@ export default function EscenaCrimen({ perfil }) {
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 14 }}>
                     {ESTRATEGIAS.map(e => (
                       <button key={e.key} onClick={() => set('estrategia_investigacion', e.key)} style={{ padding: '10px 14px', borderRadius: 8, cursor: 'pointer', textAlign: 'left', border: form.estrategia_investigacion === e.key ? `2px solid ${C.gold}` : `1px solid ${C.lightGray}`, backgroundColor: form.estrategia_investigacion === e.key ? C.lightGold : C.white }}>
-                        <div style={{ fontSize: 13, fontWeight: 700, color: form.estrategia_investigacion === e.key ? C.darkBlue : C.gray }}>{e.label}</div>
-                        <div style={{ fontSize: 11, color: C.gray }}>{e.desc}</div>
+                        <div style={{ fontSize: 15, fontWeight: 700, color: form.estrategia_investigacion === e.key ? C.darkBlue : C.gray }}>{e.label}</div>
+                        <div style={{ fontSize: 13, color: C.gray }}>{e.desc}</div>
                       </button>
                     ))}
                   </div>
@@ -630,11 +630,11 @@ export default function EscenaCrimen({ perfil }) {
               {seccion === 5 && (
                 <div>
                   <div style={st.sectionTitle}><Car size={15} /> Aseguramiento de Vehículos</div>
-                  <p style={{ fontSize: 11, color: C.gray, marginBottom: 12 }}>Registra los vehículos asegurados en el lugar de los hechos.</p>
+                  <p style={{ fontSize: 13, color: C.gray, marginBottom: 12 }}>Registra los vehículos asegurados en el lugar de los hechos.</p>
                   {vehiculos.map((v, i) => (
                     <div key={i} style={{ border: `1px solid ${C.lightGray}`, borderRadius: 10, padding: 16, marginBottom: 14, backgroundColor: C.bg }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                        <span style={{ fontSize: 13, fontWeight: 700, color: C.darkBlue }}>Vehículo #{i + 1}</span>
+                        <span style={{ fontSize: 15, fontWeight: 700, color: C.darkBlue }}>Vehículo #{i + 1}</span>
                         <button onClick={() => removeVehiculo(i)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><Trash2 size={16} color={C.red} /></button>
                       </div>
                       <div style={st.grid2}>
@@ -677,7 +677,7 @@ export default function EscenaCrimen({ perfil }) {
                       </div>
                     </div>
                   ))}
-                  <button onClick={addVehiculo} style={{ ...st.btn(C.darkBlue, C.white), fontSize: 13 }}><Plus size={15} /> Agregar Vehículo</button>
+                  <button onClick={addVehiculo} style={{ ...st.btn(C.darkBlue, C.white), fontSize: 15 }}><Plus size={15} /> Agregar Vehículo</button>
                 </div>
               )}
 
@@ -685,14 +685,14 @@ export default function EscenaCrimen({ perfil }) {
               {seccion === 6 && (
                 <div>
                   <div style={st.sectionTitle}><Camera size={15} /> Fotografías, Videos y Documentos</div>
-                  <p style={{ fontSize: 11, color: C.gray, marginBottom: 10 }}>Formatos: JPG, PNG, PDF, MP4 · Máximo 5MB por archivo</p>
+                  <p style={{ fontSize: 13, color: C.gray, marginBottom: 10 }}>Formatos: JPG, PNG, PDF, MP4 · Máximo 5MB por archivo</p>
                   <div style={{ border: `2px dashed ${C.lightGray}`, borderRadius: 10, padding: 20, textAlign: 'center', cursor: 'pointer', backgroundColor: C.bg }}
                     onClick={() => document.getElementById('file-input-escena').click()}
                     onDragOver={e => { e.preventDefault(); e.currentTarget.style.borderColor = C.gold; }}
                     onDragLeave={e => { e.currentTarget.style.borderColor = C.lightGray; }}
                     onDrop={e => { e.preventDefault(); e.currentTarget.style.borderColor = C.lightGray; handleFileSelect({ target: { files: e.dataTransfer.files } }); }}>
                     <Upload size={28} color={C.gray} />
-                    <p style={{ fontSize: 13, color: C.gray, margin: '8px 0 0 0' }}>Arrastra archivos aquí o haz clic para seleccionar</p>
+                    <p style={{ fontSize: 15, color: C.gray, margin: '8px 0 0 0' }}>Arrastra archivos aquí o haz clic para seleccionar</p>
                     <input id="file-input-escena" type="file" multiple accept="image/jpeg,image/png,image/webp,application/pdf,video/mp4" style={{ display: 'none' }} onChange={handleFileSelect} />
                   </div>
                   {archivos.length > 0 && (
@@ -701,8 +701,8 @@ export default function EscenaCrimen({ perfil }) {
                         <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', backgroundColor: C.bg, borderRadius: 8, border: `1px solid ${C.lightGray}` }}>
                           {a.preview ? <img src={a.preview} alt="" style={{ width: 40, height: 40, borderRadius: 6, objectFit: 'cover' }} /> : <div style={{ width: 40, height: 40, borderRadius: 6, backgroundColor: C.lightGray, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><FileText size={18} color={C.gray} /></div>}
                           <div style={{ flex: 1 }}>
-                            <div style={{ fontSize: 13, fontWeight: 600, color: C.darkBlue }}>{a.nombre}</div>
-                            <div style={{ fontSize: 11, color: C.gray }}>{(a.tamano / 1024).toFixed(0)} KB · {a.tipo.split('/')[1]?.toUpperCase()}</div>
+                            <div style={{ fontSize: 15, fontWeight: 600, color: C.darkBlue }}>{a.nombre}</div>
+                            <div style={{ fontSize: 13, color: C.gray }}>{(a.tamano / 1024).toFixed(0)} KB · {a.tipo.split('/')[1]?.toUpperCase()}</div>
                           </div>
                           <button onClick={() => removeArchivo(i)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><Trash2 size={16} color={C.red} /></button>
                         </div>
@@ -716,43 +716,43 @@ export default function EscenaCrimen({ perfil }) {
               {seccion === 7 && (
                 <div>
                   <div style={st.sectionTitle}><Flag size={15} /> Protocolos Especiales</div>
-                  <p style={{ fontSize: 12, color: C.gray, marginBottom: 14 }}>Activa los protocolos que aplican.</p>
+                  <p style={{ fontSize: 14, color: C.gray, marginBottom: 14 }}>Activa los protocolos que aplican.</p>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                     {PROTOCOLO_FLAGS.map(pf => (
                       <div key={pf.key} style={{ ...st.checkbox(form[pf.key], pf.color), padding: 14, borderWidth: form[pf.key] ? 2 : 1 }} onClick={() => set(pf.key, !form[pf.key])}>
                         <input type="checkbox" checked={form[pf.key]} readOnly style={{ width: 18, height: 18 }} />
                         <pf.icon size={18} color={form[pf.key] ? pf.color : C.gray} />
                         <div style={{ flex: 1 }}>
-                          <div style={{ fontSize: 14, fontWeight: 700, color: form[pf.key] ? pf.color : C.gray }}>{pf.label}</div>
-                          <div style={{ fontSize: 11, color: C.gray, marginTop: 2 }}>{pf.desc}</div>
+                          <div style={{ fontSize: 16, fontWeight: 700, color: form[pf.key] ? pf.color : C.gray }}>{pf.label}</div>
+                          <div style={{ fontSize: 13, color: C.gray, marginTop: 2 }}>{pf.desc}</div>
                         </div>
                       </div>
                     ))}
                   </div>
                   {form.es_feminicidio && (
                     <div style={{ marginTop: 14, padding: 14, backgroundColor: '#ffebee', border: `1px solid ${C.red}30`, borderRadius: 8 }}>
-                      <div style={{ fontSize: 12, fontWeight: 700, color: '#b71c1c', marginBottom: 4 }}>⚠ Protocolo de Feminicidio Activado</div>
-                      <div style={{ fontSize: 12, color: '#795548', lineHeight: 1.5 }}>Se aplica debida diligencia reforzada. Requiere perspectiva de género. Personal especializado debe intervenir.</div>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: '#b71c1c', marginBottom: 4 }}>⚠ Protocolo de Feminicidio Activado</div>
+                      <div style={{ fontSize: 14, color: '#795548', lineHeight: 1.5 }}>Se aplica debida diligencia reforzada. Requiere perspectiva de género. Personal especializado debe intervenir.</div>
                     </div>
                   )}
                   {form.involucra_diversidad_sexual && (
                     <div style={{ marginTop: 14, padding: 14, backgroundColor: '#f3e5f5', border: `1px solid #6a1b9a30`, borderRadius: 8 }}>
-                      <div style={{ fontSize: 12, fontWeight: 700, color: '#4a148c', marginBottom: 4 }}>Protocolo LGBTI+ — Indicadores de Prejuicio (CIDH)</div>
-                      <div style={{ fontSize: 12, color: '#795548', lineHeight: 1.5 }}>Se evaluarán los 7 indicadores de prejuicio: contexto de discriminación, ensañamiento, exposición pública del cuerpo, discurso de odio, mutilación, antecedentes de violencia, zona de riesgo.</div>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: '#4a148c', marginBottom: 4 }}>Protocolo LGBTI+ — Indicadores de Prejuicio (CIDH)</div>
+                      <div style={{ fontSize: 14, color: '#795548', lineHeight: 1.5 }}>Se evaluarán los 7 indicadores de prejuicio: contexto de discriminación, ensañamiento, exposición pública del cuerpo, discurso de odio, mutilación, antecedentes de violencia, zona de riesgo.</div>
                     </div>
                   )}
                 </div>
               )}
 
               {mensaje && (
-                <div style={{ padding: '10px 14px', borderRadius: 8, backgroundColor: mensaje.tipo === 'ok' ? '#e8f5e9' : '#ffebee', color: mensaje.tipo === 'ok' ? '#1b5e20' : '#b71c1c', fontSize: 13, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 8, marginTop: 8 }}>
+                <div style={{ padding: '10px 14px', borderRadius: 8, backgroundColor: mensaje.tipo === 'ok' ? '#e8f5e9' : '#ffebee', color: mensaje.tipo === 'ok' ? '#1b5e20' : '#b71c1c', fontSize: 15, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 8, marginTop: 8 }}>
                   {mensaje.tipo === 'ok' ? <CheckCircle2 size={16} /> : <AlertTriangle size={16} />} {mensaje.texto}
                 </div>
               )}
             </div>
 
             <div style={{ padding: '16px 24px', borderTop: `1px solid ${C.lightGray}`, display: 'flex', justifyContent: 'flex-end', gap: 12 }}>
-              {seccion > 1 && <button onClick={() => setSeccion(p => p - 1)} style={{ backgroundColor: 'transparent', color: C.gray, border: `1px solid ${C.lightGray}`, borderRadius: 8, padding: '10px 20px', fontSize: 14, cursor: 'pointer' }}>← Anterior</button>}
+              {seccion > 1 && <button onClick={() => setSeccion(p => p - 1)} style={{ backgroundColor: 'transparent', color: C.gray, border: `1px solid ${C.lightGray}`, borderRadius: 8, padding: '14px 24px', fontSize: 16, cursor: 'pointer' }}>← Anterior</button>}
               <div style={{ flex: 1 }} />
               {seccion < 7 ? (
                 <button onClick={() => setSeccion(p => p + 1)} style={st.btn(C.darkBlue, C.white)}>Siguiente →</button>
@@ -773,12 +773,12 @@ export default function EscenaCrimen({ perfil }) {
             <div style={{ backgroundColor: C.darkBlue, color: C.white, padding: '18px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
                 <div style={{ fontSize: 16, fontWeight: 700 }}>Procesamiento del Lugar</div>
-                <div style={{ fontSize: 12, opacity: 0.8 }}>{showDetail.tipo_escena} — {showDetail.escena_primaria ? 'Primaria' : 'Secundaria'}</div>
+                <div style={{ fontSize: 14, opacity: 0.8 }}>{showDetail.tipo_escena} — {showDetail.escena_primaria ? 'Primaria' : 'Secundaria'}</div>
               </div>
               <X size={20} style={{ cursor: 'pointer' }} onClick={() => setShowDetail(null)} />
             </div>
             {(showDetail.es_feminicidio || showDetail.es_violencia_genero || showDetail.involucra_adolescente || showDetail.involucra_diversidad_sexual) && (
-              <div style={{ padding: '10px 20px', backgroundColor: '#ffebee', borderBottom: `1px solid ${C.red}30`, display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+              <div style={{ padding: '14px 24px', backgroundColor: '#ffebee', borderBottom: `1px solid ${C.red}30`, display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                 {PROTOCOLO_FLAGS.filter(f => showDetail[f.key]).map(f => <span key={f.key} style={st.badge(f.color + '20', f.color)}>{f.label}</span>)}
               </div>
             )}
@@ -806,29 +806,29 @@ export default function EscenaCrimen({ perfil }) {
               { label: 'PCP/Peritos', value: showDetail.pcp_responsable },
               { label: 'Región', value: showDetail.region },
             ].filter(r => r.value).map((row, i) => (
-              <div key={i} style={{ padding: '10px 20px', borderBottom: `1px solid ${C.lightGray}`, display: 'flex', justifyContent: 'space-between', gap: 12 }}>
-                <span style={{ fontSize: 11, fontWeight: 600, color: C.gray, textTransform: 'uppercase', minWidth: 100 }}>{row.label}</span>
-                <span style={{ fontSize: 14, color: C.darkBlue, textAlign: 'right', flex: 1, wordBreak: 'break-word' }}>{row.value}</span>
+              <div key={i} style={{ padding: '14px 24px', borderBottom: `1px solid ${C.lightGray}`, display: 'flex', justifyContent: 'space-between', gap: 12 }}>
+                <span style={{ fontSize: 13, fontWeight: 600, color: C.gray, textTransform: 'uppercase', minWidth: 100 }}>{row.label}</span>
+                <span style={{ fontSize: 16, color: C.darkBlue, textAlign: 'right', flex: 1, wordBreak: 'break-word' }}>{row.value}</span>
               </div>
             ))}
             {showDetail.coordenadas_lat && showDetail.coordenadas_lng && (
-              <div style={{ padding: '10px 20px', borderBottom: `1px solid ${C.lightGray}` }}>
-                <a href={buildGoogleMapsUrl(showDetail.coordenadas_lat, showDetail.coordenadas_lng)} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '4px 10px', backgroundColor: C.lightGold, borderRadius: 6, fontSize: 12, fontWeight: 600, color: C.darkBlue, textDecoration: 'none' }}>
+              <div style={{ padding: '14px 24px', borderBottom: `1px solid ${C.lightGray}` }}>
+                <a href={buildGoogleMapsUrl(showDetail.coordenadas_lat, showDetail.coordenadas_lng)} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '4px 10px', backgroundColor: C.lightGold, borderRadius: 6, fontSize: 14, fontWeight: 600, color: C.darkBlue, textDecoration: 'none' }}>
                   <ExternalLink size={12} /> Abrir en Google Maps
                 </a>
               </div>
             )}
             {showDetail.descripcion_escena && (
               <div style={{ padding: '14px 20px', borderTop: `2px solid ${C.lightGray}` }}>
-                <div style={{ fontSize: 11, fontWeight: 700, color: C.gray, textTransform: 'uppercase', marginBottom: 8 }}>Descripción</div>
-                <div style={{ fontSize: 14, color: C.darkBlue, lineHeight: 1.6, backgroundColor: C.bg, padding: 12, borderRadius: 8 }}>{showDetail.descripcion_escena}</div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: C.gray, textTransform: 'uppercase', marginBottom: 8 }}>Descripción</div>
+                <div style={{ fontSize: 16, color: C.darkBlue, lineHeight: 1.6, backgroundColor: C.bg, padding: 12, borderRadius: 8 }}>{showDetail.descripcion_escena}</div>
               </div>
             )}
             <div style={{ padding: '14px 20px', borderTop: `2px solid ${C.lightGray}` }}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: C.gray, textTransform: 'uppercase', marginBottom: 8 }}>Cambiar Estatus</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: C.gray, textTransform: 'uppercase', marginBottom: 8 }}>Cambiar Estatus</div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                 {Object.entries(ESTATUS_MINISTERIAL).filter(([k]) => k !== showDetail.estatus_ministerial).map(([k, v]) => (
-                  <button key={k} style={{ ...st.badge(v.bg, v.color), border: `1px solid ${v.color}30`, cursor: 'pointer', padding: '6px 12px', fontSize: 12 }}
+                  <button key={k} style={{ ...st.badge(v.bg, v.color), border: `1px solid ${v.color}30`, cursor: 'pointer', padding: '6px 12px', fontSize: 14 }}
                     onClick={async () => { await actualizarEscena(showDetail.id, { estatus_ministerial: k }); setShowDetail(p => ({ ...p, estatus_ministerial: k })); }}>
                     {v.label}
                   </button>
