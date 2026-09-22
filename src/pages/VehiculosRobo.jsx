@@ -19,17 +19,22 @@ const C = {
   green: '#28a745', red: '#dc3545', orange: '#fd7e14',
 };
 
+// ============================================================================
+// ACCESIBILIDAD — mismo criterio aplicado en Detenidos.jsx: tipografía más
+// grande (16-17px mínimo), campos/botones más altos (44px+), mayor peso de
+// fuente, bordes más definidos. La paleta de color NO se toca.
+// ============================================================================
 const st = {
-  btn: (bg, clr) => ({ backgroundColor: bg, color: clr, border: 'none', borderRadius: 8, padding: '10px 20px', fontSize: 14, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }),
-  btnOutline: { backgroundColor: 'transparent', color: C.darkBlue, border: `2px solid ${C.darkBlue}`, borderRadius: 8, padding: '8px 16px', fontSize: 13, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 },
-  input: { padding: '10px 12px', border: `1px solid ${C.lightGray}`, borderRadius: 8, fontSize: 14, outline: 'none', fontFamily: 'inherit', width: '100%', boxSizing: 'border-box' },
-  select: { padding: '10px 12px', border: `1px solid ${C.lightGray}`, borderRadius: 8, fontSize: 14, outline: 'none', backgroundColor: C.white, fontFamily: 'inherit', width: '100%', boxSizing: 'border-box', cursor: 'pointer' },
-  textarea: { padding: '10px 12px', border: `1px solid ${C.lightGray}`, borderRadius: 8, fontSize: 14, outline: 'none', fontFamily: 'inherit', resize: 'vertical', minHeight: 70, width: '100%', boxSizing: 'border-box' },
-  label: { fontSize: 12, fontWeight: 600, color: C.darkBlue, marginBottom: 4, display: 'block' },
-  sTitle: { fontSize: 14, fontWeight: 700, color: C.gold, marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8, textTransform: 'uppercase' },
-  grid2: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 },
-  fg: { display: 'flex', flexDirection: 'column', gap: 4 },
-  badge: (bg, clr) => ({ display: 'inline-block', padding: '4px 10px', borderRadius: 12, fontSize: 11, fontWeight: 600, backgroundColor: bg, color: clr }),
+  btn: (bg, clr) => ({ backgroundColor: bg, color: clr, border: 'none', borderRadius: 8, padding: '14px 24px', fontSize: 16, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, minHeight: 44 }),
+  btnOutline: { backgroundColor: 'transparent', color: C.darkBlue, border: `2px solid ${C.darkBlue}`, borderRadius: 8, padding: '12px 20px', fontSize: 15, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, minHeight: 44 },
+  input: { padding: '13px 14px', border: `2px solid ${C.lightGray}`, borderRadius: 8, fontSize: 17, outline: 'none', fontFamily: 'inherit', width: '100%', boxSizing: 'border-box', color: '#1a1a1a', minHeight: 44 },
+  select: { padding: '13px 14px', border: `2px solid ${C.lightGray}`, borderRadius: 8, fontSize: 17, outline: 'none', backgroundColor: C.white, fontFamily: 'inherit', width: '100%', boxSizing: 'border-box', cursor: 'pointer', color: '#1a1a1a', minHeight: 44 },
+  textarea: { padding: '13px 14px', border: `2px solid ${C.lightGray}`, borderRadius: 8, fontSize: 17, outline: 'none', fontFamily: 'inherit', resize: 'vertical', minHeight: 80, width: '100%', boxSizing: 'border-box', color: '#1a1a1a' },
+  label: { fontSize: 14, fontWeight: 700, color: C.darkBlue, marginBottom: 6, display: 'block' },
+  sTitle: { fontSize: 16, fontWeight: 700, color: C.gold, marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8, textTransform: 'uppercase' },
+  grid2: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 },
+  fg: { display: 'flex', flexDirection: 'column', gap: 5 },
+  badge: (bg, clr) => ({ display: 'inline-block', padding: '5px 12px', borderRadius: 12, fontSize: 12, fontWeight: 700, backgroundColor: bg, color: clr }),
 };
 
 const MUNICIPIOS_GUERRERO = [
