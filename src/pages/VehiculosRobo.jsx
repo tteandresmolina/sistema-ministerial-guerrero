@@ -2,8 +2,9 @@
 // Módulo: Consulta de Vehículos con Reporte de Robo
 // Búsqueda por NIV (primeros 3 + últimos 5), motor, placas
 // Registro + Fotografías + Aseguramiento
+// v2 — Fix C3-secundario: bucket 'vehiculos-reporte' ahora privado, URLs firmadas
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Search, Plus, AlertTriangle, CheckCircle2, X, Send, RefreshCw,
   Eye, FileText, ChevronLeft, ChevronRight, Camera, User, Truck,
@@ -45,6 +46,49 @@ const MUNICIPIOS_GUERRERO = [
   'Zirándaro','Zitlala','Eduardo Neri','Acatepec','Marquelia','Cochoapa el Grande','José Joaquín de Herrera','Juchitán','Iliatenco',
 ];
 
+// ============================================================================
+// URLs FIRMADAS — el bucket 'vehiculos-reporte' ahora es PRIVADO.
+// Mismo mecanismo que en Detenidos.jsx y OrdenesAprehension.jsx: las URLs
+// guardadas en la base tienen el formato de getPublicUrl() pero ya no sirven
+// directamente; hay que canjearlas por una URL firmada temporal antes de
+// mostrarlas. No se toca la subida — getPublicUrl() solo arma un string, no
+// hace ninguna llamada de red, así que sigue funcionando igual para
+// construir lo que se guarda en la base.
+// ============================================================================
+const BUCKET_VEHICULOS = 'vehiculos-reporte';
+const RUTA_PUBLICA_PREFIJO_VEHICULOS = `/storage/v1/object/public/${BUCKET_VEHICULOS}/`;
+
+function rutaDesdeUrlPublicaVehiculos(urlPublica) {
+  if (!urlPublica) return null;
+  const idx = urlPublica.indexOf(RUTA_PUBLICA_PREFIJO_VEHICULOS);
+  if (idx === -1) return null;
+  return decodeURIComponent(urlPublica.slice(idx + RUTA_PUBLICA_PREFIJO_VEHICULOS.length));
+}
+
+async function firmarUrlsVehiculos(urlsPublicas, expiresIn = 3600) {
+  const pares = (urlsPublicas || [])
+    .map((url) => ({ url, ruta: rutaDesdeUrlPublicaVehiculos(url) }))
+    .filter((p) => p.ruta);
+  if (pares.length === 0) return {};
+  const { data, error } = await supabase.storage
+    .from(BUCKET_VEHICULOS)
+    .createSignedUrls(pares.map((p) => p.ruta), expiresIn);
+  if (error || !data) return {};
+  const mapa = {};
+  data.forEach((item, i) => {
+    if (item.signedUrl) mapa[pares[i].url] = item.signedUrl;
+  });
+  return mapa;
+}
+
+async function firmarUrlUnicaVehiculos(urlPublica, expiresIn = 3600) {
+  const ruta = rutaDesdeUrlPublicaVehiculos(urlPublica);
+  if (!ruta) return null;
+  const { data, error } = await supabase.storage.from(BUCKET_VEHICULOS).createSignedUrl(ruta, expiresIn);
+  if (error || !data) return null;
+  return data.signedUrl;
+}
+
 export default function VehiculosRobo({ perfil }) {
   const { vehiculos, loading, stats, buscar, crearVehiculo, actualizarVehiculo, fetchStats } = useVehiculosRobo();
 
@@ -57,6 +101,22 @@ export default function VehiculosRobo({ perfil }) {
   const [showForm, setShowForm] = useState(false);
   const [saving, setSaving] = useState(false);
   const [mensaje, setMensaje] = useState(null);
+  const [urlsFirmadas, setUrlsFirmadas] = useState({});
+
+  // Cada vez que llega o cambia la lista de resultados, firma de un jalón
+  // todas las URLs de fotos/oficio que traigan esos registros.
+  useEffect(() => {
+    if (!vehiculos || vehiculos.length === 0) { setUrlsFirmadas({}); return; }
+    const todasLasUrls = [];
+    vehiculos.forEach((v) => {
+      if (v.foto_vehiculo_url) todasLasUrls.push(v.foto_vehiculo_url);
+      if (v.foto_niv_url) todasLasUrls.push(v.foto_niv_url);
+      if (v.foto_motor_url) todasLasUrls.push(v.foto_motor_url);
+      if (v.foto_placas_url) todasLasUrls.push(v.foto_placas_url);
+      if (v.oficio_mp_url) todasLasUrls.push(v.oficio_mp_url);
+    });
+    firmarUrlsVehiculos(todasLasUrls).then(setUrlsFirmadas);
+  }, [vehiculos]);
 
   // Archivos
   const [fotoVehiculo, setFotoVehiculo] = useState(null);
@@ -122,7 +182,17 @@ export default function VehiculosRobo({ perfil }) {
       if (fotoMotor) { const url = await subirArchivo(fotoMotor, 'motor', id); if (url) updates.foto_motor_url = url; }
       if (fotoPlacas) { const url = await subirArchivo(fotoPlacas, 'placas', id); if (url) updates.foto_placas_url = url; }
       if (oficioMp) { const url = await subirArchivo(oficioMp, 'oficios', id); if (url) updates.oficio_mp_url = url; }
-      if (Object.keys(updates).length > 0) await actualizarVehiculo(id, updates);
+      if (Object.keys(updates).length > 0) {
+        await actualizarVehiculo(id, updates);
+        // Firma de inmediato las URLs recién subidas para que, si el usuario
+        // vuelve a buscar sin recargar, ya se muestren bien.
+        const nuevasFirmadas = {};
+        for (const url of Object.values(updates)) {
+          const firmada = await firmarUrlUnicaVehiculos(url);
+          if (firmada) nuevasFirmadas[url] = firmada;
+        }
+        setUrlsFirmadas((prev) => ({ ...prev, ...nuevasFirmadas }));
+      }
       setSaving(false);
       setMensaje({ tipo: 'ok', texto: 'Vehículo registrado con archivos' });
       setForm(emptyForm); setFotoVehiculo(null); setFotoNiv(null); setFotoMotor(null); setFotoPlacas(null); setOficioMp(null);
@@ -276,15 +346,15 @@ export default function VehiculosRobo({ perfil }) {
                     {/* Fotos */}
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 8, flexShrink: 0 }}>
                       {vehiculoActual.foto_vehiculo_url ? (
-                        <img src={vehiculoActual.foto_vehiculo_url} alt="Vehículo" style={{ width: 160, height: 120, objectFit: 'cover', borderRadius: 10, border: `2px solid ${C.lightGray}` }} />
+                        <img src={urlsFirmadas[vehiculoActual.foto_vehiculo_url] || vehiculoActual.foto_vehiculo_url} alt="Vehículo" style={{ width: 160, height: 120, objectFit: 'cover', borderRadius: 10, border: `2px solid ${C.lightGray}` }} />
                       ) : (
                         <div style={{ width: 160, height: 120, borderRadius: 10, backgroundColor: C.bg, border: `2px dashed ${C.lightGray}`, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: C.gray }}>
                           <Truck size={40} /><span style={{ fontSize: 10, marginTop: 4 }}>Sin foto</span>
                         </div>
                       )}
                       <div style={{ display: 'flex', gap: 6 }}>
-                        {vehiculoActual.foto_niv_url && <img src={vehiculoActual.foto_niv_url} alt="NIV" style={{ width: 75, height: 55, objectFit: 'cover', borderRadius: 6, border: `1px solid ${C.lightGray}` }} />}
-                        {vehiculoActual.foto_motor_url && <img src={vehiculoActual.foto_motor_url} alt="Motor" style={{ width: 75, height: 55, objectFit: 'cover', borderRadius: 6, border: `1px solid ${C.lightGray}` }} />}
+                        {vehiculoActual.foto_niv_url && <img src={urlsFirmadas[vehiculoActual.foto_niv_url] || vehiculoActual.foto_niv_url} alt="NIV" style={{ width: 75, height: 55, objectFit: 'cover', borderRadius: 6, border: `1px solid ${C.lightGray}` }} />}
+                        {vehiculoActual.foto_motor_url && <img src={urlsFirmadas[vehiculoActual.foto_motor_url] || vehiculoActual.foto_motor_url} alt="Motor" style={{ width: 75, height: 55, objectFit: 'cover', borderRadius: 6, border: `1px solid ${C.lightGray}` }} />}
                       </div>
                     </div>
 
@@ -323,7 +393,7 @@ export default function VehiculosRobo({ perfil }) {
 
                       {vehiculoActual.observaciones && <div style={{ fontSize: 12, color: C.gray }}>Obs: {vehiculoActual.observaciones}</div>}
                       {vehiculoActual.oficio_mp_url && (
-                        <a href={vehiculoActual.oficio_mp_url} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, marginTop: 8, fontSize: 12, color: C.gold, textDecoration: 'none' }}>
+                        <a href={urlsFirmadas[vehiculoActual.oficio_mp_url] || vehiculoActual.oficio_mp_url} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, marginTop: 8, fontSize: 12, color: C.gold, textDecoration: 'none' }}>
                           <FileText size={13} /> Ver oficio del MP (PDF)
                         </a>
                       )}
