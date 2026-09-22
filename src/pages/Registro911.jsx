@@ -20,6 +20,7 @@ import { supabase } from '../supabaseClient';
 // ═══════════════════════════════════════════════
 const COLORS = {
   darkBlue: '#001a4d',
+  darkBlueSoft: '#0a2a63',
   gold: '#b69054',
   lightGold: '#f5ede0',
   white: '#ffffff',
@@ -256,10 +257,11 @@ const styles = {
     marginBottom: '40px',
   },
   formHeader: {
-    backgroundColor: COLORS.darkBlue,
+    backgroundColor: COLORS.darkBlueSoft,
     color: COLORS.white,
     padding: '18px 24px',
     borderRadius: '14px 14px 0 0',
+    boxShadow: '0 3px 10px rgba(0,0,0,0.15)',
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
