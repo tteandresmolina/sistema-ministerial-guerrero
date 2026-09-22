@@ -154,7 +154,7 @@ export default function ChecklistCHEERS() {
           {expandido ? <ChevronUp size={16} color={C.gray} /> : <ChevronDown size={16} color={C.gray} />}
         </button>
         {expandido && (
-          <button onClick={limpiar} style={{ background: 'none', border: '1.5px solid ' + C.darkBlue, borderRadius: 7, padding: '6px 14px', display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', color: C.darkBlue, fontSize: 12, fontWeight: 600 }}>
+          <button onClick={limpiar} style={{ background: 'none', border: '1.5px solid ' + C.darkBlue, borderRadius: 7, padding: '6px 14px', display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', color: C.darkBlue, fontSize: 14, fontWeight: 600 }}>
             <RefreshCw size={13} /> Limpiar
           </button>
         )}
@@ -162,7 +162,7 @@ export default function ChecklistCHEERS() {
 
       {expandido && (
         <div>
-          <p style={{ fontSize: 12, color: C.gray, marginBottom: 14 }}>
+          <p style={{ fontSize: 14, color: C.gray, marginBottom: 14 }}>
             Antes de crear un proyecto SARA, evalúa si el problema identificado cumple los criterios CHEERS. Cada criterio se califica de 1 (no aplica) a 5 (crítico). Un puntaje alto confirma que el problema amerita una intervención estructurada.
           </p>
 
@@ -170,14 +170,14 @@ export default function ChecklistCHEERS() {
           <div style={{ background: C.white, borderRadius: 10, padding: 14, marginBottom: 14, boxShadow: '0 1px 4px rgba(0,0,0,0.08)' }}>
             <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 12 }}>
               <div>
-                <label style={{ fontSize: 12, fontWeight: 600, color: C.darkBlue, display: 'block', marginBottom: 4 }}>Problema identificado</label>
-                <input style={{ padding: '10px 12px', border: '1px solid ' + C.lightGray, borderRadius: 8, fontSize: 14, outline: 'none', fontFamily: 'inherit', width: '100%', boxSizing: 'border-box' }}
+                <label style={{ fontSize: 14, fontWeight: 600, color: C.darkBlue, display: 'block', marginBottom: 4 }}>Problema identificado</label>
+                <input style={{ padding: '13px 14px', border: '1px solid ' + C.lightGray, borderRadius: 8, fontSize: 16, outline: 'none', fontFamily: 'inherit', width: '100%', boxSizing: 'border-box' }}
                   placeholder="Ej: Robos a transeúnte en Col. Renacimiento entre 20:00-23:00 hrs"
                   value={problema} onChange={function(e) { setProblema(e.target.value); }} />
               </div>
               <div>
-                <label style={{ fontSize: 12, fontWeight: 600, color: C.darkBlue, display: 'block', marginBottom: 4 }}>Zona geográfica</label>
-                <input style={{ padding: '10px 12px', border: '1px solid ' + C.lightGray, borderRadius: 8, fontSize: 14, outline: 'none', fontFamily: 'inherit', width: '100%', boxSizing: 'border-box' }}
+                <label style={{ fontSize: 14, fontWeight: 600, color: C.darkBlue, display: 'block', marginBottom: 4 }}>Zona geográfica</label>
+                <input style={{ padding: '13px 14px', border: '1px solid ' + C.lightGray, borderRadius: 8, fontSize: 16, outline: 'none', fontFamily: 'inherit', width: '100%', boxSizing: 'border-box' }}
                   placeholder="Ej: Acapulco, Sector Renacimiento"
                   value={zona} onChange={function(e) { setZona(e.target.value); }} />
               </div>
@@ -195,15 +195,15 @@ export default function ChecklistCHEERS() {
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
                       <div style={{ flex: 1 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                          <span style={{ width: 28, height: 28, borderRadius: '50%', backgroundColor: cr.color, color: C.white, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 700 }}>{cr.letra}</span>
-                          <span style={{ fontSize: 14, fontWeight: 700, color: C.darkBlue }}>{cr.titulo}</span>
+                          <span style={{ width: 28, height: 28, borderRadius: '50%', backgroundColor: cr.color, color: C.white, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 700 }}>{cr.letra}</span>
+                          <span style={{ fontSize: 16, fontWeight: 700, color: C.darkBlue }}>{cr.titulo}</span>
                         </div>
-                        <div style={{ fontSize: 13, color: C.darkBlue, fontWeight: 500, marginBottom: 4 }}>{cr.pregunta}</div>
-                        <div style={{ fontSize: 11, color: C.gray }}>{cr.descripcion}</div>
+                        <div style={{ fontSize: 15, color: C.darkBlue, fontWeight: 500, marginBottom: 4 }}>{cr.pregunta}</div>
+                        <div style={{ fontSize: 13, color: C.gray }}>{cr.descripcion}</div>
                       </div>
                       <div style={{ textAlign: 'center', minWidth: 60 }}>
                         <div style={{ fontSize: 28, fontWeight: 700, color: nivel.color }}>{score}</div>
-                        <div style={{ fontSize: 10, fontWeight: 600, color: nivel.color }}>{nivel.label}</div>
+                        <div style={{ fontSize: 12, fontWeight: 600, color: nivel.color }}>{nivel.label}</div>
                       </div>
                     </div>
 
@@ -212,7 +212,7 @@ export default function ChecklistCHEERS() {
                       {NIVELES.filter(function(n) { return n.valor > 0; }).map(function(n) {
                         return (
                           <button key={n.valor} onClick={function() { setScores(function(p) { var u = {}; Object.assign(u, p); u[cr.key] = n.valor; return u; }); }}
-                            style={{ flex: 1, padding: '6px 4px', borderRadius: 6, cursor: 'pointer', fontSize: 10, fontWeight: 700,
+                            style={{ flex: 1, padding: '6px 4px', borderRadius: 6, cursor: 'pointer', fontSize: 12, fontWeight: 700,
                               border: score === n.valor ? '2px solid ' + n.color : '1px solid ' + C.lightGray,
                               background: score === n.valor ? n.color + '20' : C.white,
                               color: score === n.valor ? n.color : C.gray }}>
@@ -224,14 +224,14 @@ export default function ChecklistCHEERS() {
 
                     {/* Indicadores */}
                     <button onClick={function() { toggleIndicadores(cr.key); }}
-                      style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 11, color: C.gold, fontWeight: 600, padding: 0, display: 'flex', alignItems: 'center', gap: 4 }}>
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, color: C.gold, fontWeight: 600, padding: 0, display: 'flex', alignItems: 'center', gap: 4 }}>
                       {showIndicadores[cr.key] ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
                       {showIndicadores[cr.key] ? 'Ocultar' : 'Ver'} indicadores de referencia
                     </button>
                     {showIndicadores[cr.key] && (
                       <div style={{ marginTop: 6, padding: 10, background: C.bg, borderRadius: 6 }}>
                         {cr.indicadores.map(function(ind, i) {
-                          return <div key={i} style={{ fontSize: 11, color: C.darkBlue, padding: '3px 0', display: 'flex', alignItems: 'center', gap: 6 }}>
+                          return <div key={i} style={{ fontSize: 13, color: C.darkBlue, padding: '3px 0', display: 'flex', alignItems: 'center', gap: 6 }}>
                             <span style={{ color: cr.color }}>•</span> {ind}
                           </div>;
                         })}
@@ -266,15 +266,15 @@ export default function ChecklistCHEERS() {
                 var s = scores[cr.key];
                 return (
                   <div key={cr.key} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '4px 10px', borderRadius: 8, background: s > 0 ? cr.color + '15' : C.bg, border: '1px solid ' + (s > 0 ? cr.color + '30' : C.lightGray) }}>
-                    <span style={{ width: 18, height: 18, borderRadius: '50%', backgroundColor: cr.color, color: C.white, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 700 }}>{cr.letra}</span>
-                    <span style={{ fontSize: 12, fontWeight: 700, color: s > 0 ? cr.color : C.gray }}>{s}</span>
+                    <span style={{ width: 18, height: 18, borderRadius: '50%', backgroundColor: cr.color, color: C.white, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700 }}>{cr.letra}</span>
+                    <span style={{ fontSize: 14, fontWeight: 700, color: s > 0 ? cr.color : C.gray }}>{s}</span>
                   </div>
                 );
               })}
             </div>
 
             {problema && (
-              <div style={{ marginTop: 12, padding: 10, background: C.white, borderRadius: 8, fontSize: 12, color: C.darkBlue }}>
+              <div style={{ marginTop: 12, padding: 10, background: C.white, borderRadius: 8, fontSize: 14, color: C.darkBlue }}>
                 <strong>Problema evaluado:</strong> {problema}{zona ? ' — ' + zona : ''}
               </div>
             )}
