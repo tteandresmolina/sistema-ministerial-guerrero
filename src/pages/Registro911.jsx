@@ -147,7 +147,7 @@ const styles = {
     margin: 0,
   },
   subtitle: {
-    fontSize: '13px',
+    fontSize: '15px',
     color: COLORS.gray,
     margin: '4px 0 0 0',
   },
@@ -181,7 +181,7 @@ const styles = {
     lineHeight: 1,
   },
   statLabel: {
-    fontSize: '12px',
+    fontSize: '14px',
     color: COLORS.gray,
     marginTop: '2px',
   },
@@ -190,8 +190,8 @@ const styles = {
     color: COLORS.white,
     border: 'none',
     borderRadius: '8px',
-    padding: '10px 20px',
-    fontSize: '14px',
+    padding: '14px 24px',
+    fontSize: '16px',
     fontWeight: '600',
     cursor: 'pointer',
     display: 'flex',
@@ -203,8 +203,8 @@ const styles = {
     color: COLORS.white,
     border: 'none',
     borderRadius: '8px',
-    padding: '10px 20px',
-    fontSize: '14px',
+    padding: '14px 24px',
+    fontSize: '16px',
     fontWeight: '600',
     cursor: 'pointer',
     display: 'flex',
@@ -216,8 +216,8 @@ const styles = {
     color: COLORS.darkBlue,
     border: `2px solid ${COLORS.darkBlue}`,
     borderRadius: '8px',
-    padding: '8px 16px',
-    fontSize: '13px',
+    padding: '12px 20px',
+    fontSize: '15px',
     fontWeight: '600',
     cursor: 'pointer',
     display: 'flex',
@@ -229,8 +229,8 @@ const styles = {
     color: COLORS.gray,
     border: `1px solid ${COLORS.lightGray}`,
     borderRadius: '8px',
-    padding: '10px 20px',
-    fontSize: '14px',
+    padding: '14px 24px',
+    fontSize: '16px',
     cursor: 'pointer',
   },
   formOverlay: {
@@ -271,7 +271,7 @@ const styles = {
     marginBottom: '20px',
   },
   formSectionTitle: {
-    fontSize: '14px',
+    fontSize: '16px',
     fontWeight: '700',
     color: COLORS.gold,
     marginBottom: '12px',
@@ -297,7 +297,7 @@ const styles = {
     gap: '4px',
   },
   label: {
-    fontSize: '12px',
+    fontSize: '14px',
     fontWeight: '600',
     color: COLORS.darkBlue,
   },
@@ -306,29 +306,29 @@ const styles = {
     marginLeft: '2px',
   },
   input: {
-    padding: '10px 12px',
+    padding: '13px 14px',
     border: `1px solid ${COLORS.lightGray}`,
     borderRadius: '8px',
-    fontSize: '14px',
+    fontSize: '16px',
     outline: 'none',
     transition: 'border-color 0.2s',
     fontFamily: 'inherit',
   },
   select: {
-    padding: '10px 12px',
+    padding: '13px 14px',
     border: `1px solid ${COLORS.lightGray}`,
     borderRadius: '8px',
-    fontSize: '14px',
+    fontSize: '16px',
     outline: 'none',
     backgroundColor: COLORS.white,
     fontFamily: 'inherit',
     cursor: 'pointer',
   },
   textarea: {
-    padding: '10px 12px',
+    padding: '13px 14px',
     border: `1px solid ${COLORS.lightGray}`,
     borderRadius: '8px',
-    fontSize: '14px',
+    fontSize: '16px',
     outline: 'none',
     fontFamily: 'inherit',
     resize: 'vertical',
@@ -369,7 +369,7 @@ const styles = {
   searchInput: {
     border: 'none',
     outline: 'none',
-    fontSize: '14px',
+    fontSize: '16px',
     backgroundColor: 'transparent',
     flex: '1',
     fontFamily: 'inherit',
@@ -381,7 +381,7 @@ const styles = {
   th: {
     padding: '12px 16px',
     textAlign: 'left',
-    fontSize: '11px',
+    fontSize: '13px',
     fontWeight: '700',
     color: COLORS.gray,
     textTransform: 'uppercase',
@@ -392,7 +392,7 @@ const styles = {
   },
   td: {
     padding: '12px 16px',
-    fontSize: '13px',
+    fontSize: '15px',
     borderBottom: `1px solid ${COLORS.lightGray}`,
     color: COLORS.darkBlue,
   },
@@ -400,7 +400,7 @@ const styles = {
     display: 'inline-block',
     padding: '4px 10px',
     borderRadius: '12px',
-    fontSize: '11px',
+    fontSize: '13px',
     fontWeight: '600',
     whiteSpace: 'nowrap',
   },
@@ -437,7 +437,7 @@ const styles = {
     alignItems: 'center',
   },
   detailRow: {
-    padding: '10px 20px',
+    padding: '14px 24px',
     borderBottom: `1px solid ${COLORS.lightGray}`,
     display: 'flex',
     justifyContent: 'space-between',
@@ -445,14 +445,14 @@ const styles = {
     gap: '12px',
   },
   detailLabel: {
-    fontSize: '11px',
+    fontSize: '13px',
     fontWeight: '600',
     color: COLORS.gray,
     textTransform: 'uppercase',
     minWidth: '120px',
   },
   detailValue: {
-    fontSize: '14px',
+    fontSize: '16px',
     color: COLORS.darkBlue,
     textAlign: 'right',
     flex: 1,
@@ -751,7 +751,7 @@ export default function Registro911({ perfil }) {
           <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
             <Filter size={14} color={COLORS.gray} />
             <select
-              style={{ ...styles.select, padding: '6px 10px', fontSize: '13px' }}
+              style={{ ...styles.select, padding: '6px 10px', fontSize: '15px' }}
               value={filterEstatus}
               onChange={e => setFilterEstatus(e.target.value)}
             >
@@ -779,7 +779,7 @@ export default function Registro911({ perfil }) {
             <p style={{ fontSize: '16px', fontWeight: '600', marginTop: '12px' }}>
               {searchTerm || filterEstatus !== 'todos' ? 'Sin resultados para los filtros aplicados' : 'No hay reportes registrados'}
             </p>
-            <p style={{ fontSize: '13px' }}>
+            <p style={{ fontSize: '15px' }}>
               {searchTerm || filterEstatus !== 'todos' ? 'Intenta con otros criterios de búsqueda' : 'Haz clic en "Nuevo Reporte" para comenzar'}
             </p>
           </div>
@@ -813,35 +813,35 @@ export default function Registro911({ perfil }) {
                       onMouseLeave={e => e.currentTarget.style.backgroundColor = idx % 2 === 0 ? COLORS.white : COLORS.bg}
                       onClick={() => setShowDetail(r)}
                     >
-                      <td style={{ ...styles.td, fontWeight: '700', fontFamily: 'monospace', fontSize: '13px' }}>
+                      <td style={{ ...styles.td, fontWeight: '700', fontFamily: 'monospace', fontSize: '15px' }}>
                         {r.folio_911}
                       </td>
                       <td style={styles.td}>
-                        <div style={{ fontSize: '13px' }}>{formatDate(r.fecha_reporte)}</div>
-                        <div style={{ fontSize: '11px', color: COLORS.gray }}>{formatTime24(r.hora_reporte)} hrs</div>
+                        <div style={{ fontSize: '15px' }}>{formatDate(r.fecha_reporte)}</div>
+                        <div style={{ fontSize: '13px', color: COLORS.gray }}>{formatTime24(r.hora_reporte)} hrs</div>
                       </td>
                       <td style={styles.td}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                           {fuenteCfg.icon && <fuenteCfg.icon size={14} color={COLORS.gold} />}
-                          <span style={{ fontSize: '12px' }}>{fuenteCfg.label || r.fuente}</span>
+                          <span style={{ fontSize: '14px' }}>{fuenteCfg.label || r.fuente}</span>
                         </div>
                       </td>
                       <td style={{ ...styles.td, maxWidth: '180px' }}>
-                        <div style={{ fontSize: '13px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        <div style={{ fontSize: '15px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                           {r.catalogo_incidencias?.nombre || r.incidencia_tipo}
                         </div>
                         {r.catalogo_incidencias?.categoria === 'alto_impacto' && (
-                          <span style={{ ...styles.badge, backgroundColor: '#fce4ec', color: '#c62828', fontSize: '10px', marginTop: '2px' }}>
+                          <span style={{ ...styles.badge, backgroundColor: '#fce4ec', color: '#c62828', fontSize: '12px', marginTop: '2px' }}>
                             Alto impacto
                           </span>
                         )}
                       </td>
                       <td style={{ ...styles.td, maxWidth: '200px' }}>
-                        <div style={{ fontSize: '13px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        <div style={{ fontSize: '15px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                           {r.ubicacion_texto}
                         </div>
                         {r.municipio && (
-                          <div style={{ fontSize: '11px', color: COLORS.gray }}>{r.municipio}, Guerrero</div>
+                          <div style={{ fontSize: '13px', color: COLORS.gray }}>{r.municipio}, Guerrero</div>
                         )}
                       </td>
                       <td style={styles.td}>
@@ -855,7 +855,7 @@ export default function Registro911({ perfil }) {
                       </td>
                       <td style={styles.td}>
                         <button
-                          style={{ ...styles.btnOutline, padding: '4px 10px', fontSize: '11px' }}
+                          style={{ ...styles.btnOutline, padding: '4px 10px', fontSize: '13px' }}
                           onClick={e => { e.stopPropagation(); setShowDetail(r); }}
                         >
                           <Eye size={13} /> Ver
@@ -949,7 +949,7 @@ export default function Registro911({ perfil }) {
                           <option key={m} value={m}>{m}</option>
                         ))}
                       </select>
-                      <span style={{ fontSize: '11px', color: COLORS.gray, marginLeft: '4px' }}>hrs</span>
+                      <span style={{ fontSize: '13px', color: COLORS.gray, marginLeft: '4px' }}>hrs</span>
                     </div>
                   </div>
                 </div>
@@ -1067,7 +1067,7 @@ export default function Registro911({ perfil }) {
                       href={buildGoogleMapsUrl(form.coordenadas_lat, form.coordenadas_lng)}
                       target="_blank"
                       rel="noopener noreferrer"
-                      style={{ fontSize: '12px', color: COLORS.gold, display: 'flex', alignItems: 'center', gap: '4px', textDecoration: 'none' }}
+                      style={{ fontSize: '14px', color: COLORS.gold, display: 'flex', alignItems: 'center', gap: '4px', textDecoration: 'none' }}
                     >
                       <ExternalLink size={13} /> Ver ubicación en Google Maps
                     </a>
@@ -1099,7 +1099,7 @@ export default function Registro911({ perfil }) {
                 <div style={styles.formSectionTitle}>
                   <Camera size={15} /> Fotografías y Documentos
                 </div>
-                <p style={{ fontSize: '11px', color: COLORS.gray, margin: '0 0 10px 0' }}>
+                <p style={{ fontSize: '13px', color: COLORS.gray, margin: '0 0 10px 0' }}>
                   Formatos: JPG, PNG, PDF, MP4 · Máximo 5MB por archivo
                 </p>
                 <div style={{
@@ -1117,7 +1117,7 @@ export default function Registro911({ perfil }) {
                   onDrop={e => { e.preventDefault(); e.currentTarget.style.borderColor = COLORS.lightGray; handleFileSelect({ target: { files: e.dataTransfer.files } }); }}
                 >
                   <Upload size={28} color={COLORS.gray} />
-                  <p style={{ fontSize: '13px', color: COLORS.gray, margin: '8px 0 0 0' }}>
+                  <p style={{ fontSize: '15px', color: COLORS.gray, margin: '8px 0 0 0' }}>
                     Arrastra archivos aquí o haz clic para seleccionar
                   </p>
                   <input
@@ -1147,8 +1147,8 @@ export default function Registro911({ perfil }) {
                           </div>
                         )}
                         <div style={{ flex: 1 }}>
-                          <div style={{ fontSize: '13px', fontWeight: '600', color: COLORS.darkBlue }}>{arch.nombre}</div>
-                          <div style={{ fontSize: '11px', color: COLORS.gray }}>
+                          <div style={{ fontSize: '15px', fontWeight: '600', color: COLORS.darkBlue }}>{arch.nombre}</div>
+                          <div style={{ fontSize: '13px', color: COLORS.gray }}>
                             {(arch.tamano / 1024).toFixed(0)} KB · {arch.tipo.split('/')[1]?.toUpperCase()}
                           </div>
                         </div>
@@ -1169,7 +1169,7 @@ export default function Registro911({ perfil }) {
                 <div style={styles.formSectionTitle}>
                   <Shield size={15} /> Evaluación de la Información (Sistema 4x4)
                 </div>
-                <p style={{ fontSize: '12px', color: COLORS.gray, margin: '0 0 10px 0' }}>
+                <p style={{ fontSize: '14px', color: COLORS.gray, margin: '0 0 10px 0' }}>
                   Opcional — Califica la confiabilidad de la fuente y la exactitud de la información.
                 </p>
                 <div style={styles.formGrid}>
@@ -1209,7 +1209,7 @@ export default function Registro911({ perfil }) {
                   borderRadius: '8px',
                   backgroundColor: mensaje.tipo === 'ok' ? '#e8f5e9' : '#fce4ec',
                   color: mensaje.tipo === 'ok' ? '#2e7d32' : '#c62828',
-                  fontSize: '13px',
+                  fontSize: '15px',
                   fontWeight: '600',
                   display: 'flex',
                   alignItems: 'center',
@@ -1251,7 +1251,7 @@ export default function Registro911({ perfil }) {
                 <div style={{ fontSize: '16px', fontWeight: '700' }}>
                   Folio: {showDetail.folio_911}
                 </div>
-                <div style={{ fontSize: '12px', opacity: 0.8, marginTop: '2px' }}>
+                <div style={{ fontSize: '14px', opacity: 0.8, marginTop: '2px' }}>
                   Detalle del reporte
                 </div>
               </div>
@@ -1264,7 +1264,7 @@ export default function Registro911({ perfil }) {
                 ...styles.badge,
                 backgroundColor: (ESTATUS_CONFIG[showDetail.estatus] || {}).bg,
                 color: (ESTATUS_CONFIG[showDetail.estatus] || {}).color,
-                fontSize: '13px',
+                fontSize: '15px',
                 padding: '6px 14px',
               }}>
                 {(ESTATUS_CONFIG[showDetail.estatus] || {}).label}
@@ -1302,7 +1302,7 @@ export default function Registro911({ perfil }) {
               <div style={styles.detailRow}>
                 <span style={styles.detailLabel}>Coordenadas</span>
                 <div style={{ textAlign: 'right', flex: 1 }}>
-                  <div style={{ fontSize: '14px', color: COLORS.darkBlue }}>
+                  <div style={{ fontSize: '16px', color: COLORS.darkBlue }}>
                     {showDetail.coordenadas_lat}, {showDetail.coordenadas_lng}
                   </div>
                   <a
@@ -1318,7 +1318,7 @@ export default function Registro911({ perfil }) {
                       backgroundColor: COLORS.lightGold,
                       color: COLORS.darkBlue,
                       borderRadius: '6px',
-                      fontSize: '12px',
+                      fontSize: '14px',
                       fontWeight: '600',
                       textDecoration: 'none',
                     }}
@@ -1331,17 +1331,17 @@ export default function Registro911({ perfil }) {
 
             {/* Síntesis */}
             <div style={{ padding: '14px 20px', borderTop: `2px solid ${COLORS.lightGray}` }}>
-              <div style={{ fontSize: '11px', fontWeight: '700', color: COLORS.gray, textTransform: 'uppercase', marginBottom: '8px' }}>
+              <div style={{ fontSize: '13px', fontWeight: '700', color: COLORS.gray, textTransform: 'uppercase', marginBottom: '8px' }}>
                 Síntesis del Reporte
               </div>
-              <div style={{ fontSize: '14px', color: COLORS.darkBlue, lineHeight: '1.6', backgroundColor: COLORS.bg, padding: '12px', borderRadius: '8px' }}>
+              <div style={{ fontSize: '16px', color: COLORS.darkBlue, lineHeight: '1.6', backgroundColor: COLORS.bg, padding: '12px', borderRadius: '8px' }}>
                 {showDetail.sintesis}
               </div>
             </div>
 
             {/* Cambiar estatus */}
             <div style={{ padding: '14px 20px', borderTop: `2px solid ${COLORS.lightGray}` }}>
-              <div style={{ fontSize: '11px', fontWeight: '700', color: COLORS.gray, textTransform: 'uppercase', marginBottom: '8px' }}>
+              <div style={{ fontSize: '13px', fontWeight: '700', color: COLORS.gray, textTransform: 'uppercase', marginBottom: '8px' }}>
                 Cambiar Estatus
               </div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
@@ -1357,7 +1357,7 @@ export default function Registro911({ perfil }) {
                         border: `1px solid ${cfg.color}30`,
                         cursor: 'pointer',
                         padding: '6px 12px',
-                        fontSize: '12px',
+                        fontSize: '14px',
                       }}
                       onClick={async () => {
                         await actualizarEstatus(showDetail.id, key);
