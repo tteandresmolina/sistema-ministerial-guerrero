@@ -6,10 +6,11 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "../supabaseClient";
+import * as XLSX from "xlsx";
 import {
   Search, Plus, X, Phone, User, ShieldAlert, CheckCircle2,
   FileText, Link2, Fingerprint, Camera, Users, Briefcase,
-  Smartphone, Mail, Hash,
+  Smartphone, Mail, Hash, Upload, GitMerge,
 } from "lucide-react";
 
 const COLORS = { primary: "#001a4d", gold: "#b69054", white: "#ffffff", bg: "#f4f6fb" };
@@ -306,7 +307,7 @@ export default function RegistroEstatalRedCriminal({ perfil }) {
     setCargandoDisp(false);
   };
 
-  useEffect(() => { if (vista === "dispositivos") cargarDispositivos(); }, [vista]);
+  useEffect(() => { if (vista === "dispositivos" || vista === "agenda") cargarDispositivos(); }, [vista]);
 
   const listaFiltradaDisp = dispositivos.filter((d) => {
     const q = busquedaDisp.trim().toLowerCase();
@@ -453,6 +454,109 @@ export default function RegistroEstatalRedCriminal({ perfil }) {
     cargarDispositivos();
   };
 
+  // ==========================================================================
+  // AGENDA — importar Excel de un dispositivo + detección de coincidencias
+  // ==========================================================================
+  const [dispositivoParaImportar, setDispositivoParaImportar] = useState("");
+  const [archivoImportar, setArchivoImportar] = useState(null);
+  const [previewImportar, setPreviewImportar] = useState(null); // [{numero, alias}]
+  const [importando, setImportando] = useState(false);
+  const [mensajeImport, setMensajeImport] = useState(null);
+
+  const [coincidencias, setCoincidencias] = useState([]);
+  const [cargandoCoincidencias, setCargandoCoincidencias] = useState(true);
+
+  const procesarArchivoImport = (file) => {
+    setArchivoImportar(file);
+    setMensajeImport(null);
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const wb = XLSX.read(e.target.result, { type: "binary" });
+        const nombreHoja = wb.SheetNames.includes("AGENDA_DEPURADA") ? "AGENDA_DEPURADA" : wb.SheetNames[0];
+        const hoja = wb.Sheets[nombreHoja];
+        const filas = XLSX.utils.sheet_to_json(hoja, { defval: "" });
+        const registros = filas
+          .map((f) => ({
+            numero: String(f.PERIFERICO || f.NUMERO || "").replace(/\D/g, ""),
+            alias: String(f.NOMBRE || "").trim(),
+          }))
+          .filter((r) => r.numero.length >= 10);
+        setPreviewImportar(registros);
+      } catch (err) {
+        setMensajeImport({ tipo: "error", texto: "No se pudo leer el archivo: " + err.message });
+        setPreviewImportar(null);
+      }
+    };
+    reader.readAsBinaryString(file);
+  };
+
+  const importarAgenda = async () => {
+    if (!dispositivoParaImportar) {
+      setMensajeImport({ tipo: "error", texto: "Selecciona primero a qué dispositivo pertenece esta agenda." });
+      return;
+    }
+    if (!previewImportar || previewImportar.length === 0) {
+      setMensajeImport({ tipo: "error", texto: "Sube un archivo con registros válidos." });
+      return;
+    }
+    setImportando(true); setMensajeImport(null);
+
+    const filas = previewImportar.map((r) => ({
+      dispositivo_id: dispositivoParaImportar,
+      numero: r.numero,
+      alias_guardado: r.alias || null,
+      registrado_por_id: perfil?.id || null,
+    }));
+
+    // Se sube en lotes de 500 para no exceder el tamaño de una sola petición
+    const TAMANO_LOTE = 500;
+    let insertados = 0;
+    for (let i = 0; i < filas.length; i += TAMANO_LOTE) {
+      const lote = filas.slice(i, i + TAMANO_LOTE);
+      const { error } = await supabase.from("agenda_registros").insert(lote);
+      if (error) {
+        setImportando(false);
+        setMensajeImport({ tipo: "error", texto: `Error en el lote ${i / TAMANO_LOTE + 1}: ${error.message}` });
+        return;
+      }
+      insertados += lote.length;
+    }
+
+    setImportando(false);
+    setMensajeImport({ tipo: "ok", texto: `✅ Se importaron ${insertados} registros de agenda.` });
+    setArchivoImportar(null);
+    setPreviewImportar(null);
+    setDispositivoParaImportar("");
+    cargarCoincidencias();
+  };
+
+  const cargarCoincidencias = async () => {
+    setCargandoCoincidencias(true);
+    const { data, error } = await supabase
+      .from("agenda_registros")
+      .select("numero, alias_guardado, dispositivo_id, dispositivos_intervenidos(spid)");
+    if (error || !data) { setCoincidencias([]); setCargandoCoincidencias(false); return; }
+
+    const mapa = {};
+    data.forEach((fila) => {
+      if (!mapa[fila.numero]) mapa[fila.numero] = { numero: fila.numero, alias: new Set(), spids: new Set(), dispositivos: new Set() };
+      if (fila.alias_guardado) mapa[fila.numero].alias.add(fila.alias_guardado);
+      if (fila.dispositivos_intervenidos?.spid) mapa[fila.numero].spids.add(fila.dispositivos_intervenidos.spid);
+      mapa[fila.numero].dispositivos.add(fila.dispositivo_id);
+    });
+
+    const lista = Object.values(mapa)
+      .filter((c) => c.dispositivos.size > 1)
+      .map((c) => ({ numero: c.numero, alias: [...c.alias], spids: [...c.spids] }))
+      .sort((a, b) => b.alias.length - a.alias.length);
+
+    setCoincidencias(lista);
+    setCargandoCoincidencias(false);
+  };
+
+  useEffect(() => { if (vista === "agenda") cargarCoincidencias(); }, [vista]);
+
   return (
     <div>
       <h3 style={{ margin: "0 0 4px 0", color: COLORS.primary, fontSize: 20, display: "flex", alignItems: "center", gap: 10 }}>
@@ -469,6 +573,9 @@ export default function RegistroEstatalRedCriminal({ perfil }) {
         </button>
         <button onClick={() => setVista("dispositivos")} style={{ padding: "10px 20px", borderRadius: 8, cursor: "pointer", display: "flex", alignItems: "center", gap: 8, border: vista === "dispositivos" ? "2px solid #b69054" : "1px solid #e8ecf1", background: vista === "dispositivos" ? "#f5ede0" : COLORS.white, color: vista === "dispositivos" ? COLORS.primary : "#666", fontSize: 14, fontWeight: 700 }}>
           <Smartphone size={16} /> Dispositivos
+        </button>
+        <button onClick={() => setVista("agenda")} style={{ padding: "10px 20px", borderRadius: 8, cursor: "pointer", display: "flex", alignItems: "center", gap: 8, border: vista === "agenda" ? "2px solid #b69054" : "1px solid #e8ecf1", background: vista === "agenda" ? "#f5ede0" : COLORS.white, color: vista === "agenda" ? COLORS.primary : "#666", fontSize: 14, fontWeight: 700 }}>
+          <GitMerge size={16} /> Agenda
         </button>
       </div>
 
@@ -853,6 +960,88 @@ export default function RegistroEstatalRedCriminal({ perfil }) {
           </div>
         </div>
       )}
+      </>
+      )}
+
+      {vista === "agenda" && (
+      <>
+      <div style={cardStyle}>
+        <div style={tituloSeccion}><Upload size={16} /> Importar agenda de un dispositivo</div>
+        <p style={{ color: "#6b7280", fontSize: 13, margin: "0 0 16px 0" }}>
+          Sube el archivo <code>_DEPURADO.xlsx</code> que genera <code>depurar_contactos.py</code> (usa la hoja "AGENDA_DEPURADA").
+        </p>
+
+        <div style={{ display: "grid", gap: 14 }}>
+          <div>
+            <label style={labelStyle}>¿A qué dispositivo pertenece esta agenda?</label>
+            <select value={dispositivoParaImportar} onChange={(e) => setDispositivoParaImportar(e.target.value)} style={inputStyle}>
+              <option value="">— Seleccionar dispositivo —</option>
+              {dispositivos.map((d) => (
+                <option key={d.id} value={d.id}>
+                  {d.spid} — {[d.marca, d.modelo].filter(Boolean).join(" ") || "sin marca/modelo"} {d.titular_alias ? `("${d.titular_alias}")` : ""}
+                </option>
+              ))}
+            </select>
+            {dispositivos.length === 0 && (
+              <div style={{ color: "#6b7280", fontSize: 12, marginTop: 6 }}>
+                Aún no hay dispositivos registrados — da de alta uno primero en la pestaña "Dispositivos".
+              </div>
+            )}
+          </div>
+
+          <div>
+            <label style={labelStyle}>Archivo Excel</label>
+            <input type="file" accept=".xlsx,.xls" onChange={(e) => { if (e.target.files[0]) procesarArchivoImport(e.target.files[0]); }}
+              style={{ ...inputStyle, padding: 10 }} />
+          </div>
+
+          {previewImportar && (
+            <div style={{ background: "#e1f5ee", border: "1px solid #22c55e44", borderRadius: 8, padding: 14, color: "#0f6e56", fontSize: 14 }}>
+              Se detectaron <strong>{previewImportar.length}</strong> números válidos en "{archivoImportar?.name}". Listo para importar.
+            </div>
+          )}
+
+          {mensajeImport && (
+            <div style={{ background: mensajeImport.tipo === "ok" ? "#e1f5ee" : "#fcebeb", border: `1px solid ${mensajeImport.tipo === "ok" ? "#22c55e44" : "#ef444444"}`, borderRadius: 8, padding: 10, color: mensajeImport.tipo === "ok" ? "#0f6e56" : "#791f1f", fontSize: 13 }}>
+              {mensajeImport.texto}
+            </div>
+          )}
+
+          <button onClick={importarAgenda} disabled={importando || !previewImportar} style={{ ...btnPrimary, opacity: (importando || !previewImportar) ? 0.6 : 1 }}>
+            {importando ? "Importando…" : `Importar ${previewImportar ? previewImportar.length : ""} registros`}
+          </button>
+        </div>
+      </div>
+
+      <div style={cardStyle}>
+        <div style={tituloSeccion}><GitMerge size={16} /> Coincidencias detectadas</div>
+        <p style={{ color: "#6b7280", fontSize: 13, margin: "0 0 16px 0" }}>
+          Mismo número, distinto alias entre dispositivos — señal de que puede tratarse de la misma persona bajo distintos apodos.
+        </p>
+
+        {cargandoCoincidencias ? (
+          <div style={{ textAlign: "center", padding: 30, color: "#9ca3af" }}>Buscando coincidencias…</div>
+        ) : coincidencias.length === 0 ? (
+          <div style={{ textAlign: "center", padding: 30, color: "#9ca3af" }}>
+            Sin coincidencias por ahora — importa agendas de al menos dos dispositivos distintos para que aparezcan aquí.
+          </div>
+        ) : (
+          coincidencias.map((c) => (
+            <div key={c.numero} style={{ background: "#f9fafb", border: "1px solid #e8ecf1", borderRadius: 8, padding: 14, marginBottom: 10 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                <span style={{ fontSize: 15, fontWeight: 700, color: COLORS.primary, fontFamily: "monospace" }}>{formatoTelefono(c.numero)}</span>
+                <span style={{ background: COLORS.gold + "22", color: COLORS.gold, border: `1px solid ${COLORS.gold}55`, borderRadius: 12, padding: "3px 10px", fontSize: 12, fontWeight: 700 }}>{c.alias.length} alias</span>
+              </div>
+              <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 6 }}>
+                {c.alias.map((a, i) => (
+                  <span key={i} style={{ background: COLORS.white, border: "1px solid #c7cfe0", borderRadius: 4, padding: "3px 10px", fontSize: 12, color: "#374151" }}>"{a}"</span>
+                ))}
+              </div>
+              <div style={{ color: "#6b7280", fontSize: 11, fontFamily: "monospace" }}>{c.spids.join(" · ")}</div>
+            </div>
+          ))
+        )}
+      </div>
       </>
       )}
     </div>
