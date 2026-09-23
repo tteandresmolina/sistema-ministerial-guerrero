@@ -968,7 +968,7 @@ export default function RegistroEstatalRedCriminal({ perfil }) {
       <div style={cardStyle}>
         <div style={tituloSeccion}><Upload size={16} /> Importar agenda de un dispositivo</div>
         <p style={{ color: "#6b7280", fontSize: 13, margin: "0 0 16px 0" }}>
-          Sube el archivo <code>_DEPURADO.xlsx</code> que genera <code>depurar_contactos.py</code> (usa la hoja "AGENDA_DEPURADA").
+          Sube tu archivo de contactos (Excel con columnas OBJETIVO / PERIFERICO / NOMBRE — tu formato universal de SPID) o el <code>_DEPURADO.xlsx</code> de <code>depurar_contactos.py</code>. El sistema detecta cuál es automáticamente.
         </p>
 
         <div style={{ display: "grid", gap: 14 }}>
