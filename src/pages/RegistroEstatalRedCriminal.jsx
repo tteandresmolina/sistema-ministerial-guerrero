@@ -96,6 +96,33 @@ async function firmarUrlUnicaObj(urlPublica, expiresIn = 3600) {
   return data.signedUrl;
 }
 
+// ============================================================================
+// URLs FIRMADAS — bucket 'documentos-analisis-forense' (documentos_analisis)
+// ============================================================================
+const BUCKET_DOCS = "documentos-analisis-forense";
+const RUTA_PUBLICA_PREFIJO_DOCS = `/storage/v1/object/public/${BUCKET_DOCS}/`;
+
+function rutaDesdeUrlPublicaDocs(urlPublica) {
+  if (!urlPublica) return null;
+  const idx = urlPublica.indexOf(RUTA_PUBLICA_PREFIJO_DOCS);
+  if (idx === -1) return null;
+  return decodeURIComponent(urlPublica.slice(idx + RUTA_PUBLICA_PREFIJO_DOCS.length));
+}
+
+async function firmarUrlsDocs(urlsPublicas, expiresIn = 3600) {
+  const pares = (urlsPublicas || [])
+    .map((url) => ({ url, ruta: rutaDesdeUrlPublicaDocs(url) }))
+    .filter((p) => p.ruta);
+  if (pares.length === 0) return {};
+  const { data, error } = await supabase.storage
+    .from(BUCKET_DOCS)
+    .createSignedUrls(pares.map((p) => p.ruta), expiresIn);
+  if (error || !data) return {};
+  const mapa = {};
+  data.forEach((item, i) => { if (item.signedUrl) mapa[pares[i].url] = item.signedUrl; });
+  return mapa;
+}
+
 function Input({ label, value, onChange, placeholder = "", required = false }) {
   return (
     <div>
@@ -328,6 +355,7 @@ export default function RegistroEstatalRedCriminal({ perfil }) {
     setDispositivoActivo(null);
     setFotoArchivoDisp(null);
     setFotoPreviewUrlDisp(null);
+    setDocumentos([]);
     setBusquedaVincular(""); setResultadosVincular([]);
     setMostrarFormDisp(true);
     setMensajeDisp(null);
@@ -358,6 +386,7 @@ export default function RegistroEstatalRedCriminal({ perfil }) {
       const firmada = await firmarUrlUnicaObj(d.foto_url);
       setFotoPreviewUrlDisp(firmada);
     }
+    cargarDocumentos(d.id);
     setBusquedaVincular(""); setResultadosVincular([]);
     setMostrarFormDisp(true);
     setMensajeDisp(null);
@@ -452,6 +481,68 @@ export default function RegistroEstatalRedCriminal({ perfil }) {
     setMostrarFormDisp(false);
     setDispositivoActivo(null);
     cargarDispositivos();
+  };
+
+  // ==========================================================================
+  // DOCUMENTOS DEL EXPEDIENTE (por dispositivo)
+  // ==========================================================================
+  const [documentos, setDocumentos] = useState([]);
+  const [cargandoDocs, setCargandoDocs] = useState(false);
+  const [subiendoDoc, setSubiendoDoc] = useState(false);
+  const [mensajeDoc, setMensajeDoc] = useState(null);
+  const [urlsDocsFirmadas, setUrlsDocsFirmadas] = useState({});
+
+  const cargarDocumentos = async (dispositivoId) => {
+    setCargandoDocs(true);
+    const { data, error } = await supabase
+      .from("documentos_analisis")
+      .select("*")
+      .eq("dispositivo_id", dispositivoId)
+      .order("created_at", { ascending: false });
+    if (!error) {
+      const lista = data || [];
+      const mapaFirmadas = await firmarUrlsDocs(lista.map((d) => d.url_archivo));
+      setUrlsDocsFirmadas(mapaFirmadas);
+      setDocumentos(lista);
+    }
+    setCargandoDocs(false);
+  };
+
+  const subirDocumento = async (file) => {
+    if (!dispositivoActivo) return;
+    setSubiendoDoc(true); setMensajeDoc(null);
+    const ext = file.name.split(".").pop().toLowerCase();
+    const nombreUnico = `${dispositivoActivo.id}/${Date.now()}_${file.name}`;
+
+    const { error: errorSubida } = await supabase.storage.from(BUCKET_DOCS).upload(nombreUnico, file);
+    if (errorSubida) {
+      setSubiendoDoc(false);
+      setMensajeDoc({ tipo: "error", texto: "Error al subir: " + errorSubida.message });
+      return;
+    }
+    const { data } = supabase.storage.from(BUCKET_DOCS).getPublicUrl(nombreUnico);
+
+    const { error: errorInsert } = await supabase.from("documentos_analisis").insert([{
+      dispositivo_id: dispositivoActivo.id,
+      nombre_archivo: file.name,
+      tipo_archivo: ext,
+      url_archivo: data?.publicUrl || null,
+      registrado_por_id: perfil?.id || null,
+    }]);
+
+    setSubiendoDoc(false);
+    if (errorInsert) {
+      setMensajeDoc({ tipo: "error", texto: "Error al registrar: " + errorInsert.message });
+      return;
+    }
+    cargarDocumentos(dispositivoActivo.id);
+  };
+
+  const iconoDocumento = (tipo) => {
+    if (tipo === "pdf") return { icon: FileText, color: "#dc3545" };
+    if (tipo === "xlsx" || tipo === "xls") return { icon: FileText, color: "#1e7a3d" };
+    if (tipo === "pptx" || tipo === "ppt") return { icon: FileText, color: "#d24726" };
+    return { icon: FileText, color: "#6b7280" };
   };
 
   // ==========================================================================
@@ -938,6 +1029,49 @@ export default function RegistroEstatalRedCriminal({ perfil }) {
                   </div>
                 )}
               </div>
+
+              {dispositivoActivo && (
+                <div>
+                  <label style={labelStyle}>Documentos del expediente</label>
+                  <div style={{ background: "#f9fafb", border: "1px solid #e8ecf1", borderRadius: 8, padding: 14 }}>
+                    <input id="doc-dispositivo" type="file" accept=".pdf,.xlsx,.xls,.pptx,.ppt,.docx,.doc" style={{ display: "none" }}
+                      onChange={(e) => { if (e.target.files[0]) subirDocumento(e.target.files[0]); e.target.value = ""; }} />
+                    <button type="button" onClick={() => document.getElementById("doc-dispositivo").click()} disabled={subiendoDoc}
+                      style={{ ...btnSecondary, padding: "9px 16px", fontSize: 13, marginBottom: documentos.length > 0 ? 10 : 0 }}>
+                      <Upload size={14} /> {subiendoDoc ? "Subiendo…" : "Subir documento (PDF, Excel, PPTX)"}
+                    </button>
+
+                    {mensajeDoc && (
+                      <div style={{ background: "#fcebeb", border: "1px solid #ef444444", borderRadius: 6, padding: 8, marginBottom: 8, color: "#791f1f", fontSize: 12 }}>
+                        {mensajeDoc.texto}
+                      </div>
+                    )}
+
+                    {cargandoDocs ? (
+                      <div style={{ color: "#9ca3af", fontSize: 12 }}>Cargando…</div>
+                    ) : documentos.length === 0 ? (
+                      <div style={{ color: "#9ca3af", fontSize: 12 }}>Aún no hay documentos adjuntos.</div>
+                    ) : (
+                      documentos.map((doc) => {
+                        const { icon: Icon, color } = iconoDocumento(doc.tipo_archivo);
+                        return (
+                          <a key={doc.id} href={urlsDocsFirmadas[doc.url_archivo] || doc.url_archivo} target="_blank" rel="noreferrer"
+                            style={{ display: "flex", alignItems: "center", gap: 8, background: COLORS.white, borderRadius: 6, padding: "8px 10px", marginBottom: 6, textDecoration: "none", border: "1px solid #e8ecf1" }}>
+                            <Icon size={16} style={{ color }} />
+                            <span style={{ color: COLORS.primary, fontSize: 13, flex: 1, wordBreak: "break-all" }}>{doc.nombre_archivo}</span>
+                            <span style={{ color: COLORS.gold, fontSize: 11, fontWeight: 700, whiteSpace: "nowrap" }}>Ver →</span>
+                          </a>
+                        );
+                      })
+                    )}
+                  </div>
+                </div>
+              )}
+              {!dispositivoActivo && (
+                <div style={{ color: "#6b7280", fontSize: 12, fontStyle: "italic" }}>
+                  Guarda el dispositivo primero para poder adjuntar documentos del expediente.
+                </div>
+              )}
 
               <div style={{ display: "flex", alignItems: "center", gap: 8, background: formDisp.detenido ? "#fcebeb" : "transparent", borderRadius: 7, padding: formDisp.detenido ? "10px" : 0 }}>
                 <input type="checkbox" checked={formDisp.detenido} onChange={(e) => setDisp("detenido", e.target.checked)} style={{ width: 18, height: 18 }} />
