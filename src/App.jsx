@@ -33,19 +33,19 @@ function Bienvenida({ onContinuar }) {
         <div style={{ color: "#ffffff", fontSize: 22, fontWeight: 700, letterSpacing: 1, lineHeight: 1.4 }}>FISCALÍA GENERAL DEL ESTADO</div>
         <div style={{ color: "#b69054", fontSize: 22, fontWeight: 700, letterSpacing: 1, marginBottom: 14 }}>DE GUERRERO</div>
         <div style={{ width: 60, height: 2, background: "#b69054", margin: "0 auto 14px" }} />
-        <div style={{ color: "#dce6f5", fontSize: 13, letterSpacing: 2, marginBottom: 6 }}>SISTEMA DE INFORMACIÓN CRIMINAL</div>
-        <div style={{ color: "#7c8db8", fontSize: 12, letterSpacing: 1, marginBottom: 36 }}>Policía de Investigación Ministerial</div>
+        <div style={{ color: "#dce6f5", fontSize: 15, letterSpacing: 2, marginBottom: 6 }}>SISTEMA DE INFORMACIÓN CRIMINAL</div>
+        <div style={{ color: "#7c8db8", fontSize: 14, letterSpacing: 1, marginBottom: 36 }}>Policía de Investigación Ministerial</div>
 
         <div style={{ display: "flex", justifyContent: "center", gap: 28, marginBottom: 40, flexWrap: "wrap" }}>
           {[["LEALTAD", Shield], ["HONOR", BadgeCheck], ["INTEGRIDAD", CircleCheck]].map(([texto, Icon]) => (
             <div key={texto} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
               <Icon size={20} style={{ color: "#b69054" }} />
-              <span style={{ color: "#dce6f5", fontSize: 10, letterSpacing: 1.5 }}>{texto}</span>
+              <span style={{ color: "#dce6f5", fontSize: 12, letterSpacing: 1.5 }}>{texto}</span>
             </div>
           ))}
         </div>
 
-        <button onClick={onContinuar} style={{ background: "#b69054", border: "none", borderRadius: 9, padding: "14px 36px", color: "#001a4d", fontSize: 14, fontWeight: 700, letterSpacing: 1, cursor: "pointer" }}>
+        <button onClick={onContinuar} style={{ background: "#b69054", border: "none", borderRadius: 9, padding: "14px 36px", color: "#001a4d", fontSize: 16, fontWeight: 700, letterSpacing: 1, cursor: "pointer" }}>
           ACCEDER AL SISTEMA
         </button>
       </div>
@@ -67,10 +67,21 @@ function Auth() {
   const [exito, setExito] = useState("");
 
   const iniciarSesion = async () => {
-    setCargando(true); setError("");
+    setCargando(true); setError(""); setExito("");
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     setCargando(false);
     if (error) setError("Correo o contraseña incorrectos.");
+  };
+
+  const recuperarContrasena = async () => {
+    if (!email) { setError("Escribe tu correo electrónico arriba, y luego da clic en '¿Olvidaste tu contraseña?'"); return; }
+    setCargando(true); setError(""); setExito("");
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: window.location.origin,
+    });
+    setCargando(false);
+    if (error) { setError("No se pudo enviar el correo: " + error.message); return; }
+    setExito("✅ Te enviamos un correo con un enlace para definir una nueva contraseña. Revisa tu bandeja de entrada.");
   };
 
   const registrarse = async () => {
@@ -96,12 +107,12 @@ function Auth() {
         <div style={{ textAlign: "center", marginBottom: 28 }}>
           <img src="/logo-fge.png" alt="FGE Guerrero" style={{ width: 72, height: 72, marginBottom: 10, borderRadius: "50%" }} />
           <div style={{ color: "#1a1a2e", fontSize: 18, fontWeight: 700, letterSpacing: 1 }}>FISCALÍA GENERAL DEL ESTADO</div>
-          <div style={{ color: "#001a4d", fontSize: 11, letterSpacing: 3, marginTop: 4 }}>SISTEMA MINISTERIAL — GUERRERO</div>
+          <div style={{ color: "#001a4d", fontSize: 13, letterSpacing: 3, marginTop: 4 }}>SISTEMA MINISTERIAL — GUERRERO</div>
         </div>
         <div style={{ background: "#eef1f6", border: "1px solid #c3cbd6", borderRadius: 14, padding: 26 }}>
           <div style={{ display: "flex", gap: 6, marginBottom: 20, background: "#ffffff", borderRadius: 8, padding: 4 }}>
-            <button onClick={() => { setModo("login"); setError(""); setExito(""); }} style={{ flex: 1, background: modo === "login" ? "#c3cbd6" : "none", border: "none", borderRadius: 6, padding: "8px", color: modo === "login" ? "#1a1a2e" : "#6b7280", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>Iniciar sesión</button>
-            <button disabled style={{ flex: 1, background: "none", border: "none", borderRadius: 6, padding: "8px", color: "#d1d5db", fontSize: 12, fontWeight: 700, cursor: "not-allowed" }}>Registro solo por Subcoord. Admtivo.</button>
+            <button onClick={() => { setModo("login"); setError(""); setExito(""); }} style={{ flex: 1, background: modo === "login" ? "#c3cbd6" : "none", border: "none", borderRadius: 6, padding: "8px", color: modo === "login" ? "#1a1a2e" : "#6b7280", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>Iniciar sesión</button>
+            <button disabled style={{ flex: 1, background: "none", border: "none", borderRadius: 6, padding: "8px", color: "#d1d5db", fontSize: 14, fontWeight: 700, cursor: "not-allowed" }}>Registro solo por Subcoord. Admtivo.</button>
           </div>
           <div style={{ display: "grid", gap: 14 }}>
             {modo === "registro" && (<>
@@ -112,12 +123,75 @@ function Auth() {
             <Input label="Correo electrónico" value={email} onChange={setEmail} type="email" required />
             <Input label="Contraseña" value={password} onChange={setPassword} type="password" required />
           </div>
-          {error && <div style={{ background: "#fcebeb", border: "1px solid #ef444444", borderRadius: 8, padding: 10, marginTop: 14, color: "#791f1f", fontSize: 12 }}>{error}</div>}
-          {exito && <div style={{ background: "#e1f5ee", border: "1px solid #22c55e44", borderRadius: 8, padding: 10, marginTop: 14, color: "#0f6e56", fontSize: 12 }}>{exito}</div>}
+          {error && <div style={{ background: "#fcebeb", border: "1px solid #ef444444", borderRadius: 8, padding: 10, marginTop: 14, color: "#791f1f", fontSize: 14 }}>{error}</div>}
+          {exito && <div style={{ background: "#e1f5ee", border: "1px solid #22c55e44", borderRadius: 8, padding: 10, marginTop: 14, color: "#0f6e56", fontSize: 14 }}>{exito}</div>}
+          {modo === "login" && (
+            <button type="button" onClick={recuperarContrasena} disabled={cargando}
+              style={{ marginTop: 10, background: "none", border: "none", color: "#001a4d", fontSize: 14, fontWeight: 700, cursor: cargando ? "default" : "pointer", textDecoration: "underline", padding: 0 }}>
+              ¿Olvidaste tu contraseña?
+            </button>
+          )}
           <button onClick={modo === "login" ? iniciarSesion : registrarse} disabled={cargando}
-            style={{ marginTop: 18, width: "100%", background: cargando ? "#d9dee5" : "linear-gradient(135deg,#001a4d,#001237)", border: "none", borderRadius: 8, padding: 12, color: "#ffffff", fontSize: 14, fontWeight: 700, cursor: cargando ? "default" : "pointer", letterSpacing: 1 }}>
+            style={{ marginTop: 18, width: "100%", background: cargando ? "#d9dee5" : "linear-gradient(135deg,#001a4d,#001237)", border: "none", borderRadius: 8, padding: 12, color: "#ffffff", fontSize: 16, fontWeight: 700, cursor: cargando ? "default" : "pointer", letterSpacing: 1 }}>
             {cargando ? "PROCESANDO…" : modo === "login" ? "INGRESAR" : "CREAR CUENTA"}
           </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── PANTALLA DE NUEVA CONTRASEÑA (para enlaces de recuperación) ────────────────
+function NuevaContrasena({ onListo }) {
+  const [nueva, setNueva] = useState("");
+  const [confirmar, setConfirmar] = useState("");
+  const [cargando, setCargando] = useState(false);
+  const [error, setError] = useState("");
+  const [exito, setExito] = useState(false);
+
+  const guardar = async () => {
+    setError("");
+    if (nueva.length < 6) { setError("La contraseña debe tener al menos 6 caracteres."); return; }
+    if (nueva !== confirmar) { setError("Las dos contraseñas no coinciden."); return; }
+    setCargando(true);
+    const { error: errorUpdate } = await supabase.auth.updateUser({ password: nueva });
+    setCargando(false);
+    if (errorUpdate) { setError("No se pudo actualizar: " + errorUpdate.message); return; }
+    setExito(true);
+  };
+
+  return (
+    <div style={{ minHeight: "100vh", background: "#f4f6f9", display: "flex", alignItems: "center", justifyContent: "center", padding: 20, fontFamily: "'Trebuchet MS', sans-serif" }}>
+      <div style={{ width: "100%", maxWidth: 400 }}>
+        <div style={{ textAlign: "center", marginBottom: 28 }}>
+          <img src="/logo-fge.png" alt="FGE Guerrero" style={{ width: 72, height: 72, marginBottom: 10, borderRadius: "50%" }} />
+          <div style={{ color: "#1a1a2e", fontSize: 18, fontWeight: 700, letterSpacing: 1 }}>FISCALÍA GENERAL DEL ESTADO</div>
+          <div style={{ color: "#001a4d", fontSize: 15, letterSpacing: 3, marginTop: 4 }}>DEFINIR NUEVA CONTRASEÑA</div>
+        </div>
+        <div style={{ background: "#eef1f6", border: "1px solid #c3cbd6", borderRadius: 14, padding: 26 }}>
+          {exito ? (
+            <div style={{ textAlign: "center" }}>
+              <div style={{ background: "#e1f5ee", border: "1px solid #22c55e44", borderRadius: 8, padding: 14, color: "#0f6e56", fontSize: 16, marginBottom: 16 }}>
+                ✅ Tu contraseña fue actualizada correctamente.
+              </div>
+              <button onClick={onListo}
+                style={{ width: "100%", background: "linear-gradient(135deg,#001a4d,#001237)", border: "none", borderRadius: 8, padding: 12, color: "#ffffff", fontSize: 16, fontWeight: 700, cursor: "pointer", letterSpacing: 1 }}>
+                CONTINUAR
+              </button>
+            </div>
+          ) : (
+            <>
+              <div style={{ display: "grid", gap: 14 }}>
+                <Input label="Nueva contraseña" value={nueva} onChange={setNueva} type="password" required />
+                <Input label="Confirmar nueva contraseña" value={confirmar} onChange={setConfirmar} type="password" required />
+              </div>
+              {error && <div style={{ background: "#fcebeb", border: "1px solid #ef444444", borderRadius: 8, padding: 10, marginTop: 14, color: "#791f1f", fontSize: 14 }}>{error}</div>}
+              <button onClick={guardar} disabled={cargando}
+                style={{ marginTop: 18, width: "100%", background: cargando ? "#d9dee5" : "linear-gradient(135deg,#001a4d,#001237)", border: "none", borderRadius: 8, padding: 12, color: "#ffffff", fontSize: 16, fontWeight: 700, cursor: cargando ? "default" : "pointer", letterSpacing: 1 }}>
+                {cargando ? "GUARDANDO…" : "GUARDAR NUEVA CONTRASEÑA"}
+              </button>
+            </>
+          )}
         </div>
       </div>
     </div>
@@ -163,24 +237,24 @@ function RevisionSolicitudes({ perfil }) {
 
   return (
     <div style={{ background: "#faeeda", border: "1px solid #f59e0b44", borderRadius: 10, padding: 18, marginBottom: 20 }}>
-      <div style={{ color: "#854f0b", fontSize: 13, fontWeight: 800, letterSpacing: 1, marginBottom: 14, paddingBottom: 8, borderBottom: "2px solid #b69054", textTransform: "uppercase" }}><FilePenLine size={15} style={{ marginRight: 6, verticalAlign: -3 }} />Solicitudes de Edición Pendientes ({solicitudes.length})</div>
+      <div style={{ color: "#854f0b", fontSize: 15, fontWeight: 800, letterSpacing: 1, marginBottom: 14, paddingBottom: 8, borderBottom: "2px solid #b69054", textTransform: "uppercase" }}><FilePenLine size={15} style={{ marginRight: 6, verticalAlign: -3 }} />Solicitudes de Edición Pendientes ({solicitudes.length})</div>
       {solicitudes.map((s) => (
         <div key={s.id} style={{ background: "#ffffff", borderRadius: 8, padding: 12, marginBottom: 8 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 8 }}>
             <div style={{ flex: 1, minWidth: 200 }}>
-              <div style={{ color: "#1a1a2e", fontSize: 13, fontWeight: 700 }}>{s.detenido?.nombre} <span style={{ color: "#f59e0b", fontWeight: 400 }}>({s.detenido?.alias})</span></div>
-              <div style={{ color: "#7c8494", fontSize: 11, marginTop: 2 }}>{s.detenido?.delito} · {s.detenido?.region}</div>
-              <div style={{ color: "#4a5268", fontSize: 12, marginTop: 6 }}>Solicita: <strong>{s.solicitado_por}</strong></div>
-              <div style={{ color: "#a78bfa", fontSize: 12, marginTop: 2, fontStyle: "italic" }}>"{s.justificacion}"</div>
-              <div style={{ color: "#6b7280", fontSize: 10, marginTop: 4 }}>{new Date(s.creado_en).toLocaleString("es-MX", { dateStyle: "short", timeStyle: "short" })}</div>
+              <div style={{ color: "#1a1a2e", fontSize: 15, fontWeight: 700 }}>{s.detenido?.nombre} <span style={{ color: "#f59e0b", fontWeight: 400 }}>({s.detenido?.alias})</span></div>
+              <div style={{ color: "#7c8494", fontSize: 13, marginTop: 2 }}>{s.detenido?.delito} · {s.detenido?.region}</div>
+              <div style={{ color: "#4a5268", fontSize: 14, marginTop: 6 }}>Solicita: <strong>{s.solicitado_por}</strong></div>
+              <div style={{ color: "#a78bfa", fontSize: 14, marginTop: 2, fontStyle: "italic" }}>"{s.justificacion}"</div>
+              <div style={{ color: "#6b7280", fontSize: 12, marginTop: 4 }}>{new Date(s.creado_en).toLocaleString("es-MX", { dateStyle: "short", timeStyle: "short" })}</div>
             </div>
             <div style={{ display: "flex", gap: 6 }}>
               <button onClick={() => resolver(s.id, "autorizada")} disabled={procesando === s.id}
-                style={{ background: "#0f6e56", border: "none", borderRadius: 6, padding: "6px 12px", color: "#ffffff", fontSize: 11, fontWeight: 700, cursor: "pointer" }}>
+                style={{ background: "#0f6e56", border: "none", borderRadius: 6, padding: "6px 12px", color: "#ffffff", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
                 ✓ Autorizar
               </button>
               <button onClick={() => resolver(s.id, "rechazada")} disabled={procesando === s.id}
-                style={{ background: "#A32D2D", border: "none", borderRadius: 6, padding: "6px 12px", color: "#ffffff", fontSize: 11, fontWeight: 700, cursor: "pointer" }}>
+                style={{ background: "#A32D2D", border: "none", borderRadius: 6, padding: "6px 12px", color: "#ffffff", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
                 ✕ Rechazar
               </button>
             </div>
@@ -277,12 +351,12 @@ function DashboardMandos({ perfil }) {
         <div style={{ display: "flex", gap: 8 }}>
           {!esRegional && (
             <select value={filtroRegion} onChange={(e) => setFiltroRegion(e.target.value)}
-              style={{ background: "#ffffff", border: "1px solid #d9dee5", borderRadius: 7, padding: "8px 11px", color: "#33394d", fontSize: 12 }}>
+              style={{ background: "#ffffff", border: "1px solid #d9dee5", borderRadius: 7, padding: "8px 11px", color: "#33394d", fontSize: 14 }}>
               <option value="Todas">Todo el estado</option>
               {REGIONES.map((r) => <option key={r} value={r}>{r}</option>)}
             </select>
           )}
-          <button onClick={exportarReporte} style={{ background: "#b69054", border: "none", borderRadius: 8, padding: "8px 16px", color: "#ffffff", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>⬇ Descargar reporte</button>
+          <button onClick={exportarReporte} style={{ background: "#b69054", border: "none", borderRadius: 8, padding: "8px 16px", color: "#ffffff", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>⬇ Descargar reporte</button>
         </div>
       </div>
 
@@ -304,27 +378,27 @@ function DashboardMandos({ perfil }) {
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 16 }}>
         <div style={{ background: "#ffffff", border: "1px solid #d9dee5", borderRadius: 10, padding: 16 }}>
-          <div style={{ color: "#001a4d", fontSize: 12, fontWeight: 700, letterSpacing: 1, marginBottom: 12, textTransform: "uppercase" }}>Estatus de Expedientes</div>
-          {datosSemaforo.length === 0 ? <div style={{ color: "#6b7280", fontSize: 12 }}>Sin datos aún</div> : (
+          <div style={{ color: "#001a4d", fontSize: 14, fontWeight: 700, letterSpacing: 1, marginBottom: 12, textTransform: "uppercase" }}>Estatus de Expedientes</div>
+          {datosSemaforo.length === 0 ? <div style={{ color: "#6b7280", fontSize: 14 }}>Sin datos aún</div> : (
             <ResponsiveContainer width="100%" height={180}>
               <PieChart>
                 <Pie data={datosSemaforo} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={65} label={({ name, value }) => `${value}`} labelLine={false} fontSize={11}>
                   {datosSemaforo.map((e, i) => <Cell key={i} fill={e.color} />)}
                 </Pie>
-                <Tooltip contentStyle={{ background: "#eef1f6", border: "1px solid #d9dee5", color: "#4a5268", fontSize: 12 }} />
-                <Legend wrapperStyle={{ fontSize: 10, color: "#7c8494" }} />
+                <Tooltip contentStyle={{ background: "#eef1f6", border: "1px solid #d9dee5", color: "#4a5268", fontSize: 14 }} />
+                <Legend wrapperStyle={{ fontSize: 12, color: "#7c8494" }} />
               </PieChart>
             </ResponsiveContainer>
           )}
         </div>
 
         <div style={{ background: "#ffffff", border: "1px solid #d9dee5", borderRadius: 10, padding: 16 }}>
-          <div style={{ color: "#f59e0b", fontSize: 12, fontWeight: 700, letterSpacing: 1, marginBottom: 12, textTransform: "uppercase" }}>{esRegional ? "Detenidos en mi Región" : "Detenidos por Región"}</div>
+          <div style={{ color: "#f59e0b", fontSize: 14, fontWeight: 700, letterSpacing: 1, marginBottom: 12, textTransform: "uppercase" }}>{esRegional ? "Detenidos en mi Región" : "Detenidos por Región"}</div>
           <ResponsiveContainer width="100%" height={180}>
             <BarChart data={detPorRegion} margin={{ top: 0, right: 10, left: -20, bottom: 30 }}>
               <XAxis dataKey="name" tick={{ fill: "#6b7280", fontSize: 9 }} angle={-30} textAnchor="end" />
-              <YAxis tick={{ fill: "#6b7280", fontSize: 10 }} allowDecimals={false} />
-              <Tooltip contentStyle={{ background: "#eef1f6", border: "1px solid #d9dee5", color: "#4a5268", fontSize: 12 }} />
+              <YAxis tick={{ fill: "#6b7280", fontSize: 12 }} allowDecimals={false} />
+              <Tooltip contentStyle={{ background: "#eef1f6", border: "1px solid #d9dee5", color: "#4a5268", fontSize: 14 }} />
               <Bar dataKey="value" fill="#001a4d" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
@@ -332,13 +406,13 @@ function DashboardMandos({ perfil }) {
       </div>
 
       <div style={{ background: "#ffffff", border: "1px solid #d9dee5", borderRadius: 10, padding: 16 }}>
-        <div style={{ color: "#a78bfa", fontSize: 12, fontWeight: 700, letterSpacing: 1, marginBottom: 12, textTransform: "uppercase" }}>Delitos más frecuentes</div>
-        {delitosData.length === 0 ? <div style={{ color: "#6b7280", fontSize: 12 }}>Sin datos aún</div> : (
+        <div style={{ color: "#a78bfa", fontSize: 14, fontWeight: 700, letterSpacing: 1, marginBottom: 12, textTransform: "uppercase" }}>Delitos más frecuentes</div>
+        {delitosData.length === 0 ? <div style={{ color: "#6b7280", fontSize: 14 }}>Sin datos aún</div> : (
           <ResponsiveContainer width="100%" height={Math.max(140, delitosData.length * 36)}>
             <BarChart data={delitosData} layout="vertical" margin={{ top: 0, right: 20, left: 10, bottom: 0 }}>
-              <XAxis type="number" tick={{ fill: "#6b7280", fontSize: 10 }} allowDecimals={false} />
-              <YAxis type="category" dataKey="name" tick={{ fill: "#4a5268", fontSize: 11 }} width={140} />
-              <Tooltip contentStyle={{ background: "#eef1f6", border: "1px solid #d9dee5", color: "#4a5268", fontSize: 12 }} />
+              <XAxis type="number" tick={{ fill: "#6b7280", fontSize: 12 }} allowDecimals={false} />
+              <YAxis type="category" dataKey="name" tick={{ fill: "#4a5268", fontSize: 13 }} width={140} />
+              <Tooltip contentStyle={{ background: "#eef1f6", border: "1px solid #d9dee5", color: "#4a5268", fontSize: 14 }} />
               <Bar dataKey="value" radius={[0, 4, 4, 0]}>
                 {delitosData.map((_, i) => <Cell key={i} fill={COLORES_CHART[i % COLORES_CHART.length]} />)}
               </Bar>
@@ -355,10 +429,14 @@ export default function App() {
   const [sesion, setSesion] = useState(null);
   const [perfil, setPerfil] = useState(null);
   const [cargandoSesion, setCargandoSesion] = useState(true);
+  const [modoRecuperacion, setModoRecuperacion] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => { setSesion(session); setCargandoSesion(false); });
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => setSesion(session));
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSesion(session);
+      if (_event === "PASSWORD_RECOVERY") setModoRecuperacion(true);
+    });
     return () => listener.subscription.unsubscribe();
   }, []);
 
@@ -373,6 +451,7 @@ export default function App() {
   const [detenidoParaAbrir, setDetenidoParaAbrir] = useState(null);
 
   if (cargandoSesion) return <div style={{ minHeight: "100vh", background: "#f4f6f9", display: "flex", alignItems: "center", justifyContent: "center", color: "#6b7280" }}>Cargando…</div>;
+  if (modoRecuperacion) return <NuevaContrasena onListo={() => setModoRecuperacion(false)} />;
   if (!sesion) return <Auth />;
 
   const puedeVerDashboard = perfil && ["coordinador", "regional", "mando"].includes(perfil.rol);
@@ -389,19 +468,19 @@ export default function App() {
           <img src="/logo-fge.png" alt="FGE Guerrero" style={{ width: 48, height: 48, borderRadius: "50%", border: "2px solid #b69054" }} />
           <div>
             <div style={{ color: "#ffffff", fontSize: 19, fontWeight: 700 }}>FGE GUERRERO — SISTEMA MINISTERIAL</div>
-<div style={{ color: "#b69054", fontSize: 13, fontWeight: 600, letterSpacing: 1.5, marginTop: 2 }}>{["registro911","primerrespondiente","escenacrimen","indicios","victimastestigos","expediente"].includes(tabApp) ? "EXPEDIENTE DE INVESTIGACIÓN POLICIAL" : ["busqueda","detenidos"].includes(tabApp) ? "INDIVIDUALIZACIÓN DE DETENIDOS" : "ANÁLISIS E INTELIGENCIA CRIMINAL"}</div>
+<div style={{ color: "#b69054", fontSize: 15, fontWeight: 600, letterSpacing: 1.5, marginTop: 2 }}>{["registro911","primerrespondiente","escenacrimen","indicios","victimastestigos","expediente"].includes(tabApp) ? "EXPEDIENTE DE INVESTIGACIÓN POLICIAL" : ["busqueda","detenidos"].includes(tabApp) ? "INDIVIDUALIZACIÓN DE DETENIDOS" : "ANÁLISIS E INTELIGENCIA CRIMINAL"}</div>
           </div>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
           {perfil && (
             <div style={{ textAlign: "right" }}>
               <div style={{ color: "#ffffff", fontSize: 15, fontWeight: 700 }}>{perfil.nombre_completo}</div>
-              <span style={{ background: (rolColor[perfil.rol] || "#6b7280") + "22", color: rolColor[perfil.rol] || "#6b7280", border: `1px solid ${(rolColor[perfil.rol] || "#6b7280")}55`, borderRadius: 4, padding: "2px 10px", fontSize: 12, fontWeight: 700 }}>
+              <span style={{ background: (rolColor[perfil.rol] || "#6b7280") + "22", color: rolColor[perfil.rol] || "#6b7280", border: `1px solid ${(rolColor[perfil.rol] || "#6b7280")}55`, borderRadius: 4, padding: "2px 10px", fontSize: 14, fontWeight: 700 }}>
                 {rolLabel[perfil.rol] || perfil.rol}
               </span>
             </div>
           )}
-          <button onClick={cerrarSesion} style={{ background: "transparent", border: "1.5px solid rgba(255,255,255,0.5)", borderRadius: 7, padding: "10px 18px", color: "#ffffff", fontSize: 14, fontWeight: 700, cursor: "pointer", minHeight: 44 }}>SALIR</button>
+          <button onClick={cerrarSesion} style={{ background: "transparent", border: "1.5px solid rgba(255,255,255,0.5)", borderRadius: 7, padding: "10px 18px", color: "#ffffff", fontSize: 16, fontWeight: 700, cursor: "pointer", minHeight: 44 }}>SALIR</button>
         </div>
       </div>
 
