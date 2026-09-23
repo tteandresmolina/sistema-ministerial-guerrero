@@ -8,7 +8,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "../supabaseClient";
 import {
   Search, Plus, X, Phone, User, ShieldAlert, CheckCircle2,
-  FileText, Link2, Fingerprint,
+  FileText, Link2, Fingerprint, Camera, Users, Briefcase,
 } from "lucide-react";
 
 const COLORS = { primary: "#001a4d", gold: "#b69054", white: "#ffffff", bg: "#f4f6fb" };
@@ -19,6 +19,44 @@ const textareaStyle = { ...inputStyle, minHeight: 72, resize: "vertical" };
 const btnPrimary = { background: COLORS.gold, color: COLORS.white, border: "none", borderRadius: 7, padding: "14px 26px", fontWeight: 700, fontSize: 16, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 8, justifyContent: "center", minHeight: 44 };
 const btnSecondary = { ...btnPrimary, background: "transparent", color: COLORS.primary, border: `2px solid ${COLORS.primary}` };
 const tituloSeccion = { color: COLORS.gold, fontSize: 15, fontWeight: 800, letterSpacing: 1, marginBottom: 16, paddingBottom: 12, borderBottom: "2px solid #b69054", textTransform: "uppercase", display: "flex", alignItems: "center", gap: 9 };
+
+// ============================================================================
+// URLs FIRMADAS — bucket 'red-criminal-fotos' es privado desde el inicio.
+// Mismo mecanismo que Detenidos.jsx: getPublicUrl() solo arma el string que
+// se guarda en la base; para MOSTRAR la foto hay que canjearlo por una URL
+// firmada temporal.
+// ============================================================================
+const BUCKET_FOTOS = "red-criminal-fotos";
+const RUTA_PUBLICA_PREFIJO_FOTOS = `/storage/v1/object/public/${BUCKET_FOTOS}/`;
+
+function rutaDesdeUrlPublicaFotos(urlPublica) {
+  if (!urlPublica) return null;
+  const idx = urlPublica.indexOf(RUTA_PUBLICA_PREFIJO_FOTOS);
+  if (idx === -1) return null;
+  return decodeURIComponent(urlPublica.slice(idx + RUTA_PUBLICA_PREFIJO_FOTOS.length));
+}
+
+async function firmarUrlsFotos(urlsPublicas, expiresIn = 3600) {
+  const pares = (urlsPublicas || [])
+    .map((url) => ({ url, ruta: rutaDesdeUrlPublicaFotos(url) }))
+    .filter((p) => p.ruta);
+  if (pares.length === 0) return {};
+  const { data, error } = await supabase.storage
+    .from(BUCKET_FOTOS)
+    .createSignedUrls(pares.map((p) => p.ruta), expiresIn);
+  if (error || !data) return {};
+  const mapa = {};
+  data.forEach((item, i) => { if (item.signedUrl) mapa[pares[i].url] = item.signedUrl; });
+  return mapa;
+}
+
+async function firmarUrlUnicaFotos(urlPublica, expiresIn = 3600) {
+  const ruta = rutaDesdeUrlPublicaFotos(urlPublica);
+  if (!ruta) return null;
+  const { data, error } = await supabase.storage.from(BUCKET_FOTOS).createSignedUrl(ruta, expiresIn);
+  if (error || !data) return null;
+  return data.signedUrl;
+}
 
 function Input({ label, value, onChange, placeholder = "", required = false }) {
   return (
@@ -43,7 +81,7 @@ function formatoTelefono(t) {
   return t.length === 10 ? `${t.slice(0, 3)} ${t.slice(3, 6)} ${t.slice(6)}` : t;
 }
 
-const emptyForm = { telefono: "", nombre_principal: "", alias: "", notas: "", detenido: false, fecha_deteccion: "", spid_deteccion: "" };
+const emptyForm = { telefono: "", nombre_principal: "", alias: "", notas: "", detenido: false, fecha_deteccion: "", spid_deteccion: "", grupo_delictivo: "", carpeta_investigacion: "" };
 
 export default function RegistroEstatalRedCriminal({ perfil }) {
   const [contactos, setContactos] = useState([]);
@@ -54,6 +92,9 @@ export default function RegistroEstatalRedCriminal({ perfil }) {
   const [form, setForm] = useState(emptyForm);
   const [guardando, setGuardando] = useState(false);
   const [mensaje, setMensaje] = useState(null);
+  const [fotoArchivo, setFotoArchivo] = useState(null);
+  const [fotoPreviewUrl, setFotoPreviewUrl] = useState(null);
+  const [urlsFotosFirmadas, setUrlsFotosFirmadas] = useState({});
 
   const set = (k, v) => setForm((p) => ({ ...p, [k]: v }));
 
@@ -66,7 +107,10 @@ export default function RegistroEstatalRedCriminal({ perfil }) {
     if (error) {
       setMensaje({ tipo: "error", texto: "No se pudo cargar el registro: " + error.message });
     } else {
-      setContactos(data || []);
+      const lista = data || [];
+      const mapaFirmadas = await firmarUrlsFotos(lista.map((c) => c.foto_url).filter(Boolean));
+      setUrlsFotosFirmadas(mapaFirmadas);
+      setContactos(lista);
     }
     setCargando(false);
   };
@@ -89,11 +133,13 @@ export default function RegistroEstatalRedCriminal({ perfil }) {
   const abrirNuevo = () => {
     setForm(emptyForm);
     setContactoActivo(null);
+    setFotoArchivo(null);
+    setFotoPreviewUrl(null);
     setMostrarForm(true);
     setMensaje(null);
   };
 
-  const abrirEdicion = (contacto) => {
+  const abrirEdicion = async (contacto) => {
     setForm({
       telefono: contacto.telefono || "",
       nombre_principal: contacto.nombre_principal || "",
@@ -102,10 +148,27 @@ export default function RegistroEstatalRedCriminal({ perfil }) {
       detenido: contacto.detenido || false,
       fecha_deteccion: contacto.fecha_deteccion ? contacto.fecha_deteccion.slice(0, 10) : "",
       spid_deteccion: contacto.spid_deteccion || "",
+      grupo_delictivo: contacto.grupo_delictivo || "",
+      carpeta_investigacion: contacto.carpeta_investigacion || "",
     });
     setContactoActivo(contacto);
+    setFotoArchivo(null);
+    setFotoPreviewUrl(urlsFotosFirmadas[contacto.foto_url] || null);
+    if (contacto.foto_url && !urlsFotosFirmadas[contacto.foto_url]) {
+      const firmada = await firmarUrlUnicaFotos(contacto.foto_url);
+      setFotoPreviewUrl(firmada);
+    }
     setMostrarForm(true);
     setMensaje(null);
+  };
+
+  const subirFoto = async (contactoId, file) => {
+    const ext = file.name.split(".").pop();
+    const nombreUnico = `${contactoId}/foto_${Date.now()}.${ext}`;
+    const { error: errorSubida } = await supabase.storage.from(BUCKET_FOTOS).upload(nombreUnico, file);
+    if (errorSubida) return null;
+    const { data } = supabase.storage.from(BUCKET_FOTOS).getPublicUrl(nombreUnico);
+    return data?.publicUrl || null;
   };
 
   const guardar = async () => {
@@ -124,16 +187,31 @@ export default function RegistroEstatalRedCriminal({ perfil }) {
       detenido: form.detenido,
       fecha_deteccion: form.detenido && form.fecha_deteccion ? form.fecha_deteccion : null,
       spid_deteccion: form.detenido ? (form.spid_deteccion || null) : null,
+      grupo_delictivo: form.grupo_delictivo || null,
+      carpeta_investigacion: form.carpeta_investigacion || null,
     };
 
-    let error;
+    let error, idParaFoto;
     if (contactoActivo) {
-      ({ error } = await supabase.from("contactos_estatales").update(payload).eq("id", contactoActivo.id));
+      idParaFoto = contactoActivo.id;
+      if (fotoArchivo) {
+        const url = await subirFoto(idParaFoto, fotoArchivo);
+        if (url) payload.foto_url = url;
+      }
+      ({ error } = await supabase.from("contactos_estatales").update(payload).eq("id", idParaFoto));
     } else {
-      ({ error } = await supabase.from("contactos_estatales").insert([{
+      const { data: nuevo, error: errorInsert } = await supabase.from("contactos_estatales").insert([{
         ...payload,
         registrado_por_id: perfil?.id || null,
-      }]));
+      }]).select().single();
+      error = errorInsert;
+      if (!error && nuevo) {
+        idParaFoto = nuevo.id;
+        if (fotoArchivo) {
+          const url = await subirFoto(idParaFoto, fotoArchivo);
+          if (url) await supabase.from("contactos_estatales").update({ foto_url: url }).eq("id", idParaFoto);
+        }
+      }
     }
 
     setGuardando(false);
@@ -206,14 +284,27 @@ export default function RegistroEstatalRedCriminal({ perfil }) {
             onMouseLeave={(e) => e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,0.07)"}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12 }}>
               <div style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
-                <div style={{ width: 44, height: 44, borderRadius: "50%", background: "#f9fafb", border: "1px solid #e8ecf1", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                  <User size={20} style={{ color: "#9ca3af" }} />
-                </div>
+                {urlsFotosFirmadas[c.foto_url] ? (
+                  <img src={urlsFotosFirmadas[c.foto_url]} alt={c.nombre_principal || c.telefono}
+                    style={{ width: 44, height: 44, borderRadius: "50%", objectFit: "cover", border: "1px solid #e8ecf1", flexShrink: 0 }} />
+                ) : (
+                  <div style={{ width: 44, height: 44, borderRadius: "50%", background: "#f9fafb", border: "1px solid #e8ecf1", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    <User size={20} style={{ color: "#9ca3af" }} />
+                  </div>
+                )}
                 <div>
                   <div style={{ fontSize: 16, fontWeight: 700, color: COLORS.primary, fontFamily: "monospace", letterSpacing: 1 }}>
                     {formatoTelefono(c.telefono)}
                   </div>
                   {c.nombre_principal && <div style={{ fontSize: 14, color: "#374151", marginTop: 2 }}>{c.nombre_principal}</div>}
+                  {c.grupo_delictivo && (
+                    <div style={{ display: "inline-flex", alignItems: "center", gap: 4, marginTop: 4, color: "#791f1f", fontSize: 12, fontWeight: 700 }}>
+                      <Users size={12} /> {c.grupo_delictivo}
+                    </div>
+                  )}
+                  {c.carpeta_investigacion && (
+                    <div style={{ color: "#6b7280", fontSize: 11, marginTop: 2, fontFamily: "monospace" }}>C.I. {c.carpeta_investigacion}</div>
+                  )}
                   {c.alias && c.alias.length > 0 && (
                     <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 6 }}>
                       {c.alias.map((a, i) => (
@@ -251,9 +342,38 @@ export default function RegistroEstatalRedCriminal({ perfil }) {
             </div>
 
             <div style={{ padding: 24, display: "grid", gap: 14 }}>
+              <div>
+                <label style={labelStyle}>Fotografía</label>
+                <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+                  {fotoArchivo ? (
+                    <img src={URL.createObjectURL(fotoArchivo)} alt="Nueva foto" style={{ width: 72, height: 72, borderRadius: 10, objectFit: "cover", border: `2px solid ${COLORS.gold}` }} />
+                  ) : fotoPreviewUrl ? (
+                    <img src={fotoPreviewUrl} alt="Foto actual" style={{ width: 72, height: 72, borderRadius: 10, objectFit: "cover", border: "2px solid #c7cfe0" }} />
+                  ) : (
+                    <div style={{ width: 72, height: 72, borderRadius: 10, background: "#f9fafb", border: "2px dashed #c7cfe0", display: "flex", alignItems: "center", justifyContent: "center", color: "#9ca3af" }}>
+                      <User size={28} />
+                    </div>
+                  )}
+                  <div>
+                    <input id="foto-red-criminal" type="file" accept="image/jpeg,image/png,image/webp" style={{ display: "none" }}
+                      onChange={(e) => { if (e.target.files[0]) setFotoArchivo(e.target.files[0]); }} />
+                    <button type="button" onClick={() => document.getElementById("foto-red-criminal").click()}
+                      style={{ ...btnSecondary, padding: "10px 16px", fontSize: 13 }}>
+                      <Camera size={15} /> {fotoPreviewUrl || fotoArchivo ? "Reemplazar foto" : "Subir foto"}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
               <Input label="Teléfono (10 dígitos)" value={form.telefono} onChange={(v) => set("telefono", v)} placeholder="7441234567" required />
               <Input label="Nombre principal" value={form.nombre_principal} onChange={(v) => set("nombre_principal", v)} placeholder="Si se conoce la identidad" />
               <TextArea label="Alias conocidos (uno por línea)" value={form.alias} onChange={(v) => set("alias", v)} rows={3} placeholder={"Jorge\nMexicano\nEl Meno"} />
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+                <Input label="Grupo delictivo" value={form.grupo_delictivo} onChange={(v) => set("grupo_delictivo", v)} placeholder="Si se autodenomina o se identifica" />
+                <Input label="Carpeta de investigación" value={form.carpeta_investigacion} onChange={(v) => set("carpeta_investigacion", v)} placeholder="C.I. si aplica" />
+              </div>
+
               <TextArea label="Notas" value={form.notas} onChange={(v) => set("notas", v)} rows={2} />
 
               <div style={{ display: "flex", alignItems: "center", gap: 8, background: form.detenido ? "#fcebeb" : "transparent", borderRadius: 7, padding: form.detenido ? "10px" : 0 }}>
