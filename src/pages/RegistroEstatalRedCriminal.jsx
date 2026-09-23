@@ -160,6 +160,7 @@ export default function RegistroEstatalRedCriminal({ perfil }) {
   const [contactos, setContactos] = useState([]);
   const [cargando, setCargando] = useState(true);
   const [busqueda, setBusqueda] = useState("");
+  const [paginaContactos, setPaginaContactos] = useState(0);
   const [contactoActivo, setContactoActivo] = useState(null);
   const [mostrarForm, setMostrarForm] = useState(false);
   const [form, setForm] = useState(emptyForm);
@@ -200,6 +201,12 @@ export default function RegistroEstatalRedCriminal({ perfil }) {
       enAlias
     );
   });
+
+  const TAMANO_PAGINA = 5;
+  const totalPaginasContactos = Math.max(1, Math.ceil(listaFiltrada.length / TAMANO_PAGINA));
+  const listaPaginaContactos = listaFiltrada.slice(paginaContactos * TAMANO_PAGINA, (paginaContactos + 1) * TAMANO_PAGINA);
+
+  useEffect(() => { setPaginaContactos(0); }, [busqueda]);
 
   const totalDetenidos = contactos.filter((c) => c.detenido).length;
 
@@ -346,6 +353,7 @@ export default function RegistroEstatalRedCriminal({ perfil }) {
   const [dispositivos, setDispositivos] = useState([]);
   const [cargandoDisp, setCargandoDisp] = useState(true);
   const [busquedaDisp, setBusquedaDisp] = useState("");
+  const [paginaDisp, setPaginaDisp] = useState(0);
   const [dispositivoActivo, setDispositivoActivo] = useState(null);
   const [mostrarFormDisp, setMostrarFormDisp] = useState(false);
   const [formDisp, setFormDisp] = useState(emptyFormDispositivo);
@@ -390,6 +398,11 @@ export default function RegistroEstatalRedCriminal({ perfil }) {
       (d.modelo || "").toLowerCase().includes(q)
     );
   });
+
+  const totalPaginasDisp = Math.max(1, Math.ceil(listaFiltradaDisp.length / TAMANO_PAGINA));
+  const listaPaginaDisp = listaFiltradaDisp.slice(paginaDisp * TAMANO_PAGINA, (paginaDisp + 1) * TAMANO_PAGINA);
+
+  useEffect(() => { setPaginaDisp(0); }, [busquedaDisp]);
 
   const totalDispDetenidos = dispositivos.filter((d) => d.detenido).length;
 
@@ -761,7 +774,8 @@ export default function RegistroEstatalRedCriminal({ perfil }) {
           {busqueda ? "Sin resultados para esta búsqueda." : "Aún no hay contactos registrados."}
         </div>
       ) : (
-        listaFiltrada.map((c) => (
+        <>
+        {listaPaginaContactos.map((c) => (
           <div key={c.id} onClick={() => abrirDetalle(c)} style={{ ...cardStyle, cursor: "pointer", transition: "box-shadow 0.2s" }}
             onMouseEnter={(e) => e.currentTarget.style.boxShadow = "0 4px 16px rgba(0,0,0,0.12)"}
             onMouseLeave={(e) => e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,0.07)"}>
@@ -808,7 +822,18 @@ export default function RegistroEstatalRedCriminal({ perfil }) {
               )}
             </div>
           </div>
-        ))
+        ))}
+
+        {totalPaginasContactos > 1 && (
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 10 }}>
+            <button onClick={() => setPaginaContactos((p) => Math.max(0, p - 1))} disabled={paginaContactos === 0}
+              style={{ ...btnSecondary, padding: "8px 16px", fontSize: 13, opacity: paginaContactos === 0 ? 0.4 : 1 }}>← Anterior</button>
+            <span style={{ color: "#6b7280", fontSize: 13, fontWeight: 700 }}>Página {paginaContactos + 1} de {totalPaginasContactos}</span>
+            <button onClick={() => setPaginaContactos((p) => Math.min(totalPaginasContactos - 1, p + 1))} disabled={paginaContactos >= totalPaginasContactos - 1}
+              style={{ ...btnSecondary, padding: "8px 16px", fontSize: 13, opacity: paginaContactos >= totalPaginasContactos - 1 ? 0.4 : 1 }}>Siguiente →</button>
+          </div>
+        )}
+        </>
       )}
       </>
       ) : (
@@ -1055,7 +1080,8 @@ export default function RegistroEstatalRedCriminal({ perfil }) {
           {busquedaDisp ? "Sin resultados para esta búsqueda." : "Aún no hay dispositivos registrados."}
         </div>
       ) : (
-        listaFiltradaDisp.map((d) => (
+        <>
+        {listaPaginaDisp.map((d) => (
           <div key={d.id} onClick={() => abrirEdicionDispositivo(d)} style={{ ...cardStyle, cursor: "pointer", transition: "box-shadow 0.2s" }}
             onMouseEnter={(e) => e.currentTarget.style.boxShadow = "0 4px 16px rgba(0,0,0,0.12)"}
             onMouseLeave={(e) => e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,0.07)"}>
@@ -1091,7 +1117,18 @@ export default function RegistroEstatalRedCriminal({ perfil }) {
               )}
             </div>
           </div>
-        ))
+        ))}
+
+        {totalPaginasDisp > 1 && (
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 10 }}>
+            <button onClick={() => setPaginaDisp((p) => Math.max(0, p - 1))} disabled={paginaDisp === 0}
+              style={{ ...btnSecondary, padding: "8px 16px", fontSize: 13, opacity: paginaDisp === 0 ? 0.4 : 1 }}>← Anterior</button>
+            <span style={{ color: "#6b7280", fontSize: 13, fontWeight: 700 }}>Página {paginaDisp + 1} de {totalPaginasDisp}</span>
+            <button onClick={() => setPaginaDisp((p) => Math.min(totalPaginasDisp - 1, p + 1))} disabled={paginaDisp >= totalPaginasDisp - 1}
+              style={{ ...btnSecondary, padding: "8px 16px", fontSize: 13, opacity: paginaDisp >= totalPaginasDisp - 1 ? 0.4 : 1 }}>Siguiente →</button>
+          </div>
+        )}
+        </>
       )}
 
       {mostrarFormDisp && (
