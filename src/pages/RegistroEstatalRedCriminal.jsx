@@ -203,6 +203,49 @@ export default function RegistroEstatalRedCriminal({ perfil }) {
 
   const totalDetenidos = contactos.filter((c) => c.detenido).length;
 
+  const [contactoDetalle, setContactoDetalle] = useState(null);
+  const [detalleAgenda, setDetalleAgenda] = useState([]);
+  const [detalleDocumentos, setDetalleDocumentos] = useState([]);
+  const [cargandoDetalle, setCargandoDetalle] = useState(false);
+  const [urlsDetalleDocs, setUrlsDetalleDocs] = useState({});
+
+  const abrirDetalle = async (contacto) => {
+    setContactoDetalle(contacto);
+    setCargandoDetalle(true);
+
+    // Cómo lo tiene guardado cada dispositivo — cruce por número en agenda_registros
+    const { data: agendaData } = await supabase
+      .from("agenda_registros")
+      .select("alias_guardado, dispositivos_intervenidos(id, spid, titular_alias, fecha_intervencion)")
+      .eq("numero", contacto.telefono);
+    const entradas = (agendaData || []).filter((a) => a.dispositivos_intervenidos);
+    setDetalleAgenda(entradas);
+
+    // Dispositivos vinculados directamente (telefono_id), por si no aparecen en agenda_registros
+    const { data: dispDirectos } = await supabase
+      .from("dispositivos_intervenidos")
+      .select("id, spid, titular_alias, fecha_intervencion")
+      .eq("telefono_id", contacto.id);
+
+    const idsAgenda = entradas.map((a) => a.dispositivos_intervenidos.id);
+    const idsDirectos = (dispDirectos || []).map((d) => d.id);
+    const todosIds = [...new Set([...idsAgenda, ...idsDirectos])];
+
+    if (todosIds.length > 0) {
+      const { data: docsData } = await supabase
+        .from("documentos_analisis")
+        .select("*")
+        .in("dispositivo_id", todosIds);
+      const docs = docsData || [];
+      const mapaFirmadas = await firmarUrlsDocs(docs.map((d) => d.url_archivo));
+      setUrlsDetalleDocs(mapaFirmadas);
+      setDetalleDocumentos(docs);
+    } else {
+      setDetalleDocumentos([]);
+    }
+    setCargandoDetalle(false);
+  };
+
   const abrirNuevo = () => {
     setForm(emptyForm);
     setContactoActivo(null);
@@ -693,6 +736,8 @@ export default function RegistroEstatalRedCriminal({ perfil }) {
         </div>
       </div>
 
+      {!contactoDetalle ? (
+      <>
       <div style={{ ...cardStyle, display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
         <div style={{ position: "relative", flex: "1 1 280px" }}>
           <Search size={17} style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", color: "#9ca3af" }} />
@@ -717,7 +762,7 @@ export default function RegistroEstatalRedCriminal({ perfil }) {
         </div>
       ) : (
         listaFiltrada.map((c) => (
-          <div key={c.id} onClick={() => abrirEdicion(c)} style={{ ...cardStyle, cursor: "pointer", transition: "box-shadow 0.2s" }}
+          <div key={c.id} onClick={() => abrirDetalle(c)} style={{ ...cardStyle, cursor: "pointer", transition: "box-shadow 0.2s" }}
             onMouseEnter={(e) => e.currentTarget.style.boxShadow = "0 4px 16px rgba(0,0,0,0.12)"}
             onMouseLeave={(e) => e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,0.07)"}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12 }}>
@@ -764,6 +809,125 @@ export default function RegistroEstatalRedCriminal({ perfil }) {
             </div>
           </div>
         ))
+      )}
+      </>
+      ) : (
+      <>
+      <button onClick={() => setContactoDetalle(null)} style={{ ...btnSecondary, padding: "8px 16px", fontSize: 13, marginBottom: 14 }}>← Volver</button>
+
+      <div style={cardStyle}>
+        <div style={{ display: "flex", gap: 16, alignItems: "flex-start", flexWrap: "wrap" }}>
+          {urlsFotosFirmadas[contactoDetalle.foto_url] ? (
+            <img src={urlsFotosFirmadas[contactoDetalle.foto_url]} alt={contactoDetalle.nombre_principal || contactoDetalle.telefono}
+              style={{ width: 84, height: 84, borderRadius: 12, objectFit: "cover", border: "2px solid #c7cfe0", flexShrink: 0 }} />
+          ) : (
+            <div style={{ width: 84, height: 84, borderRadius: 12, background: "#f9fafb", border: "2px dashed #c7cfe0", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+              <User size={32} style={{ color: "#9ca3af" }} />
+            </div>
+          )}
+          <div style={{ flex: 1, minWidth: 200 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+              <span style={{ fontSize: 22, fontWeight: 800, color: COLORS.primary, fontFamily: "monospace" }}>{formatoTelefono(contactoDetalle.telefono)}</span>
+              {contactoDetalle.detenido && <span style={{ background: "#ef4444", color: COLORS.white, borderRadius: 4, padding: "4px 12px", fontSize: 12, fontWeight: 700 }}>DETENIDO</span>}
+            </div>
+            {contactoDetalle.nombre_principal && <div style={{ fontSize: 16, color: "#374151", marginTop: 4 }}>Identidad probable: {contactoDetalle.nombre_principal}</div>}
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 8 }}>
+              {contactoDetalle.grupo_delictivo && (
+                <span style={{ background: "#791f1f22", color: "#791f1f", border: "1px solid #791f1f55", borderRadius: 6, padding: "4px 12px", fontSize: 12, fontWeight: 700 }}>
+                  <Users size={12} style={{ marginRight: 4, verticalAlign: -2 }} />Grupo delictivo: {contactoDetalle.grupo_delictivo}
+                </span>
+              )}
+              {contactoDetalle.carpeta_investigacion && (
+                <span style={{ background: "#f5ede0", color: COLORS.primary, border: `1px solid ${COLORS.gold}55`, borderRadius: 6, padding: "4px 12px", fontSize: 12, fontWeight: 700, fontFamily: "monospace" }}>
+                  C.I. {contactoDetalle.carpeta_investigacion}
+                </span>
+              )}
+              {contactoDetalle.alias && contactoDetalle.alias.map((a, i) => (
+                <span key={i} style={{ background: COLORS.gold + "1a", color: COLORS.gold, border: `1px solid ${COLORS.gold}55`, borderRadius: 6, padding: "4px 12px", fontSize: 12, fontWeight: 700 }}>"{a}"</span>
+              ))}
+            </div>
+            {contactoDetalle.notas && <div style={{ marginTop: 10, color: "#6b7280", fontSize: 13 }}>{contactoDetalle.notas}</div>}
+          </div>
+          <button onClick={() => { setContactoDetalle(null); abrirEdicion(contactoDetalle); }} style={{ ...btnSecondary, padding: "9px 16px", fontSize: 13, whiteSpace: "nowrap" }}>Editar</button>
+        </div>
+      </div>
+
+      {cargandoDetalle ? (
+        <div style={{ textAlign: "center", padding: 30, color: "#9ca3af" }}>Cargando cruce de información…</div>
+      ) : (
+        <>
+          <div style={cardStyle}>
+            <div style={tituloSeccion}><Smartphone size={16} /> Cómo lo tiene guardado cada dispositivo</div>
+            {detalleAgenda.length === 0 ? (
+              <div style={{ color: "#9ca3af", fontSize: 13, textAlign: "center", padding: 16 }}>
+                No se ha detectado este número en ninguna agenda importada todavía.
+              </div>
+            ) : (
+              <div style={{ overflowX: "auto" }}>
+                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+                  <thead>
+                    <tr style={{ borderBottom: `2px solid ${COLORS.gold}` }}>
+                      <th style={{ textAlign: "left", padding: "8px 10px", color: "#6b7280", fontWeight: 700 }}>ALIAS REGISTRADO</th>
+                      <th style={{ textAlign: "left", padding: "8px 10px", color: "#6b7280", fontWeight: 700 }}>SPID</th>
+                      <th style={{ textAlign: "left", padding: "8px 10px", color: "#6b7280", fontWeight: 700 }}>TITULAR DEL DISPOSITIVO</th>
+                      <th style={{ textAlign: "left", padding: "8px 10px", color: "#6b7280", fontWeight: 700 }}>FECHA</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {detalleAgenda.map((a, i) => (
+                      <tr key={i} style={{ borderBottom: "1px solid #e8ecf1" }}>
+                        <td style={{ padding: "8px 10px", color: COLORS.primary, fontWeight: 600 }}>{a.alias_guardado || "—"}</td>
+                        <td style={{ padding: "8px 10px", fontFamily: "monospace", color: "#374151" }}>{a.dispositivos_intervenidos.spid}</td>
+                        <td style={{ padding: "8px 10px", color: "#374151" }}>{a.dispositivos_intervenidos.titular_alias || "—"}</td>
+                        <td style={{ padding: "8px 10px", color: "#6b7280" }}>{a.dispositivos_intervenidos.fecha_intervencion || "—"}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+
+          <div style={cardStyle}>
+            <div style={tituloSeccion}><Briefcase size={16} /> Expedientes donde aparece</div>
+            {(() => {
+              const spidsUnicos = [...new Map(detalleAgenda.map((a) => [a.dispositivos_intervenidos.spid, a.dispositivos_intervenidos])).values()];
+              return spidsUnicos.length === 0 ? (
+                <div style={{ color: "#9ca3af", fontSize: 13, textAlign: "center", padding: 16 }}>Sin expedientes relacionados todavía.</div>
+              ) : (
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 10 }}>
+                  {spidsUnicos.map((d, i) => (
+                    <div key={i} style={{ background: "#f9fafb", border: "1px solid #e8ecf1", borderRadius: 8, padding: 12 }}>
+                      <div style={{ fontWeight: 700, color: COLORS.primary, fontFamily: "monospace", fontSize: 13 }}>{d.spid}</div>
+                      {d.titular_alias && <div style={{ color: "#6b7280", fontSize: 12, marginTop: 2 }}>{d.titular_alias}</div>}
+                    </div>
+                  ))}
+                </div>
+              );
+            })()}
+          </div>
+
+          <div style={cardStyle}>
+            <div style={tituloSeccion}><FileText size={16} /> Documentos del expediente</div>
+            {detalleDocumentos.length === 0 ? (
+              <div style={{ color: "#9ca3af", fontSize: 13, textAlign: "center", padding: 16 }}>Sin documentos adjuntos todavía.</div>
+            ) : (
+              detalleDocumentos.map((doc) => {
+                const { icon: Icon, color } = iconoDocumento(doc.tipo_archivo);
+                return (
+                  <a key={doc.id} href={urlsDetalleDocs[doc.url_archivo] || doc.url_archivo} target="_blank" rel="noreferrer"
+                    style={{ display: "flex", alignItems: "center", gap: 8, background: "#f9fafb", borderRadius: 6, padding: "10px 12px", marginBottom: 6, textDecoration: "none", border: "1px solid #e8ecf1" }}>
+                    <Icon size={16} style={{ color }} />
+                    <span style={{ color: COLORS.primary, fontSize: 13, flex: 1 }}>{doc.nombre_archivo}</span>
+                    <span style={{ color: COLORS.gold, fontSize: 12, fontWeight: 700 }}>Ver →</span>
+                  </a>
+                );
+              })
+            )}
+          </div>
+        </>
+      )}
+      </>
       )}
 
       {mostrarForm && (
