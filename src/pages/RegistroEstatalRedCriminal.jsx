@@ -502,7 +502,7 @@ export default function RegistroEstatalRedCriminal({ perfil }) {
       evento: formDisp.evento || null,
       marca: formDisp.marca || null,
       modelo: formDisp.modelo || null,
-      numero: formDisp.numero || null,
+      numero: formDisp.numero.replace(/\D/g, "") || null,
       imei: formDisp.imei.split("\n").map((s) => s.trim()).filter(Boolean),
       correo: formDisp.correo || null,
       titular_alias: formDisp.titular_alias || null,
