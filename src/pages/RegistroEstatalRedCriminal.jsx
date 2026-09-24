@@ -418,7 +418,7 @@ export default function RegistroEstatalRedCriminal({ perfil }) {
     setFotoArchivoDisp(null);
     setFotoPreviewUrlDisp(null);
     setDocumentos([]);
-    setBusquedaVincular(""); setResultadosVincular([]);
+    setBusquedaVincular(""); setResultadosVincular([]); setMostrarDropdownVincular(false);
     setMostrarFormDisp(true);
     setMensajeDisp(null);
   };
@@ -449,21 +449,22 @@ export default function RegistroEstatalRedCriminal({ perfil }) {
       setFotoPreviewUrlDisp(firmada);
     }
     cargarDocumentos(d.id);
-    setBusquedaVincular(""); setResultadosVincular([]);
+    setBusquedaVincular(""); setResultadosVincular([]); setMostrarDropdownVincular(false);
     setMostrarFormDisp(true);
     setMensajeDisp(null);
   };
 
+  const [mostrarDropdownVincular, setMostrarDropdownVincular] = useState(false);
+
   const buscarContactoParaVincular = async (texto) => {
     setBusquedaVincular(texto);
-    if (texto.trim().length < 2) { setResultadosVincular([]); return; }
     setBuscandoVincular(true);
     const q = texto.trim();
-    const { data } = await supabase
-      .from("contactos_estatales")
-      .select("id, telefono, nombre_principal")
-      .or(`telefono.ilike.%${q}%,nombre_principal.ilike.%${q}%`)
-      .limit(8);
+    let consulta = supabase.from("contactos_estatales").select("id, telefono, nombre_principal").order("telefono").limit(50);
+    if (q.length >= 1) {
+      consulta = consulta.or(`telefono.ilike.%${q}%,nombre_principal.ilike.%${q}%`);
+    }
+    const { data } = await consulta;
     setResultadosVincular(data || []);
     setBuscandoVincular(false);
   };
@@ -471,7 +472,7 @@ export default function RegistroEstatalRedCriminal({ perfil }) {
   const vincularContacto = (contacto) => {
     setDisp("telefono_id", contacto.id);
     setDisp("telefono_vinculado_label", `${formatoTelefono(contacto.telefono)}${contacto.nombre_principal ? " · " + contacto.nombre_principal : ""}`);
-    setBusquedaVincular(""); setResultadosVincular([]);
+    setBusquedaVincular(""); setResultadosVincular([]); setMostrarDropdownVincular(false);
   };
 
   const quitarVinculo = () => {
@@ -1215,17 +1216,20 @@ export default function RegistroEstatalRedCriminal({ perfil }) {
                   </div>
                 ) : (
                   <div style={{ position: "relative" }}>
-                    <input value={busquedaVincular} onChange={(e) => buscarContactoParaVincular(e.target.value)}
-                      placeholder="Buscar por teléfono o nombre en Red Criminal…" style={inputStyle} />
-                    {busquedaVincular.length >= 2 && (
-                      <div style={{ background: COLORS.white, border: "1.5px solid #c7cfe0", borderRadius: 8, marginTop: 4, maxHeight: 200, overflowY: "auto", boxShadow: "0 4px 12px rgba(0,0,0,0.1)", position: "absolute", zIndex: 10, width: "100%" }}>
+                    <input value={busquedaVincular}
+                      onFocus={() => { setMostrarDropdownVincular(true); buscarContactoParaVincular(busquedaVincular); }}
+                      onBlur={() => setTimeout(() => setMostrarDropdownVincular(false), 150)}
+                      onChange={(e) => buscarContactoParaVincular(e.target.value)}
+                      placeholder="Buscar por teléfono o nombre — o solo da clic para ver todos…" style={inputStyle} />
+                    {mostrarDropdownVincular && (
+                      <div style={{ background: COLORS.white, border: "1.5px solid #c7cfe0", borderRadius: 8, marginTop: 4, maxHeight: 220, overflowY: "auto", boxShadow: "0 4px 12px rgba(0,0,0,0.1)", position: "absolute", zIndex: 10, width: "100%" }}>
                         {buscandoVincular ? (
                           <div style={{ color: "#6b7280", fontSize: 12, padding: 10 }}>Buscando…</div>
                         ) : resultadosVincular.length === 0 ? (
                           <div style={{ color: "#6b7280", fontSize: 12, padding: 10 }}>Sin resultados.</div>
                         ) : (
                           resultadosVincular.map((r) => (
-                            <div key={r.id} onClick={() => vincularContacto(r)} style={{ padding: "8px 12px", cursor: "pointer", borderBottom: "1px solid #e8ecf1" }}
+                            <div key={r.id} onMouseDown={() => vincularContacto(r)} style={{ padding: "8px 12px", cursor: "pointer", borderBottom: "1px solid #e8ecf1" }}
                               onMouseEnter={(e) => e.currentTarget.style.background = "#f5ede0"}
                               onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}>
                               <div style={{ color: COLORS.primary, fontSize: 13, fontFamily: "monospace" }}>{formatoTelefono(r.telefono)}</div>
