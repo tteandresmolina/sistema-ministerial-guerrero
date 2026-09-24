@@ -825,7 +825,7 @@ export default function RegistroEstatalRedCriminal({ perfil }) {
                 </div>
               </div>
               {c.detenido && (
-                <span style={{ background: "#ef444422", color: "#791f1f", border: "1px solid #ef444455", borderRadius: 4, padding: "4px 10px", fontSize: 12, fontWeight: 700, whiteSpace: "nowrap" }}>DETENIDO</span>
+                <span style={{ background: "#8b1e1e", color: "#ffffff", borderRadius: 20, padding: "4px 12px", fontSize: 12, fontWeight: 800, letterSpacing: "0.3px", whiteSpace: "nowrap" }}>DETENIDO</span>
               )}
             </div>
           </div>
@@ -860,7 +860,7 @@ export default function RegistroEstatalRedCriminal({ perfil }) {
           <div style={{ flex: 1, minWidth: 200 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
               <span style={{ fontSize: 22, fontWeight: 800, color: COLORS.primary, fontFamily: "monospace" }}>{formatoTelefono(contactoDetalle.telefono)}</span>
-              {contactoDetalle.detenido && <span style={{ background: "#ef4444", color: COLORS.white, borderRadius: 4, padding: "4px 12px", fontSize: 12, fontWeight: 700 }}>DETENIDO</span>}
+              {contactoDetalle.detenido && <span style={{ background: "#8b1e1e", color: "#ffffff", borderRadius: 20, padding: "4px 12px", fontSize: 12, fontWeight: 800, letterSpacing: "0.3px" }}>DETENIDO</span>}
             </div>
             {contactoDetalle.nombre_principal && <div style={{ fontSize: 16, color: "#374151", marginTop: 4 }}>Identidad probable: {contactoDetalle.nombre_principal}</div>}
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 8 }}>
@@ -878,7 +878,14 @@ export default function RegistroEstatalRedCriminal({ perfil }) {
                 <span key={i} style={{ background: COLORS.gold + "1a", color: COLORS.gold, border: `1px solid ${COLORS.gold}55`, borderRadius: 6, padding: "4px 12px", fontSize: 12, fontWeight: 700 }}>"{a}"</span>
               ))}
             </div>
-            {contactoDetalle.notas && <div style={{ marginTop: 10, color: "#6b7280", fontSize: 13 }}>{contactoDetalle.notas}</div>}
+            {contactoDetalle.notas && (
+              <div style={{ marginTop: 12 }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: "#9ca3af", textTransform: "uppercase", letterSpacing: 1, marginBottom: 4 }}>Notas</div>
+                <div style={{ background: "#f9fafb", border: "1px solid #e8ecf1", borderRadius: 8, padding: 10, color: "#6b7280", fontSize: 12, maxHeight: 90, overflowY: "auto", lineHeight: 1.5 }}>
+                  {contactoDetalle.notas}
+                </div>
+              </div>
+            )}
           </div>
           <button onClick={() => { setContactoDetalle(null); abrirEdicion(contactoDetalle); }} style={{ ...btnSecondary, padding: "9px 16px", fontSize: 13, whiteSpace: "nowrap" }}>Editar</button>
         </div>
@@ -946,17 +953,18 @@ export default function RegistroEstatalRedCriminal({ perfil }) {
             {detalleDocumentos.length === 0 ? (
               <div style={{ color: "#9ca3af", fontSize: 13, textAlign: "center", padding: 16 }}>Sin documentos adjuntos todavía.</div>
             ) : (
-              detalleDocumentos.map((doc) => {
-                const { icon: Icon, color } = iconoDocumento(doc.tipo_archivo);
-                return (
-                  <a key={doc.id} href={urlsDetalleDocs[doc.url_archivo] || doc.url_archivo} target="_blank" rel="noreferrer"
-                    style={{ display: "flex", alignItems: "center", gap: 8, background: "#f9fafb", borderRadius: 6, padding: "10px 12px", marginBottom: 6, textDecoration: "none", border: "1px solid #e8ecf1" }}>
-                    <Icon size={16} style={{ color }} />
-                    <span style={{ color: COLORS.primary, fontSize: 13, flex: 1 }}>{doc.nombre_archivo}</span>
-                    <span style={{ color: COLORS.gold, fontSize: 12, fontWeight: 700 }}>Ver →</span>
-                  </a>
-                );
-              })
+              <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                {detalleDocumentos.map((doc) => {
+                  const { icon: Icon, color } = iconoDocumento(doc.tipo_archivo);
+                  return (
+                    <a key={doc.id} href={urlsDetalleDocs[doc.url_archivo] || doc.url_archivo} target="_blank" rel="noreferrer"
+                      style={{ display: "flex", alignItems: "center", gap: 8, background: "#f9fafb", border: "1.5px solid #e8ecf1", borderRadius: 8, padding: "9px 14px", textDecoration: "none" }}>
+                      <Icon size={15} style={{ color }} />
+                      <span style={{ color: "#374151", fontSize: 12, fontWeight: 700 }}>{doc.nombre_archivo}</span>
+                    </a>
+                  );
+                })}
+              </div>
             )}
           </div>
         </>
@@ -1122,7 +1130,7 @@ export default function RegistroEstatalRedCriminal({ perfil }) {
                 </div>
               </div>
               {d.detenido && (
-                <span style={{ background: "#ef444422", color: "#791f1f", border: "1px solid #ef444455", borderRadius: 4, padding: "4px 10px", fontSize: 12, fontWeight: 700, whiteSpace: "nowrap" }}>DETENIDO</span>
+                <span style={{ background: "#8b1e1e", color: "#ffffff", borderRadius: 20, padding: "4px 12px", fontSize: 12, fontWeight: 800, letterSpacing: "0.3px", whiteSpace: "nowrap" }}>DETENIDO</span>
               )}
             </div>
           </div>
