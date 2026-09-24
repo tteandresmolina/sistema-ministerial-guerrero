@@ -225,18 +225,24 @@ export default function RegistroEstatalRedCriminal({ perfil }) {
       .from("agenda_registros")
       .select("alias_guardado, dispositivos_intervenidos(id, spid, titular_alias, fecha_intervencion)")
       .eq("numero", contacto.telefono);
-    const entradas = (agendaData || []).filter((a) => a.dispositivos_intervenidos);
-    setDetalleAgenda(entradas);
+    const entradasAgenda = (agendaData || []).filter((a) => a.dispositivos_intervenidos);
 
-    // Dispositivos vinculados directamente (telefono_id), por si no aparecen en agenda_registros
-    const { data: dispDirectos } = await supabase
+    // Dispositivos relacionados de forma DIRECTA: vinculados a mano (telefono_id)
+    // O cuyo propio número coincide con este contacto (el dispositivo ES ese número)
+    const { data: dispRelacionados } = await supabase
       .from("dispositivos_intervenidos")
       .select("id, spid, titular_alias, fecha_intervencion")
-      .eq("telefono_id", contacto.id);
+      .or(`telefono_id.eq.${contacto.id},numero.eq.${contacto.telefono}`);
 
-    const idsAgenda = entradas.map((a) => a.dispositivos_intervenidos.id);
-    const idsDirectos = (dispDirectos || []).map((d) => d.id);
-    const todosIds = [...new Set([...idsAgenda, ...idsDirectos])];
+    // Combinar ambas fuentes para la tabla, evitando duplicar el mismo dispositivo
+    const idsYaEnAgenda = new Set(entradasAgenda.map((a) => a.dispositivos_intervenidos.id));
+    const entradasDirectas = (dispRelacionados || [])
+      .filter((d) => !idsYaEnAgenda.has(d.id))
+      .map((d) => ({ alias_guardado: null, dispositivos_intervenidos: d }));
+    const entradasCombinadas = [...entradasAgenda, ...entradasDirectas];
+    setDetalleAgenda(entradasCombinadas);
+
+    const todosIds = [...new Set(entradasCombinadas.map((a) => a.dispositivos_intervenidos.id))];
 
     if (todosIds.length > 0) {
       const { data: docsData } = await supabase
@@ -901,7 +907,9 @@ export default function RegistroEstatalRedCriminal({ perfil }) {
                   <tbody>
                     {detalleAgenda.map((a, i) => (
                       <tr key={i} style={{ borderBottom: "1px solid #e8ecf1" }}>
-                        <td style={{ padding: "8px 10px", color: COLORS.primary, fontWeight: 600 }}>{a.alias_guardado || "—"}</td>
+                        <td style={{ padding: "8px 10px", color: a.alias_guardado ? COLORS.primary : "#9ca3af", fontWeight: a.alias_guardado ? 600 : 400, fontStyle: a.alias_guardado ? "normal" : "italic" }}>
+                          {a.alias_guardado || "(es el número propio de este dispositivo)"}
+                        </td>
                         <td style={{ padding: "8px 10px", fontFamily: "monospace", color: "#374151" }}>{a.dispositivos_intervenidos.spid}</td>
                         <td style={{ padding: "8px 10px", color: "#374151" }}>{a.dispositivos_intervenidos.titular_alias || "—"}</td>
                         <td style={{ padding: "8px 10px", color: "#6b7280" }}>{a.dispositivos_intervenidos.fecha_intervencion || "—"}</td>
