@@ -8,6 +8,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../supabaseClient';
 import { RefreshCw, MapPin, Filter, X, Clock, BarChart3, ChevronDown, ChevronUp } from 'lucide-react';
+import ImportarIncidenciaRegional from './ImportarIncidenciaRegional';
 
 const C = {
   darkBlue: '#001a4d', gold: '#b69054', lightGold: '#f5ede0',
@@ -20,7 +21,20 @@ const FUENTES = [
   { key: 'escenas_crimen', label: 'Procesamiento del Lugar', color: '#fd7e14', lat: 'coordenadas_lat', lng: 'coordenadas_lng', fecha: 'fecha_procesamiento', delito: 'tipo_escena', muni: 'municipio', desc: 'descripcion_escena' },
   { key: 'detenidos', label: 'Detenidos', color: '#001a4d', lat: 'latitud', lng: 'longitud', fecha: 'fecha_deteccion', delito: 'delito', muni: 'region', desc: 'lugar_deteccion' },
   { key: 'oficios_investigacion', label: 'Oficios de Investigación', color: '#b69054', lat: 'coordenadas_lat', lng: 'coordenadas_lng', fecha: 'fecha_emision', delito: 'delito', muni: 'municipio', desc: 'lugar_hechos' },
+  { key: 'incidencia_regional', label: 'Homicidios (Acapulco)', color: '#8b1e1e', lat: 'coordenadas_lat', lng: 'coordenadas_lng', fecha: 'fecha', delito: 'delito', muni: 'zona', desc: 'lugar_hechos' },
 ];
+
+// Estado inicial de las capas: todas activas (se arma desde FUENTES para no repetir la lista)
+function filtrosIniciales() {
+  var f = {};
+  FUENTES.forEach(function(x) { f[x.key] = true; });
+  return f;
+}
+
+// Los textos de la base (incluye los que llegan de Excel) se escapan antes de entrar al popup HTML
+function esc(t) {
+  return String(t == null ? '' : t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
 
 const inputStyle = { padding: '13px 14px', border: '2px solid #e8ecf1', borderRadius: 7, fontSize: 15, outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box', minHeight: 44 };
 const selectStyle = { ...inputStyle, backgroundColor: '#ffffff', cursor: 'pointer' };
@@ -41,7 +55,7 @@ function loadCSS(href) {
   document.head.appendChild(l);
 }
 
-export default function MapaCalor() {
+export default function MapaCalor({ user }) {
   const mapRef = useRef(null);
   const mapInstance = useRef(null);
   const layerGroup = useRef(null);
@@ -51,9 +65,7 @@ export default function MapaCalor() {
   const [leafletReady, setLeafletReady] = useState(false);
   const [showAnalisis, setShowAnalisis] = useState(false);
 
-  const [filtros, setFiltros] = useState({
-    registros_911: true, escenas_crimen: true, detenidos: true, oficios_investigacion: true
-  });
+  const [filtros, setFiltros] = useState(filtrosIniciales);
   const [fechaDesde, setFechaDesde] = useState('');
   const [fechaHasta, setFechaHasta] = useState('');
   const [filtroDelito, setFiltroDelito] = useState('');
@@ -146,11 +158,11 @@ export default function MapaCalor() {
     }
     puntosFiltrados.forEach(function(p) {
       var popup = '<div style="font-family:Segoe UI,sans-serif;min-width:180px">' +
-        '<div style="font-weight:700;font-size:13px;color:' + p.color + ';margin-bottom:4px">' + p.label + '</div>' +
-        (p.delito ? '<div style="font-size:12px;color:#b71c1c;font-weight:600">' + p.delito + '</div>' : '') +
-        (p.municipio ? '<div style="font-size:11px;color:#666;margin-top:2px">📍 ' + p.municipio + '</div>' : '') +
-        (p.fecha ? '<div style="font-size:11px;color:#666">📅 ' + p.fecha + '</div>' : '') +
-        (p.descripcion ? '<div style="font-size:11px;color:#333;margin-top:4px;max-width:220px;word-wrap:break-word">' + p.descripcion.substring(0, 120) + (p.descripcion.length > 120 ? '...' : '') + '</div>' : '') +
+        '<div style="font-weight:700;font-size:13px;color:' + p.color + ';margin-bottom:4px">' + esc(p.label) + '</div>' +
+        (p.delito ? '<div style="font-size:12px;color:#b71c1c;font-weight:600">' + esc(p.delito) + '</div>' : '') +
+        (p.municipio ? '<div style="font-size:11px;color:#666;margin-top:2px">📍 ' + esc(p.municipio) + '</div>' : '') +
+        (p.fecha ? '<div style="font-size:11px;color:#666">📅 ' + esc(p.fecha) + '</div>' : '') +
+        (p.descripcion ? '<div style="font-size:11px;color:#333;margin-top:4px;max-width:220px;word-wrap:break-word">' + esc(p.descripcion.substring(0, 120)) + (p.descripcion.length > 120 ? '...' : '') + '</div>' : '') +
         '<div style="font-size:10px;color:#999;margin-top:4px">Lat: ' + p.lat.toFixed(5) + ' · Lng: ' + p.lng.toFixed(5) + '</div></div>';
       window.L.circleMarker([p.lat, p.lng], { radius: 8, fillColor: p.color, color: '#ffffff', weight: 2, opacity: 1, fillOpacity: 0.85 }).addTo(layerGroup.current).bindPopup(popup);
     });
@@ -162,7 +174,7 @@ export default function MapaCalor() {
 
   useEffect(function() { return function() { if (mapInstance.current) { mapInstance.current.remove(); mapInstance.current = null; } }; }, []);
 
-  var limpiarFiltros = function() { setFechaDesde(''); setFechaHasta(''); setFiltroDelito(''); setFiltroMunicipio(''); setFiltros({ registros_911: true, escenas_crimen: true, detenidos: true, oficios_investigacion: true }); };
+  var limpiarFiltros = function() { setFechaDesde(''); setFechaHasta(''); setFiltroDelito(''); setFiltroMunicipio(''); setFiltros(filtrosIniciales()); };
   var hayFiltrosActivos = fechaDesde || fechaHasta || filtroDelito || filtroMunicipio;
 
   return (
@@ -183,6 +195,8 @@ export default function MapaCalor() {
           </button>
         </div>
       </div>
+
+      {user && user.rol === 'mando' && <ImportarIncidenciaRegional perfil={user} onImportado={cargarDatos} />}
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: 10, marginBottom: 14 }}>
         <div style={{ background: C.white, borderRadius: 10, padding: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.08)', textAlign: 'center' }}>
@@ -209,6 +223,11 @@ export default function MapaCalor() {
             </button>
           ); })}
         </div>
+        {filtros.incidencia_regional && (
+          <div style={{ fontSize: 12, color: C.gray, marginBottom: 10 }}>
+            Homicidios (Acapulco): solo incluye casos con carpeta de investigación asignada. Los casos con C.I. pendiente no se muestran.
+          </div>
+        )}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 10 }}>
           <div>
             <label style={{ fontSize: 12, fontWeight: 600, color: C.gray, display: 'block', marginBottom: 2 }}>Fecha desde</label>
