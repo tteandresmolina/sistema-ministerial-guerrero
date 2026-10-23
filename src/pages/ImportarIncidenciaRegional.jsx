@@ -190,8 +190,194 @@ const btnPrimario = { ...btn, background: C.gold, color: C.white };
 const btnSecundario = { ...btn, background: 'transparent', color: C.navy, border: '2px solid ' + C.navy };
 const campo = { padding: '10px 12px', border: '2px solid ' + C.border, borderRadius: 7, fontSize: 15, fontFamily: 'inherit', minHeight: 44, boxSizing: 'border-box', background: C.white, color: '#1a1a1a' };
 
+
+// ============================================================================
+// Revisar y corregir la ubicación de casos YA guardados (poner los que faltan,
+// confirmar los automáticos, mover los que quedaron mal).
+// ============================================================================
+function RevisarGuardadas({ leafletListo, onCambio }) {
+  const [filas, setFilas] = useState([]);
+  const [cargando, setCargando] = useState(true);
+  const [filtro, setFiltro] = useState('pendientes'); // 'pendientes' | 'todos'
+  const [sel, setSel] = useState(null);
+  const [borrador, setBorrador] = useState(null); // punto aún sin guardar
+  const [buscando, setBuscando] = useState(false);
+  const [guardando, setGuardando] = useState(false);
+  const [msg, setMsg] = useState(null);
+  const mapEl = useRef(null);
+  const mapObj = useRef(null);
+  const capa = useRef(null);
+  const selRef = useRef(null);
+  selRef.current = sel;
+
+  const cargar = async () => {
+    setCargando(true);
+    const { data, error } = await supabase.from('incidencia_regional')
+      .select('id, carpeta_investigacion, zona, fecha, lugar_hechos, observaciones, coordenadas_lat, coordenadas_lng, ubicacion_confirmada, lugar_es_hospital')
+      .order('fecha', { ascending: false });
+    if (error) setMsg({ tipo: 'error', texto: 'No se pudieron cargar los casos: ' + error.message });
+    else setFilas(data || []);
+    setCargando(false);
+  };
+  useEffect(() => { cargar(); }, []);
+
+  const sinUbicar = (f) => f.coordenadas_lat == null;
+  const sinConfirmar = (f) => f.coordenadas_lat != null && !f.ubicacion_confirmada;
+  const nSin = filas.filter(sinUbicar).length;
+  const nAuto = filas.filter(sinConfirmar).length;
+  const lista = filas
+    .filter((f) => filtro === 'todos' || sinUbicar(f) || sinConfirmar(f))
+    .sort((a, b) => (sinUbicar(b) - sinUbicar(a)) || (sinConfirmar(b) - sinConfirmar(a)) || String(b.fecha).localeCompare(String(a.fecha)));
+  const fSel = filas.find((f) => f.id === sel) || null;
+
+  const seleccionar = (f) => {
+    setSel(f.id); setBorrador(null); setMsg(null);
+    if (f.coordenadas_lat != null && mapObj.current) mapObj.current.setView([f.coordenadas_lat, f.coordenadas_lng], 16);
+  };
+
+  useEffect(() => {
+    if (!leafletListo || !mapEl.current || !window.L) return;
+    const L = window.L;
+    if (mapObj.current && mapObj.current.getContainer() !== mapEl.current) {
+      try { mapObj.current.remove(); } catch (e) { /* contenedor anterior ya no existe */ }
+      mapObj.current = null;
+    }
+    if (!mapObj.current) {
+      mapObj.current = L.map(mapEl.current, { center: [16.85, -99.88], zoom: 11 });
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap', maxZoom: 18 }).addTo(mapObj.current);
+      capa.current = L.layerGroup().addTo(mapObj.current);
+      mapObj.current.on('click', (e) => { if (selRef.current != null) setBorrador({ lat: e.latlng.lat, lng: e.latlng.lng }); });
+    }
+    capa.current.clearLayers();
+    filas.forEach((f) => {
+      if (f.coordenadas_lat == null || f.id === sel) return;
+      L.circleMarker([f.coordenadas_lat, f.coordenadas_lng], { radius: 7, fillColor: f.ubicacion_confirmada ? C.navy : C.ambar, color: '#ffffff', weight: 2, fillOpacity: 0.9 })
+        .addTo(capa.current).on('click', () => seleccionar(f));
+    });
+    const actual = filas.find((f) => f.id === sel);
+    const pos = borrador || (actual && actual.coordenadas_lat != null ? { lat: actual.coordenadas_lat, lng: actual.coordenadas_lng } : null);
+    if (pos) {
+      const mk = L.marker([pos.lat, pos.lng], { draggable: true }).addTo(capa.current);
+      mk.on('dragend', () => { const q = mk.getLatLng(); setBorrador({ lat: q.lat, lng: q.lng }); });
+    }
+  }, [leafletListo, filas, sel, borrador]);
+
+  useEffect(() => () => { if (mapObj.current) { mapObj.current.remove(); mapObj.current = null; } }, []);
+
+  const actualizar = async (cambios, textoOk) => {
+    setGuardando(true); setMsg(null);
+    const { data, error } = await supabase.from('incidencia_regional')
+      .update({ ...cambios, updated_at: new Date().toISOString() }).eq('id', sel).select('id');
+    setGuardando(false);
+    if (error || !data || data.length === 0) {
+      setMsg({ tipo: 'error', texto: 'No se pudo guardar' + (error ? ': ' + error.message : ' (sin permiso o el caso ya no existe).') });
+      return;
+    }
+    setFilas((prev) => prev.map((f) => (f.id === sel ? { ...f, ...cambios } : f)));
+    setBorrador(null);
+    setMsg({ tipo: 'ok', texto: textoOk });
+    if (onCambio) onCambio();
+  };
+
+  const guardarUbicacion = () => {
+    if (!borrador) return;
+    if (!enZona(borrador.lat, borrador.lng)) { setMsg({ tipo: 'error', texto: 'El punto queda fuera de la zona de Acapulco y Coyuca. Colócalo de nuevo.' }); return; }
+    actualizar({ coordenadas_lat: borrador.lat, coordenadas_lng: borrador.lng, ubicacion_confirmada: true }, 'Ubicación guardada.');
+  };
+  const confirmarActual = () => actualizar({ ubicacion_confirmada: true }, 'Ubicación confirmada.');
+  const quitarUbicacion = () => {
+    if (!window.confirm('¿Quitar la ubicación de este caso? Dejará de aparecer en el mapa.')) return;
+    actualizar({ coordenadas_lat: null, coordenadas_lng: null, ubicacion_confirmada: false }, 'Ubicación quitada.');
+  };
+
+  const buscarDireccion = async () => {
+    if (!fSel) return;
+    setBuscando(true); setMsg(null);
+    for (const c of consultasDe({ sector: fSel.zona, lugar: fSel.lugar_hechos || '' })) {
+      let hit = null;
+      try { hit = await geocodificar(c.q); } catch (e) { hit = null; }
+      if (hit) {
+        setBorrador({ lat: hit.lat, lng: hit.lng });
+        if (mapObj.current) mapObj.current.setView([hit.lat, hit.lng], 16);
+        setMsg({ tipo: 'ok', texto: c.nivel === 'direccion' ? 'Se encontró por la dirección. Revisa el punto y guarda.' : 'Solo se encontró la colonia: el punto es aproximado. Muévelo si hace falta y guarda.' });
+        setBuscando(false);
+        return;
+      }
+      await esperar(1100);
+    }
+    setBuscando(false);
+    setMsg({ tipo: 'error', texto: 'No se encontró la dirección. Colócala a mano con un clic en el mapa.' });
+  };
+
+  const chipEstado = (f) => (sinUbicar(f) ? { t: 'Sin ubicar', c: C.rojo } : f.ubicacion_confirmada ? { t: 'Confirmada', c: C.navy } : { t: 'Sin confirmar', c: C.ambar });
+  const chipFiltro = (activo) => ({ ...btn, padding: '8px 14px', minHeight: 38, fontSize: 14, background: activo ? C.navy : 'transparent', color: activo ? '#fff' : C.navy, border: '2px solid ' + C.navy });
+
+  return (
+    <div>
+      <p style={{ color: C.gray, fontSize: 15, margin: '0 0 10px 0', lineHeight: 1.5 }}>
+        Aquí corriges casos ya guardados: ubicas los que faltan, confirmas los que SARA ubicó sola y mueves los que quedaron mal.
+        Selecciona un caso, coloca el punto con un clic en el mapa (o arrastra el marcador) y guarda.
+      </p>
+      {msg && (
+        <div style={{ background: msg.tipo === 'ok' ? '#e1f5ee' : '#fcebeb', border: '1px solid ' + (msg.tipo === 'ok' ? '#22c55e55' : '#ef444455'), color: msg.tipo === 'ok' ? '#0f6e56' : '#791f1f', borderRadius: 8, padding: 12, fontSize: 15, marginBottom: 12 }}>{msg.texto}</div>
+      )}
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 12, fontSize: 14 }}>
+        <span style={{ background: C.bg, border: '1.5px solid ' + C.border, borderRadius: 8, padding: '8px 12px', fontWeight: 700, color: C.rojo }}>{nSin} · Sin ubicar</span>
+        <span style={{ background: C.bg, border: '1.5px solid ' + C.border, borderRadius: 8, padding: '8px 12px', fontWeight: 700, color: C.ambar }}>{nAuto} · Sin confirmar</span>
+        <span style={{ background: C.bg, border: '1.5px solid ' + C.border, borderRadius: 8, padding: '8px 12px', fontWeight: 700, color: C.navy }}>{filas.length - nSin - nAuto} · Confirmadas</span>
+        <button onClick={() => setFiltro('pendientes')} style={chipFiltro(filtro === 'pendientes')}>Pendientes</button>
+        <button onClick={() => setFiltro('todos')} style={chipFiltro(filtro === 'todos')}>Todos</button>
+      </div>
+
+      <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', alignItems: 'flex-start' }}>
+        <div style={{ flex: '1 1 340px', maxHeight: 460, overflowY: 'auto', border: '1.5px solid ' + C.border, borderRadius: 8 }}>
+          {cargando ? (
+            <div style={{ padding: 16, color: C.gray }}>Cargando…</div>
+          ) : lista.length === 0 ? (
+            <div style={{ padding: 16, color: C.gray, fontSize: 15 }}>{filtro === 'pendientes' ? 'No hay casos pendientes: todo está ubicado y confirmado.' : 'Aún no hay casos guardados.'}</div>
+          ) : lista.map((f) => {
+            const et = chipEstado(f);
+            return (
+              <div key={f.id} onClick={() => seleccionar(f)} style={{ padding: '10px 12px', borderBottom: '1px solid ' + C.border, cursor: 'pointer', background: f.id === sel ? '#f5ede0' : C.white }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, alignItems: 'center' }}>
+                  <span style={{ fontWeight: 700, color: C.navy, fontSize: 14 }}>{f.zona || 'Sin sector'} · {f.fecha || 'sin fecha'}</span>
+                  <span style={{ background: et.c, color: '#fff', borderRadius: 12, padding: '2px 10px', fontSize: 12, fontWeight: 700, whiteSpace: 'nowrap' }}>{et.t}</span>
+                </div>
+                <div style={{ color: '#374151', fontSize: 13, marginTop: 3 }}>{String(f.lugar_hechos || '').slice(0, 90)}{String(f.lugar_hechos || '').length > 90 ? '…' : ''}</div>
+                {f.lugar_es_hospital && <span style={{ background: C.guinda, color: '#fff', borderRadius: 10, padding: '1px 8px', fontSize: 11, fontWeight: 700, display: 'inline-block', marginTop: 4 }}>HOSPITAL</span>}
+              </div>
+            );
+          })}
+        </div>
+
+        <div style={{ flex: '1 1 380px', minWidth: 300 }}>
+          {fSel ? (
+            <div style={{ border: '1.5px solid ' + C.border, borderRadius: 8, padding: 12, marginBottom: 10, fontSize: 14 }}>
+              <div style={{ fontFamily: 'monospace', color: C.gray, fontSize: 12, marginBottom: 6 }}>C.I. {fSel.carpeta_investigacion}</div>
+              <div style={{ color: '#374151', lineHeight: 1.4 }}><strong>Lugar:</strong> {fSel.lugar_hechos}</div>
+              {fSel.observaciones && <div style={{ color: C.gray, lineHeight: 1.4, marginTop: 4, fontSize: 13 }}><strong>Observaciones:</strong> {fSel.observaciones}</div>}
+              {fSel.lugar_es_hospital && <div style={{ color: C.guinda, fontSize: 13, marginTop: 6, fontWeight: 700 }}>El lugar registrado es un hospital. Si sabes dónde ocurrió el hecho, coloca el punto ahí.</div>}
+              <div style={{ display: 'flex', gap: 8, marginTop: 10, flexWrap: 'wrap' }}>
+                <button onClick={buscarDireccion} disabled={buscando || guardando} style={{ ...btnSecundario, padding: '8px 14px', fontSize: 13, minHeight: 38, opacity: buscando ? 0.6 : 1 }}>{buscando ? 'Buscando…' : 'Buscar dirección'}</button>
+                <button onClick={guardarUbicacion} disabled={!borrador || guardando} style={{ ...btnPrimario, padding: '8px 14px', fontSize: 13, minHeight: 38, opacity: !borrador || guardando ? 0.45 : 1 }}>{guardando ? 'Guardando…' : 'Guardar ubicación'}</button>
+                <button onClick={confirmarActual} disabled={borrador || sinUbicar(fSel) || fSel.ubicacion_confirmada || guardando} style={{ ...btnSecundario, padding: '8px 14px', fontSize: 13, minHeight: 38, opacity: (borrador || sinUbicar(fSel) || fSel.ubicacion_confirmada) ? 0.45 : 1 }}>Confirmar ubicación actual</button>
+                <button onClick={quitarUbicacion} disabled={sinUbicar(fSel) || guardando} style={{ ...btn, padding: '8px 14px', fontSize: 13, minHeight: 38, background: 'transparent', color: C.rojo, border: '1px solid ' + C.rojo, opacity: sinUbicar(fSel) ? 0.45 : 1 }}>Quitar ubicación</button>
+              </div>
+              <div style={{ color: C.gray, fontSize: 12, marginTop: 8 }}>{borrador ? 'Hay un punto sin guardar: presiona "Guardar ubicación".' : 'Haz clic en el mapa para colocar el punto, o arrastra el marcador.'}</div>
+            </div>
+          ) : (
+            <div style={{ color: C.gray, fontSize: 14, padding: '4px 2px 10px' }}>Selecciona un caso de la lista para revisarlo en el mapa.</div>
+          )}
+          <div ref={mapEl} style={{ height: 380, borderRadius: 8, border: '1.5px solid ' + C.border }} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function ImportarIncidenciaRegional({ perfil, onImportado }) {
   const [abierto, setAbierto] = useState(false);
+  const [modo, setModo] = useState('importar'); // 'importar' | 'revisar'
   const [fase, setFase] = useState('inicio'); // 'inicio' | 'revision'
   const [resumen, setResumen] = useState(null);
   const [filas, setFilas] = useState([]);
@@ -223,12 +409,16 @@ export default function ImportarIncidenciaRegional({ perfil, onImportado }) {
 
   // Mapa de revisión
   useEffect(() => {
-    if (fase !== 'revision') {
+    if (!(fase === 'revision' && modo === 'importar')) {
       if (mapObj.current) { mapObj.current.remove(); mapObj.current = null; }
       return;
     }
     if (!leafletListo || !mapEl.current || !window.L) return;
     const L = window.L;
+    if (mapObj.current && mapObj.current.getContainer() !== mapEl.current) {
+      try { mapObj.current.remove(); } catch (e) { /* contenedor anterior ya no existe */ }
+      mapObj.current = null;
+    }
     if (!mapObj.current) {
       mapObj.current = L.map(mapEl.current, { center: [16.85, -99.88], zoom: 11 });
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap', maxZoom: 18 }).addTo(mapObj.current);
@@ -246,7 +436,7 @@ export default function ImportarIncidenciaRegional({ perfil, onImportado }) {
           .addTo(capa.current).on('click', () => seleccionar(i));
       }
     });
-  }, [fase, leafletListo, filas, sel]);
+  }, [fase, modo, leafletListo, filas, sel]);
 
   const seleccionar = (i) => {
     setSel(i);
@@ -359,13 +549,20 @@ export default function ImportarIncidenciaRegional({ perfil, onImportado }) {
         <X size={20} style={{ cursor: 'pointer', color: C.gray }} onClick={() => { cancelar(); setAbierto(false); }} />
       </div>
 
-      {msg && (
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 12 }}>
+        <button onClick={() => setModo('importar')} style={{ ...btn, padding: '8px 16px', minHeight: 40, fontSize: 14, background: modo === 'importar' ? C.navy : 'transparent', color: modo === 'importar' ? '#fff' : C.navy, border: '2px solid ' + C.navy }}>Importar archivo</button>
+        <button onClick={() => setModo('revisar')} style={{ ...btn, padding: '8px 16px', minHeight: 40, fontSize: 14, background: modo === 'revisar' ? C.navy : 'transparent', color: modo === 'revisar' ? '#fff' : C.navy, border: '2px solid ' + C.navy }}>Revisar ubicaciones guardadas</button>
+      </div>
+
+      {modo === 'revisar' && <RevisarGuardadas leafletListo={leafletListo} onCambio={onImportado} />}
+
+      {modo === 'importar' && msg && (
         <div style={{ background: msg.tipo === 'ok' ? '#e1f5ee' : '#fcebeb', border: '1px solid ' + (msg.tipo === 'ok' ? '#22c55e55' : '#ef444455'), color: msg.tipo === 'ok' ? '#0f6e56' : '#791f1f', borderRadius: 8, padding: 12, fontSize: 15, marginBottom: 12 }}>
           {msg.texto}
         </div>
       )}
 
-      {fase === 'inicio' && (
+      {modo === 'importar' && fase === 'inicio' && (
         <div>
           <p style={{ color: C.gray, fontSize: 15, margin: '0 0 12px 0', lineHeight: 1.5 }}>
             Sube el Excel del regional. Se lee la hoja de homicidios dolosos y solo se agregan los casos que aún no estén registrados
@@ -375,7 +572,7 @@ export default function ImportarIncidenciaRegional({ perfil, onImportado }) {
         </div>
       )}
 
-      {fase === 'revision' && resumen && (
+      {modo === 'importar' && fase === 'revision' && resumen && (
         <div>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 12, fontSize: 14 }}>
             {[
