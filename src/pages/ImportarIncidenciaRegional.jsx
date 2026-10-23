@@ -67,6 +67,13 @@ function parseFecha(v) {
 const siNo = (v) => { const s = normalizar(v); return s ? s.startsWith('SI') : null; };
 const armaTxt = (v) => { const s = String(v == null ? '' : v).trim(); return !s || normalizar(s) === 'NO' ? null : s; };
 
+// Coordenadas opcionales del archivo (p. ej. las que colocó el regional en Google Earth).
+const aNumero = (v) => {
+  const n = typeof v === 'number' ? v : parseFloat(String(v == null ? '' : v).replace(',', '.'));
+  return isFinite(n) ? n : null;
+};
+const enZona = (la, lo) => la != null && lo != null && la > 16.4 && la < 17.5 && lo > -100.6 && lo < -99.0;
+
 function parsearLibro(wb) {
   const nombres = wb.SheetNames;
   const orden = [...nombres.filter((n) => normalizar(n).includes('HOMICIDIO')),
@@ -80,7 +87,7 @@ function parsearLibro(wb) {
     const idx = {
       zona: col('COORDINACION'), fecha: col('FECHA'), delito: col('DELITO'), ci: col('CARPETA DE INVESTIGACION'),
       lugar: col('LUGAR DE LOS HECHOS'), cartulina: col('CARTULINA'), calibre: col('CALIBRE'),
-      vehiculo: col('VEHICULO'), droga: col('DROGA'),
+      vehiculo: col('VEHICULO'), droga: col('DROGA'), lat: col('LATITUD'), lng: col('LONGITUD'),
     };
     const datos = filas.slice(h + 1);
 
@@ -110,6 +117,9 @@ function parsearLibro(wb) {
       if (vistos.has(ci)) { repetidos++; continue; }
       vistos.add(ci);
       const f = parseFecha(r[idx.fecha]);
+      const la = idx.lat >= 0 ? aNumero(r[idx.lat]) : null;
+      const lo = idx.lng >= 0 ? aNumero(r[idx.lng]) : null;
+      const conCoords = enZona(la, lo);
       out.push({
         ci, ciRara: ci.length !== 20,
         zonaCruda: String(r[idx.zona] == null ? '' : r[idx.zona]).trim(),
@@ -120,7 +130,8 @@ function parsearLibro(wb) {
         esHospital: HOSPITAL_RE.test(lugar),
         cartulina: siNo(r[idx.cartulina]), vehiculo: siNo(r[idx.vehiculo]), droga: siNo(r[idx.droga]),
         arma: armaTxt(r[idx.calibre]),
-        lat: null, lng: null, precision: null, confirmada: false,
+        lat: conCoords ? la : null, lng: conCoords ? lo : null,
+        precision: conCoords ? 'manual' : null, confirmada: conCoords, deArchivo: conCoords,
       });
     }
     return { filas: out, totalLeidos, omitidos, repetidos, hoja: nombre };
@@ -264,7 +275,7 @@ export default function ImportarIncidenciaRegional({ perfil, onImportado }) {
       setFilas(nuevas);
       setSel(null);
       setProgreso(0);
-      setResumen({ archivo: file.name, hoja: parsed.hoja, leidos: parsed.totalLeidos, omitidos: parsed.omitidos, repetidos: parsed.repetidos, existentes: parsed.filas.length - nuevas.length, nuevas: nuevas.length });
+      setResumen({ archivo: file.name, hoja: parsed.hoja, leidos: parsed.totalLeidos, omitidos: parsed.omitidos, repetidos: parsed.repetidos, existentes: parsed.filas.length - nuevas.length, nuevas: nuevas.length, conCoords: nuevas.filter((f) => f.deArchivo).length });
       setFase('revision');
     } catch (err) {
       setMsg({ tipo: 'error', texto: 'No se pudo leer el archivo: ' + (err.message || err) });
@@ -372,6 +383,7 @@ export default function ImportarIncidenciaRegional({ perfil, onImportado }) {
               ['Omitidos sin C.I.', resumen.omitidos, C.guinda],
               ['Ya registrados', resumen.existentes, C.gray],
               ['Nuevos a revisar', resumen.nuevas, C.verde],
+              ...(resumen.conCoords > 0 ? [['Con coordenadas del archivo', resumen.conCoords, C.navy]] : []),
             ].map(([t, n, c]) => (
               <span key={t} style={{ background: C.bg, border: '1.5px solid ' + C.border, borderRadius: 8, padding: '8px 12px', fontWeight: 700, color: c }}>{n} · {t}</span>
             ))}
