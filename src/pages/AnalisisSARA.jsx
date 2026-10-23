@@ -638,7 +638,7 @@ const [showMapa, setShowMapa] = useState(false);
           <MapPin size={15} /> {showMapa ? 'Ocultar Mapa de Calor' : 'Mapa de Calor'}
         </button>
       </div>
-      {showMapa && <MapaCalor />}
+      {showMapa && <MapaCalor user={user} />}
       <ChecklistCHEERS />
 <TrianguloProblema />
       {vista === 'listado' && renderListado()}
