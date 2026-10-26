@@ -92,13 +92,14 @@ export function calcularFocos(puntos, epsM, minPts, ventanaDias) {
     const desde = fechas[0] || null, hasta = fechas[fechas.length - 1] || null;
     const dias = desde && hasta ? Math.max(7, Math.round((hasta - desde) / 86400000) + 1) : null;
     const delito = frecuente(miembros.map((m) => m.delito));
+    const reg = frecuente(miembros.map((m) => m.region));
     focos.push({
       clave: centro.lat.toFixed(5) + ',' + centro.lng.toFixed(5),
       n: miembros.length, enMes, centro, radioM, miembros,
       sectores: sectoresOrdenados,
       desde, hasta,
       porSemana: dias ? Math.round((miembros.length / (dias / 7)) * 10) / 10 : null,
-      delito,
+      delito, region: reg ? reg.valor : '',
     });
   }
   focos.sort((a, b) => b.n - a.n);
@@ -117,8 +118,11 @@ const km1 = (m) => (Math.round(m / 100) / 10).toFixed(1);
 
 const btn = { borderRadius: 7, padding: '10px 16px', fontSize: 14, fontWeight: 700, cursor: 'pointer', minHeight: 44, display: 'inline-flex', alignItems: 'center', gap: 6, justifyContent: 'center' };
 
-export default function ZonasAtencion({ puntos, seleccionada, onSeleccionar, onIniciarProyecto, onZonas }) {
-  const [km, setKm] = useState(2);
+export default function ZonasAtencion({ puntos, seleccionada, onSeleccionar, onIniciarProyecto, onZonas, km: kmProp, onKm }) {
+  // La distancia (1 o 2 km) puede controlarla el mapa, para que el color de los puntos use la misma regla que las zonas
+  const [kmInterno, setKmInterno] = useState(2);
+  const km = kmProp != null ? kmProp : kmInterno;
+  const setKm = (k) => { if (onKm) onKm(k); else setKmInterno(k); };
   const [verInfo, setVerInfo] = useState(false);
   const [sinUbicar, setSinUbicar] = useState(null);
 
@@ -147,7 +151,7 @@ export default function ZonasAtencion({ puntos, seleccionada, onSeleccionar, onI
       + (f.delito && f.delito.n >= 2 ? ' Delito más frecuente: ' + f.delito.valor + ' (' + f.delito.n + ').' : '');
     onIniciarProyecto({
       problema: 'Homicidios dolosos — ' + zona,
-      zona: zona + ', Acapulco',
+      zona: zona + (f.region ? ', ' + f.region.replace(/^Región /, '') : ''),
       prioridad: 'media',
       categoria: 'Homicidio doloso',
       resumen: 'Zona de atención prioritaria detectada en el mapa de calor: ' + f.n + ' casos en un radio aproximado de ' + km1(f.radioM) + ' km '
