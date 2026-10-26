@@ -9,6 +9,7 @@ import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../supabaseClient';
 import { RefreshCw, MapPin, Filter, X, Clock, BarChart3, ChevronDown, ChevronUp } from 'lucide-react';
 import ImportarIncidenciaRegional from './ImportarIncidenciaRegional';
+import ZonasAtencion from './ZonasAtencion';
 
 const C = {
   darkBlue: '#001a4d', gold: '#b69054', lightGold: '#f5ede0',
@@ -55,8 +56,9 @@ function loadCSS(href) {
   document.head.appendChild(l);
 }
 
-export default function MapaCalor({ user }) {
+export default function MapaCalor({ user, onIniciarProyecto }) {
   const mapRef = useRef(null);
+  const [focoSel, setFocoSel] = useState(null); // zona de atención elegida en el panel (para dibujarla en el mapa)
   const mapInstance = useRef(null);
   const layerGroup = useRef(null);
   const heatLayer = useRef(null);
@@ -172,11 +174,17 @@ export default function MapaCalor({ user }) {
         '<div style="font-size:10px;color:#999;margin-top:4px">Lat: ' + p.lat.toFixed(5) + ' · Lng: ' + p.lng.toFixed(5) + '</div></div>';
       window.L.circleMarker([p.lat, p.lng], { radius: 8, fillColor: p.color, color: '#ffffff', weight: 2, opacity: 1, fillOpacity: 0.85 }).addTo(layerGroup.current).bindPopup(popup);
     });
-    if (puntosFiltrados.length > 0) {
+    if (focoSel && window.L.circle) {
+      window.L.circle([focoSel.centro.lat, focoSel.centro.lng], { radius: Math.max(focoSel.radioM + 150, 300), color: '#8b1e1e', weight: 3, dashArray: '8 6', fillColor: '#8b1e1e', fillOpacity: 0.08 }).addTo(layerGroup.current);
+      mapInstance.current.fitBounds(window.L.latLngBounds(focoSel.miembros.map(function(m) { return [m.lat, m.lng]; })), { padding: [70, 70], maxZoom: 15 });
+    } else if (puntosFiltrados.length > 0) {
       var bounds = window.L.latLngBounds(puntosFiltrados.map(function(p) { return [p.lat, p.lng]; }));
       mapInstance.current.fitBounds(bounds, { padding: [40, 40], maxZoom: 12 });
     }
   }, [leafletReady, puntosFiltrados]);
+
+  // Si cambian los filtros o las capas, la zona elegida ya no corresponde: se quita
+  useEffect(function() { setFocoSel(null); }, [fechaDesde, fechaHasta, filtroDelito, filtroMunicipio, filtros]);
 
   useEffect(function() { return function() { if (mapInstance.current) { mapInstance.current.remove(); mapInstance.current = null; } }; }, []);
 
@@ -281,6 +289,15 @@ export default function MapaCalor({ user }) {
         <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><span style={{ width: 12, height: 12, borderRadius: 3, background: '#ffeb3b', display: 'inline-block' }} /> Alta</span>
         <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><span style={{ width: 12, height: 12, borderRadius: 3, background: '#ff9800', display: 'inline-block' }} /> Muy alta</span>
         <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><span style={{ width: 12, height: 12, borderRadius: 3, background: '#f44336', display: 'inline-block' }} /> Crítica</span>
+      </div>
+
+      <div style={{ marginTop: 16 }}>
+        <ZonasAtencion
+          puntos={puntosFiltrados.filter(function(p) { return p.fuente === 'incidencia_regional'; })}
+          seleccionada={focoSel && focoSel.clave}
+          onSeleccionar={setFocoSel}
+          onIniciarProyecto={onIniciarProyecto}
+        />
       </div>
 
       <div style={{ marginTop: 16 }}>
