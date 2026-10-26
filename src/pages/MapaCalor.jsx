@@ -58,6 +58,7 @@ function loadCSS(href) {
 
 export default function MapaCalor({ user, onIniciarProyecto }) {
   const mapRef = useRef(null);
+  const [zonas, setZonas] = useState([]); // zonas de atención calculadas por el panel (se marcan siempre en el mapa)
   const [focoSel, setFocoSel] = useState(null); // zona de atención elegida en el panel (para dibujarla en el mapa)
   const mapInstance = useRef(null);
   const layerGroup = useRef(null);
@@ -174,8 +175,15 @@ export default function MapaCalor({ user, onIniciarProyecto }) {
         '<div style="font-size:10px;color:#999;margin-top:4px">Lat: ' + p.lat.toFixed(5) + ' · Lng: ' + p.lng.toFixed(5) + '</div></div>';
       window.L.circleMarker([p.lat, p.lng], { radius: 8, fillColor: p.color, color: '#ffffff', weight: 2, opacity: 1, fillOpacity: 0.85 }).addTo(layerGroup.current).bindPopup(popup);
     });
-    if (focoSel && window.L.circle) {
-      window.L.circle([focoSel.centro.lat, focoSel.centro.lng], { radius: Math.max(focoSel.radioM + 150, 300), color: '#8b1e1e', weight: 3, dashArray: '8 6', fillColor: '#8b1e1e', fillOpacity: 0.08 }).addTo(layerGroup.current);
+    // Todas las zonas de atención se marcan siempre (círculo punteado + etiqueta); la elegida se resalta
+    (zonas || []).forEach(function(z) {
+      var activa = focoSel && focoSel.clave === z.clave;
+      var radio = Math.max(z.radioM + 150, 300);
+      window.L.circle([z.centro.lat, z.centro.lng], { radius: radio, color: '#8b1e1e', weight: activa ? 3 : 2, opacity: activa ? 1 : 0.8, dashArray: activa ? '8 6' : '4 8', fillColor: '#8b1e1e', fillOpacity: activa ? 0.1 : 0.03, interactive: false }).addTo(layerGroup.current);
+      var etiqueta = '<div style="transform:translate(-50%,-100%);background:#8b1e1e;color:#fff;font:700 12px Segoe UI,sans-serif;padding:2px 9px;border-radius:10px;white-space:nowrap;box-shadow:0 1px 3px rgba(0,0,0,.35)">Zona ' + z.numero + ' · ' + z.n + ' casos</div>';
+      window.L.marker([z.centro.lat + radio / 111320, z.centro.lng], { interactive: false, keyboard: false, icon: window.L.divIcon({ className: '', iconSize: [0, 0], html: etiqueta }) }).addTo(layerGroup.current);
+    });
+    if (focoSel) {
       mapInstance.current.fitBounds(window.L.latLngBounds(focoSel.miembros.map(function(m) { return [m.lat, m.lng]; })), { padding: [70, 70], maxZoom: 15 });
     } else if (puntosFiltrados.length > 0) {
       var bounds = window.L.latLngBounds(puntosFiltrados.map(function(p) { return [p.lat, p.lng]; }));
@@ -297,6 +305,7 @@ export default function MapaCalor({ user, onIniciarProyecto }) {
           seleccionada={focoSel && focoSel.clave}
           onSeleccionar={setFocoSel}
           onIniciarProyecto={onIniciarProyecto}
+          onZonas={setZonas}
         />
       </div>
 
