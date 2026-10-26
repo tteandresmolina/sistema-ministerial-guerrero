@@ -6,6 +6,7 @@
 
 import { useState } from 'react';
 import { CheckCircle2, AlertTriangle, Target, Users, Shield, BarChart3, RefreshCw, ChevronDown, ChevronUp } from 'lucide-react';
+import NotaUso from './NotaUso';
 
 const C = {
   darkBlue: '#001a4d', gold: '#b69054', lightGold: '#f5ede0',
@@ -116,7 +117,7 @@ const NIVELES = [
 ];
 
 function getResultado(total) {
-  if (total >= 25) return { texto: 'PRIORIDAD MÁXIMA — Iniciar proyecto SARA inmediatamente', color: '#b71c1c', bg: '#ffebee', icon: AlertTriangle };
+  if (total >= 25) return { texto: 'PRIORIDAD MÁXIMA — Iniciar plan de acción inmediatamente', color: '#b71c1c', bg: '#ffebee', icon: AlertTriangle };
   if (total >= 20) return { texto: 'PRIORIDAD ALTA — Se recomienda fuertemente iniciar SARA', color: '#e65100', bg: '#fff3e0', icon: Target };
   if (total >= 15) return { texto: 'PRIORIDAD MEDIA — Evaluar viabilidad de intervención SARA', color: '#f59e0b', bg: '#fffde7', icon: BarChart3 };
   if (total >= 10) return { texto: 'PRIORIDAD BAJA — Monitorear y considerar acciones preventivas', color: '#2e7d32', bg: '#e8f5e9', icon: Shield };
@@ -173,9 +174,7 @@ export default function ChecklistCHEERS({ onIniciarProyecto }) {
 
       {expandido && (
         <div>
-          <p style={{ fontSize: 14, color: C.gray, marginBottom: 14 }}>
-            Antes de crear un proyecto SARA, evalúa si el problema identificado cumple los criterios CHEERS. Cada criterio se califica de 1 (no aplica) a 5 (crítico). Un puntaje alto confirma que el problema amerita una intervención estructurada.
-          </p>
+          <NotaUso objetivo="Decidir si un problema merece un plan de acción." uso="Califica los 6 criterios de 1 (no aplica) a 5 (crítico). Con 10 puntos o más aparece el botón para iniciar el plan de acción." />
 
           {/* Contexto del problema */}
           <div style={{ background: C.white, borderRadius: 10, padding: 14, marginBottom: 14, boxShadow: '0 1px 4px rgba(0,0,0,0.08)' }}>
@@ -293,7 +292,7 @@ export default function ChecklistCHEERS({ onIniciarProyecto }) {
             {onIniciarProyecto && total >= 10 && (
               <div style={{ marginTop: 14, display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
                 <button onClick={iniciar} style={{ background: C.gold, color: C.white, border: 'none', borderRadius: 8, padding: '12px 22px', fontSize: 16, fontWeight: 700, cursor: 'pointer', minHeight: 44 }}>
-                  Iniciar proyecto SARA con este análisis
+                  Iniciar plan de acción con este análisis
                 </button>
                 <span style={{ fontSize: 14, color: C.gray }}>Abre el formulario de nuevo proyecto con estos datos ya llenos.</span>
               </div>
