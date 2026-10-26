@@ -6,7 +6,7 @@ import React, { useState } from 'react';
 import {
   Search, BarChart3, Zap, CheckCircle, Plus, ChevronLeft, RefreshCw,
   Target, FileText, MapPin, Clock, Users, AlertTriangle, ArrowRight,
-  Filter, Eye, Briefcase, Flag, ChevronDown, ClipboardList, CheckSquare, Triangle
+  Filter, Eye, Briefcase, Flag, ChevronDown, ClipboardList, CheckSquare, Triangle, Trash2
 } from 'lucide-react';
 import { useAnalisisSARA } from '../hooks/useAnalisisSARA';
 import MapaCalor from './MapaCalor';
@@ -59,6 +59,34 @@ const badge = (color) => ({
 });
 
 // Cada fase es un componente propio: sus hooks (useState) deben vivir en un componente, no en una función de dibujo
+// Botón de eliminar con doble confirmación (evita borrar por un clic accidental)
+function BotonEliminar({ onConfirmar }) {
+  const [confirmando, setConfirmando] = useState(false);
+  const [eliminando, setEliminando] = useState(false);
+  const base = { padding: '8px 14px', borderRadius: 7, fontSize: 14, fontWeight: 700, cursor: 'pointer', minHeight: 40, display: 'inline-flex', alignItems: 'center', gap: 6 };
+  if (!confirmando) {
+    return (
+      <button onClick={(e) => { e.stopPropagation(); setConfirmando(true); }}
+        style={{ ...base, background: 'transparent', color: '#8b1e1e', border: '1.5px solid #8b1e1e' }}>
+        <Trash2 size={15} /> Eliminar
+      </button>
+    );
+  }
+  return (
+    <div onClick={(e) => e.stopPropagation()} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', background: '#fbf1f1', border: '1.5px solid #8b1e1e', borderRadius: 8, padding: '6px 10px' }}>
+      <span style={{ fontSize: 14, fontWeight: 700, color: '#8b1e1e' }}>¿Eliminar este plan de acción? No se puede deshacer.</span>
+      <button disabled={eliminando} onClick={async (e) => { e.stopPropagation(); setEliminando(true); const ok = await onConfirmar(); if (!ok) { setEliminando(false); setConfirmando(false); } }}
+        style={{ ...base, background: '#8b1e1e', color: '#fff', border: 'none', opacity: eliminando ? 0.6 : 1 }}>
+        {eliminando ? 'Eliminando…' : 'Sí, eliminar'}
+      </button>
+      <button disabled={eliminando} onClick={(e) => { e.stopPropagation(); setConfirmando(false); }}
+        style={{ ...base, background: 'transparent', color: '#374151', border: '1.5px solid #c7cfe0' }}>
+        Cancelar
+      </button>
+    </div>
+  );
+}
+
 function FaseScanning({ p, onGuardar }) {
     const [form, setForm] = useState({
       scanning_problema: p.scanning_problema || '',
@@ -290,7 +318,7 @@ export default function AnalisisSARA({ user }) {
   const {
     proyectos, loading, error, setError,
     filtroFase, setFiltroFase, filtroPrioridad, setFiltroPrioridad,
-    fetchProyectos, crearProyecto, actualizarProyecto, avanzarFase,
+    fetchProyectos, crearProyecto, actualizarProyecto, eliminarProyecto, avanzarFase,
     FASES, getPrioridadColor, getFaseInfo, getProgreso, formatFecha
   } = hook;
 
@@ -324,6 +352,14 @@ const [tab, setTab] = useState(MOSTRAR_MAPA_CALOR ? 'mapa' : 'plan');
     setFormProyecto({ ...emptyProyecto, titulo: d.problema || '', categoria_delito: d.categoria || '', zona_geografica: d.zona || '', prioridad: d.prioridad, scanning_problema: d.problema || '', descripcion: d.resumen, ...(d.extra || {}) });
     setVista('nuevo');
     setTimeout(() => { const el = document.getElementById('sara-form-nuevo'); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 150);
+  };
+
+  // Solo el rol mando ve el botón de eliminar; además la base de datos exige su propia política de borrado
+  const puedeEliminar = user?.rol === 'mando';
+  const handleEliminar = async (p) => {
+    const ok = await eliminarProyecto(p.id);
+    if (ok) { setProyectoActivo(null); setVista('listado'); }
+    return ok;
   };
 
   const handleVerProyecto = (p) => {
@@ -484,6 +520,7 @@ const [tab, setTab] = useState(MOSTRAR_MAPA_CALOR ? 'mapa' : 'plan');
                   {renderProgreso(p)}
                   <div style={{ fontSize: 13, color: '#9ca3af', marginTop: 6 }}>{formatFecha(p.created_at)}</div>
                   <div style={{ fontSize: 13, color: '#6b7280' }}>{p.nombre_creador}</div>
+                  {puedeEliminar && <div style={{ marginTop: 8 }}><BotonEliminar onConfirmar={() => handleEliminar(p)} /></div>}
                 </div>
               </div>
             </div>
@@ -572,6 +609,7 @@ const [tab, setTab] = useState(MOSTRAR_MAPA_CALOR ? 'mapa' : 'plan');
             <span style={{ marginLeft: 10, ...badge(faseInfo.color) }}>{faseInfo.icon} {faseInfo.label}</span>
             <span style={{ marginLeft: 6, ...badge(getPrioridadColor(p.prioridad)) }}>{p.prioridad}</span>
           </div>
+          {puedeEliminar && <BotonEliminar onConfirmar={() => handleEliminar(p)} />}
         </div>
 
         {/* Progreso visual grande */}
