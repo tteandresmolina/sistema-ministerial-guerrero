@@ -25,6 +25,12 @@ const FUENTES = [
   { key: 'incidencia_regional', label: 'Homicidios (Acapulco)', color: '#8b1e1e', lat: 'coordenadas_lat', lng: 'coordenadas_lng', fecha: 'fecha', delito: 'delito', muni: 'zona', desc: 'lugar_hechos' },
 ];
 
+// Las fuentes se muestran en dos grupos: lo que se captura en el sistema (por C.I.) y la estadística regional que llega en Excel
+const GRUPOS_FUENTES = [
+  { titulo: 'Captura del sistema', detalle: '911 y oficios de investigación, por carpeta (C.I.)', keys: ['registros_911', 'escenas_crimen', 'detenidos', 'oficios_investigacion'] },
+  { titulo: 'Estadística regional', detalle: 'Reporte mensual en Excel · solo casos con carpeta de investigación', keys: ['incidencia_regional'], importador: true },
+];
+
 // Calor tipo semáforo. El mapa y la leyenda usan los mismos colores y niveles:
 // 1 caso verde, 2 amarillo, 3 naranja, 4 o más rojo (probado con el motor de dibujo real de leaflet.heat).
 const NIVELES_CALOR = [
@@ -114,7 +120,7 @@ function loadCSS(href) {
   document.head.appendChild(l);
 }
 
-export default function MapaCalor({ user, onIniciarProyecto }) {
+export default function MapaCalor({ user, onIniciarProyecto, seccion = 'mapa' }) {
   const mapRef = useRef(null);
   const [zonas, setZonas] = useState([]); // zonas de atención calculadas por el panel (se marcan siempre en el mapa)
   const [focoSel, setFocoSel] = useState(null); // zona de atención elegida en el panel (para dibujarla en el mapa)
@@ -124,7 +130,6 @@ export default function MapaCalor({ user, onIniciarProyecto }) {
   const [puntos, setPuntos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [leafletReady, setLeafletReady] = useState(false);
-  const [showAnalisis, setShowAnalisis] = useState(false);
 
   const [filtros, setFiltros] = useState(filtrosIniciales);
   const [fechaDesde, setFechaDesde] = useState('');
@@ -179,14 +184,14 @@ export default function MapaCalor({ user, onIniciarProyecto }) {
 
   useEffect(function() { cargarDatos(); }, []);
 
-  const puntosFiltrados = puntos.filter(function(p) {
-    if (!filtros[p.fuente]) return false;
+  const pasaFiltros = function(p) {
     if (fechaDesde && p.fecha && p.fecha < fechaDesde) return false;
     if (fechaHasta && p.fecha && p.fecha > fechaHasta) return false;
     if (filtroDelito && p.delito.toUpperCase() !== filtroDelito) return false;
     if (filtroMunicipio && p.municipio !== filtroMunicipio) return false;
     return true;
-  });
+  };
+  const puntosFiltrados = puntos.filter(function(p) { return filtros[p.fuente] && pasaFiltros(p); });
 
   const analysisPorMunicipio = {};
   const analysisPorDelito = {};
@@ -222,6 +227,7 @@ export default function MapaCalor({ user, onIniciarProyecto }) {
         }
       });
     }
+    mapInstance.current.invalidateSize(false);
     layerGroup.current.clearLayers();
     if (heatLayer.current) { mapInstance.current.removeLayer(heatLayer.current); heatLayer.current = null; }
     var heatData = puntosFiltrados.map(function(p) { return [p.lat, p.lng, 1]; });
@@ -261,6 +267,13 @@ export default function MapaCalor({ user, onIniciarProyecto }) {
   // Si cambian los filtros o las capas, la zona elegida ya no corresponde: se quita
   useEffect(function() { setFocoSel(null); }, [fechaDesde, fechaHasta, filtroDelito, filtroMunicipio, filtros]);
 
+  // Al volver a la pestaña del mapa, Leaflet recalcula su tamaño
+  useEffect(function() {
+    if (seccion !== 'mapa') return;
+    var t = setTimeout(function() { if (mapInstance.current) mapInstance.current.invalidateSize(false); }, 60);
+    return function() { clearTimeout(t); };
+  }, [seccion]);
+
   useEffect(function() { return function() { if (mapInstance.current) { mapInstance.current.remove(); mapInstance.current = null; } }; }, []);
 
   var limpiarFiltros = function() { setFechaDesde(''); setFechaHasta(''); setFiltroDelito(''); setFiltroMunicipio(''); setFiltros(filtrosIniciales()); };
@@ -268,11 +281,7 @@ export default function MapaCalor({ user, onIniciarProyecto }) {
 
   return (
     <div style={{ marginBottom: 20 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <MapPin size={18} color={C.gold} />
-          <span style={{ fontWeight: 700, fontSize: 16, color: C.darkBlue }}>Mapa de Calor — Inteligencia Criminal</span>
-        </div>
+      <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', marginBottom: 12 }}>
         <div style={{ display: 'flex', gap: 8 }}>
           {hayFiltrosActivos && (
             <button onClick={limpiarFiltros} style={{ background: '#ffebee', border: '1px solid #dc354530', borderRadius: 7, padding: '6px 12px', color: C.red, fontSize: 13, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
@@ -285,38 +294,39 @@ export default function MapaCalor({ user, onIniciarProyecto }) {
         </div>
       </div>
 
-      {user && user.rol === 'mando' && <ImportarIncidenciaRegional perfil={user} onImportado={cargarDatos} leafletListo={leafletReady} />}
-
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: 10, marginBottom: 14 }}>
-        <div style={{ background: C.white, borderRadius: 10, padding: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.08)', textAlign: 'center' }}>
-          <div style={{ fontSize: 22, fontWeight: 700, color: C.darkBlue }}>{puntosFiltrados.length}</div>
-          <div style={{ fontSize: 13, color: C.gray }}>Puntos filtrados</div>
+      <div style={{ marginBottom: 14 }}>
+        <div style={{ fontSize: 15, color: C.darkBlue, marginBottom: 8 }}><strong style={{ fontSize: 24 }}>{puntosFiltrados.length}</strong> puntos en el mapa</div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 12 }}>
+          {GRUPOS_FUENTES.map(function(g) { return (
+            <div key={g.titulo} style={{ background: C.white, borderRadius: 10, padding: 14, boxShadow: '0 1px 4px rgba(0,0,0,0.08)' }}>
+              <div style={{ fontSize: 15, fontWeight: 800, color: C.darkBlue }}>{g.titulo}</div>
+              <div style={{ fontSize: 13, color: C.gray, margin: '2px 0 10px' }}>{g.detalle}</div>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                {FUENTES.filter(function(f) { return g.keys.indexOf(f.key) >= 0; }).map(function(f) {
+                  var n = puntos.filter(function(p) { return p.fuente === f.key && pasaFiltros(p); }).length;
+                  var on = filtros[f.key];
+                  return (
+                    <button key={f.key} onClick={function() { setFiltros(function(p) { var x = {}; Object.assign(x, p); x[f.key] = !p[f.key]; return x; }); }}
+                      style={{ padding: '8px 14px', borderRadius: 8, fontSize: 14, fontWeight: 700, cursor: 'pointer', minHeight: 40, border: '1.5px solid ' + (on ? f.color : C.lightGray), background: on ? f.color + '15' : C.white, color: on ? f.color : C.gray }}>
+                      {on ? '✓ ' : ''}{f.label} · {n}
+                    </button>
+                  );
+                })}
+              </div>
+              {g.importador && user && user.rol === 'mando' && (
+                <div style={{ marginTop: 12 }}>
+                  <ImportarIncidenciaRegional perfil={user} onImportado={cargarDatos} leafletListo={leafletReady} />
+                </div>
+              )}
+            </div>
+          ); })}
         </div>
-        {FUENTES.map(function(f) { return (
-          <div key={f.key} style={{ background: C.white, borderRadius: 10, padding: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.08)', textAlign: 'center' }}>
-            <div style={{ fontSize: 22, fontWeight: 700, color: f.color }}>{puntosFiltrados.filter(function(p) { return p.fuente === f.key; }).length}</div>
-            <div style={{ fontSize: 12, color: C.gray }}>{f.label}</div>
-          </div>
-        ); })}
       </div>
 
       <div style={{ background: C.white, borderRadius: 10, padding: 14, marginBottom: 14, boxShadow: '0 1px 4px rgba(0,0,0,0.08)' }}>
         <div style={{ fontSize: 14, fontWeight: 700, color: C.gold, marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6, textTransform: 'uppercase' }}>
           <Filter size={14} /> Filtros de Análisis
         </div>
-        <div style={{ display: 'flex', gap: 6, marginBottom: 12, flexWrap: 'wrap' }}>
-          {FUENTES.map(function(f) { return (
-            <button key={f.key} onClick={function() { setFiltros(function(p) { var n = {}; Object.assign(n, p); n[f.key] = !p[f.key]; return n; }); }}
-              style={{ padding: '5px 12px', borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: 'pointer', border: '1.5px solid ' + (filtros[f.key] ? f.color : C.lightGray), background: filtros[f.key] ? f.color + '15' : C.white, color: filtros[f.key] ? f.color : C.gray }}>
-              {filtros[f.key] ? '✓ ' : ''}{f.label}
-            </button>
-          ); })}
-        </div>
-        {filtros.incidencia_regional && (
-          <div style={{ fontSize: 12, color: C.gray, marginBottom: 10 }}>
-            Homicidios (Acapulco): solo casos con carpeta de investigación.
-          </div>
-        )}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 10 }}>
           <div>
             <label style={{ fontSize: 12, fontWeight: 600, color: C.gray, display: 'block', marginBottom: 2 }}>Fecha desde</label>
@@ -343,6 +353,7 @@ export default function MapaCalor({ user, onIniciarProyecto }) {
         </div>
       </div>
 
+      <div style={{ display: seccion === 'mapa' ? 'block' : 'none' }}>
       {loading ? (
         <div style={{ background: C.white, borderRadius: 12, padding: 60, textAlign: 'center', color: C.gray, boxShadow: '0 2px 8px rgba(0,0,0,0.07)' }}>
           <RefreshCw size={28} color={C.gray} /><p style={{ marginTop: 10, fontSize: 16 }}>Cargando datos geográficos...</p>
@@ -376,17 +387,10 @@ export default function MapaCalor({ user, onIniciarProyecto }) {
           onZonas={setZonas}
         />
       </div>
+      </div>
 
-      <div style={{ marginTop: 16 }}>
-        <button onClick={function() { setShowAnalisis(!showAnalisis); }} style={{ background: C.lightGold, border: '1px solid #b6905440', borderRadius: 10, padding: '12px 18px', width: '100%', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ fontSize: 16, fontWeight: 700, color: C.darkBlue, display: 'flex', alignItems: 'center', gap: 8 }}>
-            <BarChart3 size={16} color={C.gold} /> Panel de Análisis — Inteligencia Basada en Evidencia
-          </span>
-          {showAnalisis ? <ChevronUp size={16} color={C.gold} /> : <ChevronDown size={16} color={C.gold} />}
-        </button>
-
-        {showAnalisis && (
-          <div style={{ background: C.white, borderRadius: '0 0 10px 10px', border: '1px solid #b6905440', borderTop: 'none', padding: 20 }}>
+      <div style={{ display: seccion === 'panel' ? 'block' : 'none' }}>
+        <div style={{ background: C.white, borderRadius: 10, border: '1px solid #b6905440', padding: 20 }}>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 24 }}>
               <RankingBarras titulo="Incidencia por Municipio (Top 10)" icono={<MapPin size={14} color={C.gold} />} items={topMunicipios} />
               <RankingBarras titulo="Incidencia por Colonia (Top 10)" icono={<MapPin size={14} color={C.gold} />} items={topSectores} />
@@ -409,8 +413,7 @@ export default function MapaCalor({ user, onIniciarProyecto }) {
                 </div>
               </div>
             )}
-          </div>
-        )}
+        </div>
       </div>
 
       {stats.total === 0 && !loading && (
