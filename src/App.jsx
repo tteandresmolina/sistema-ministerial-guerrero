@@ -477,7 +477,7 @@ export default function App() {
             <div style={{ textAlign: "right" }}>
               <div style={{ color: "#ffffff", fontSize: 15, fontWeight: 700 }}>{perfil.nombre_completo}</div>
               <span style={{ background: (rolColor[perfil.rol] || "#6b7280") + "22", color: rolColor[perfil.rol] || "#6b7280", border: `1px solid ${(rolColor[perfil.rol] || "#6b7280")}55`, borderRadius: 4, padding: "2px 10px", fontSize: 14, fontWeight: 700 }}>
-                {rolLabel[perfil.rol] || perfil.rol}
+                {perfil.cargo || rolLabel[perfil.rol] || perfil.rol}
               </span>
             </div>
           )}
