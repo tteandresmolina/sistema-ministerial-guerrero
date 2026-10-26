@@ -73,6 +73,14 @@ const [showMapa, setShowMapa] = useState(false);
     }
   };
 
+  // Viene del checklist CHEERS: abre "Nuevo proyecto" con el problema, la zona, la prioridad y el resumen ya llenos
+  const handleIniciarDesdeCheers = (d) => {
+    setProyectoActivo(null);
+    setFormProyecto({ ...emptyProyecto, titulo: d.problema || '', zona_geografica: d.zona || '', prioridad: d.prioridad, scanning_problema: d.problema || '', descripcion: d.resumen });
+    setVista('nuevo');
+    setTimeout(() => { const el = document.getElementById('sara-form-nuevo'); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 150);
+  };
+
   const handleVerProyecto = (p) => {
     setProyectoActivo(p);
     setVista('detalle');
@@ -249,7 +257,7 @@ const [showMapa, setShowMapa] = useState(false);
         <button style={{ ...btnSecondary, padding: '6px 12px' }} onClick={() => setVista('listado')}>
           <ChevronLeft size={16} /> Volver
         </button>
-        <h3 style={{ margin: 0, color: COLORS.primary }}>Nuevo Proyecto SARA</h3>
+        <h3 id="sara-form-nuevo" style={{ margin: 0, color: COLORS.primary }}>Nuevo Proyecto SARA</h3>
       </div>
 
       <div style={cardStyle}>
@@ -639,7 +647,7 @@ const [showMapa, setShowMapa] = useState(false);
         </button>
       </div>
       {showMapa && <MapaCalor user={user} />}
-      <ChecklistCHEERS />
+      <ChecklistCHEERS onIniciarProyecto={handleIniciarDesdeCheers} />
 <TrianguloProblema />
       {vista === 'listado' && renderListado()}
       {vista === 'nuevo' && renderFormNuevo()}
