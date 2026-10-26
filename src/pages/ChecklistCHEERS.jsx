@@ -123,7 +123,7 @@ function getResultado(total) {
   return { texto: 'INSUFICIENTE — No amerita intervención SARA en este momento', color: C.gray, bg: C.bg, icon: CheckCircle2 };
 }
 
-export default function ChecklistCHEERS() {
+export default function ChecklistCHEERS({ onIniciarProyecto }) {
   const [scores, setScores] = useState({
     community: 0, harm: 0, expectation: 0, events: 0, recurring: 0, similar: 0,
   });
@@ -138,6 +138,17 @@ export default function ChecklistCHEERS() {
 
   var toggleIndicadores = function(key) {
     setShowIndicadores(function(p) { var n = {}; Object.assign(n, p); n[key] = !p[key]; return n; });
+  };
+
+  // Prioridad del proyecto según el puntaje: 25+ crítica, 20+ alta, 15+ media, 10+ baja
+  var prioridadDe = function(t) { return t >= 25 ? 'critica' : t >= 20 ? 'alta' : t >= 15 ? 'media' : 'baja'; };
+
+  var iniciar = function() {
+    var detalle = CRITERIOS.map(function(cr) { return cr.titulo + ': ' + (scores[cr.key] || '—') + '/5'; }).join(' · ');
+    onIniciarProyecto({
+      problema: problema, zona: zona, prioridad: prioridadDe(total),
+      resumen: 'Checklist CHEERS: ' + total + '/30 — ' + resultado.texto + '. ' + detalle,
+    });
   };
 
   var limpiar = function() {
@@ -276,6 +287,15 @@ export default function ChecklistCHEERS() {
             {problema && (
               <div style={{ marginTop: 12, padding: 10, background: C.white, borderRadius: 8, fontSize: 14, color: C.darkBlue }}>
                 <strong>Problema evaluado:</strong> {problema}{zona ? ' — ' + zona : ''}
+              </div>
+            )}
+
+            {onIniciarProyecto && total >= 10 && (
+              <div style={{ marginTop: 14, display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
+                <button onClick={iniciar} style={{ background: C.gold, color: C.white, border: 'none', borderRadius: 8, padding: '12px 22px', fontSize: 16, fontWeight: 700, cursor: 'pointer', minHeight: 44 }}>
+                  Iniciar proyecto SARA con este análisis
+                </button>
+                <span style={{ fontSize: 14, color: C.gray }}>Abre el formulario de nuevo proyecto con estos datos ya llenos.</span>
               </div>
             )}
           </div>
