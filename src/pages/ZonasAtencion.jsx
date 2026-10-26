@@ -223,7 +223,7 @@ export default function ZonasAtencion({ puntos, seleccionada, onSeleccionar, onI
                   </button>
                   {onIniciarProyecto && (
                     <button onClick={() => iniciar(f)} style={{ ...btn, background: C.gold, color: C.white, border: 'none' }}>
-                      Iniciar proyecto SARA para esta zona
+                      Iniciar plan de acción para esta zona
                     </button>
                   )}
                 </div>
