@@ -108,7 +108,7 @@ function parsearLibro(wb) {
     const out = [];
     for (const r of datos) {
       const lugar = String(r[idx.lugar] == null ? '' : r[idx.lugar]).trim();
-      const delito = String(r[idx.delito] == null ? '' : r[idx.delito]).trim();
+      const delito = String(r[idx.delito] == null ? '' : r[idx.delito]).replace(/\s+/g, ' ').replace(/[\s.]+$/, '').trim().toUpperCase();
       if (!lugar && !delito) continue;
       totalLeidos++;
       const crudo = r[idx.ci];
@@ -165,20 +165,8 @@ async function geocodificar(texto) {
 
 const esperar = (ms) => new Promise((res) => setTimeout(res, ms));
 
-function loadScript(src) {
-  return new Promise((resolve, reject) => {
-    if (document.querySelector('script[src="' + src + '"]')) { resolve(); return; }
-    const s = document.createElement('script');
-    s.src = src; s.onload = resolve; s.onerror = reject;
-    document.head.appendChild(s);
-  });
-}
-function loadCSS(href) {
-  if (document.querySelector('link[href="' + href + '"]')) return;
-  const l = document.createElement('link');
-  l.rel = 'stylesheet'; l.href = href;
-  document.head.appendChild(l);
-}
+// Leaflet lo carga MapaCalor.jsx y lo pasa por la prop leafletListo. Este archivo NO debe cargarlo por su cuenta:
+// si lo hiciera antes que el mapa, el plugin de calor se cargaría sin Leaflet y no dibujaría el resplandor.
 
 const colorPrecision = (f) => (f.confirmada ? C.navy : f.precision === 'direccion' ? C.verde : C.ambar);
 const etiquetaPrecision = (f) => (f.lat == null ? { t: 'Sin ubicar', c: C.rojo }
@@ -375,7 +363,7 @@ function RevisarGuardadas({ leafletListo, onCambio }) {
   );
 }
 
-export default function ImportarIncidenciaRegional({ perfil, onImportado }) {
+export default function ImportarIncidenciaRegional({ perfil, onImportado, leafletListo }) {
   const [abierto, setAbierto] = useState(false);
   const [modo, setModo] = useState('importar'); // 'importar' | 'revisar'
   const [fase, setFase] = useState('inicio'); // 'inicio' | 'revision'
@@ -386,7 +374,6 @@ export default function ImportarIncidenciaRegional({ perfil, onImportado }) {
   const [progreso, setProgreso] = useState(0);
   const [guardando, setGuardando] = useState(false);
   const [msg, setMsg] = useState(null);
-  const [leafletListo, setLeafletListo] = useState(false);
 
   const mapEl = useRef(null);
   const mapObj = useRef(null);
@@ -397,12 +384,7 @@ export default function ImportarIncidenciaRegional({ perfil, onImportado }) {
   selRef.current = sel;
   filasRef.current = filas;
 
-  useEffect(() => {
-    loadCSS('https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css');
-    loadScript('https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js')
-      .then(() => setLeafletListo(true)).catch(() => setMsg({ tipo: 'error', texto: 'No se pudo cargar el mapa.' }));
-    return () => { cancelado.current = true; if (mapObj.current) { mapObj.current.remove(); mapObj.current = null; } };
-  }, []);
+  useEffect(() => () => { cancelado.current = true; if (mapObj.current) { mapObj.current.remove(); mapObj.current = null; } }, []);
 
   const actualizar = (i, cambios) => setFilas((prev) => prev.map((f, j) => (j === i ? { ...f, ...cambios } : f)));
   const ponerCoords = (i, lat, lng) => actualizar(i, { lat, lng, confirmada: true, precision: 'manual' });
