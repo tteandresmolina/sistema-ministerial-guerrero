@@ -6,17 +6,27 @@ import React, { useState } from 'react';
 import {
   Search, BarChart3, Zap, CheckCircle, Plus, ChevronLeft, RefreshCw,
   Target, FileText, MapPin, Clock, Users, AlertTriangle, ArrowRight,
-  Filter, Eye, Briefcase, Flag, ChevronDown
+  Filter, Eye, Briefcase, Flag, ChevronDown, ClipboardList, CheckSquare, Triangle
 } from 'lucide-react';
 import { useAnalisisSARA } from '../hooks/useAnalisisSARA';
 import MapaCalor from './MapaCalor';
 import TrianguloProblema from './TrianguloProblema';
 import ChecklistCHEERS from './ChecklistCHEERS';
+import NotaUso from './NotaUso';
 const COLORS = { primary: '#001a4d', gold: '#b69054', white: '#ffffff' };
 
 // Interruptor del Mapa de Calor: false = el botón y el mapa no aparecen (p. ej. durante el demo); true = se muestran.
 // No borra ningún dato: solo oculta la herramienta. Para activarlo, cambia false por true y sube el archivo.
 const MOSTRAR_MAPA_CALOR = true;
+
+// Pestañas horizontales de la sección (cada una abre con su objetivo y su uso en dos líneas)
+const TABS = [
+  { key: 'mapa', label: 'Mapa y zonas', icon: MapPin },
+  { key: 'panel', label: 'Panel de análisis', icon: BarChart3 },
+  { key: 'plan', label: 'Plan de acción', icon: ClipboardList },
+  { key: 'cheers', label: 'Checklist CHEERS', icon: CheckSquare },
+  { key: 'triangulo', label: 'Triángulo del problema', icon: Triangle },
+].filter((t) => MOSTRAR_MAPA_CALOR || (t.key !== 'mapa' && t.key !== 'panel'));
 
 const cardStyle = {
   background: COLORS.white, borderRadius: 10, padding: 18,
@@ -64,7 +74,7 @@ function FaseScanning({ p, onGuardar }) {
     return (
       <div style={{ ...cardStyle, borderLeft: '4px solid #3b82f6' }}>
         <div style={{ fontSize: 15, fontWeight: 800, color: '#3b82f6', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
-          <Search size={18} /> Fase 1: Scanning — Identificación del Problema
+          <Search size={18} /> Paso 1: Identificar el problema (Scanning)
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
           <div style={{ gridColumn: '1 / -1' }}>
@@ -115,7 +125,7 @@ function FaseScanning({ p, onGuardar }) {
         </div>
         <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 14 }}>
           <button style={btnPrimary} onClick={() => onGuardar(form)}>
-            <FileText size={14} /> Guardar Scanning
+            <FileText size={14} /> Guardar paso 1
           </button>
         </div>
       </div>
@@ -138,7 +148,7 @@ function FaseAnalysis({ p, onGuardar }) {
     return (
       <div style={{ ...cardStyle, borderLeft: '4px solid #8b5cf6' }}>
         <div style={{ fontSize: 15, fontWeight: 800, color: '#8b5cf6', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
-          <BarChart3 size={18} /> Fase 2: Analysis — Causas y Factores
+          <BarChart3 size={18} /> Paso 2: Analizar causas y factores (Analysis)
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
           <div style={{ gridColumn: '1 / -1' }}>
@@ -180,7 +190,7 @@ function FaseAnalysis({ p, onGuardar }) {
         </div>
         <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 14 }}>
           <button style={{ ...btnPrimary, background: '#8b5cf6' }} onClick={() => onGuardar(form)}>
-            <FileText size={14} /> Guardar Analysis
+            <FileText size={14} /> Guardar paso 2
           </button>
         </div>
       </div>
@@ -198,7 +208,7 @@ function FaseResponse({ p, onGuardar }) {
     return (
       <div style={{ ...cardStyle, borderLeft: '4px solid #f59e0b' }}>
         <div style={{ fontSize: 15, fontWeight: 800, color: '#f59e0b', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
-          <Zap size={18} /> Fase 3: Response — Estrategia de Intervención
+          <Zap size={18} /> Paso 3: Responder con una estrategia (Response)
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 12 }}>
           <div>
@@ -219,7 +229,7 @@ function FaseResponse({ p, onGuardar }) {
         </div>
         <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 14 }}>
           <button style={{ ...btnPrimary, background: '#f59e0b' }} onClick={() => onGuardar(form)}>
-            <FileText size={14} /> Guardar Response
+            <FileText size={14} /> Guardar paso 3
           </button>
         </div>
       </div>
@@ -238,7 +248,7 @@ function FaseAssessment({ p, onGuardar }) {
     return (
       <div style={{ ...cardStyle, borderLeft: '4px solid #10b981' }}>
         <div style={{ fontSize: 15, fontWeight: 800, color: '#10b981', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
-          <CheckCircle size={18} /> Fase 4: Assessment — Evaluación de Resultados
+          <CheckCircle size={18} /> Paso 4: Evaluar resultados (Assessment)
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 12 }}>
           <div>
@@ -267,7 +277,7 @@ function FaseAssessment({ p, onGuardar }) {
         </div>
         <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 14 }}>
           <button style={{ ...btnPrimary, background: '#10b981' }} onClick={() => onGuardar(form)}>
-            <FileText size={14} /> Guardar Assessment
+            <FileText size={14} /> Guardar paso 4
           </button>
         </div>
       </div>
@@ -285,7 +295,9 @@ export default function AnalisisSARA({ user }) {
 
   const [vista, setVista] = useState('listado');
   const [proyectoActivo, setProyectoActivo] = useState(null);
-const [showMapa, setShowMapa] = useState(false);
+const [tab, setTab] = useState(MOSTRAR_MAPA_CALOR ? 'mapa' : 'plan');
+  const [visitadas, setVisitadas] = useState({ [MOSTRAR_MAPA_CALOR ? 'mapa' : 'plan']: true });
+  const abrirTab = (k) => { setTab(k); setVisitadas((v) => (v[k] ? v : { ...v, [k]: true })); };
   const emptyProyecto = {
     titulo: '', descripcion: '', categoria_delito: '', zona_geografica: '',
     prioridad: 'media', scanning_problema: ''
@@ -306,6 +318,7 @@ const [showMapa, setShowMapa] = useState(false);
 
   // Viene del checklist CHEERS: abre "Nuevo proyecto" con el problema, la zona, la prioridad y el resumen ya llenos
   const handleIniciarDesdeCheers = (d) => {
+    abrirTab('plan');
     setProyectoActivo(null);
     setFormProyecto({ ...emptyProyecto, titulo: d.problema || '', categoria_delito: d.categoria || '', zona_geografica: d.zona || '', prioridad: d.prioridad, scanning_problema: d.problema || '', descripcion: d.resumen, ...(d.extra || {}) });
     setVista('nuevo');
@@ -387,15 +400,15 @@ const [showMapa, setShowMapa] = useState(false);
         <div>
           <h2 style={{ margin: '0 0 4px', color: COLORS.primary, fontSize: 20, display: 'flex', alignItems: 'center', gap: 8 }}>
             <Target size={22} color={COLORS.gold} />
-            Análisis SARA
+            Plan de acción
           </h2>
           <div style={{ fontSize: 14, color: '#6b7280' }}>
-            Problem-Solving Policing · Scanning → Analysis → Response → Assessment
+            Método SARA · Identificar → Analizar → Responder → Evaluar
           </div>
         </div>
-        {['direccion_general','coordinador_regional','coordinador_zona'].includes(user?.rol) && (
+        {['mando','regional','coordinador','direccion_general','coordinador_regional','coordinador_zona'].includes(user?.rol) && (
           <button style={btnPrimary} onClick={() => { setFormProyecto(emptyProyecto); setVista('nuevo'); }}>
-            <Plus size={15} /> Nuevo Proyecto
+            <Plus size={15} /> Nuevo plan de acción
           </button>
         )}
       </div>
@@ -443,7 +456,7 @@ const [showMapa, setShowMapa] = useState(false);
       {proyectos.length === 0 ? (
         <div style={{ ...cardStyle, textAlign: 'center', padding: 40, color: '#9ca3af' }}>
           <Target size={40} style={{ marginBottom: 10, opacity: 0.4 }} />
-          <div style={{ fontSize: 16 }}>No hay proyectos SARA. Crea uno para iniciar el análisis cross-case.</div>
+          <div style={{ fontSize: 16 }}>Aún no hay planes de acción. Crea uno desde una zona del mapa o con el botón "Nuevo plan de acción".</div>
         </div>
       ) : (
         proyectos.map(p => {
@@ -488,13 +501,13 @@ const [showMapa, setShowMapa] = useState(false);
         <button style={{ ...btnSecondary, padding: '6px 12px' }} onClick={() => setVista('listado')}>
           <ChevronLeft size={16} /> Volver
         </button>
-        <h3 id="sara-form-nuevo" style={{ margin: 0, color: COLORS.primary }}>Nuevo Proyecto SARA</h3>
+        <h3 id="sara-form-nuevo" style={{ margin: 0, color: COLORS.primary }}>Nuevo plan de acción</h3>
       </div>
 
       <div style={cardStyle}>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
           <div style={{ gridColumn: '1 / -1' }}>
-            <label style={labelStyle}>Título del Proyecto *</label>
+            <label style={labelStyle}>Título del plan *</label>
             <input style={inputStyle} placeholder="Ej: Incremento de robo a transeúnte en Zona Renacimiento"
               value={formProyecto.titulo} onChange={e => setFormProyecto({ ...formProyecto, titulo: e.target.value })} />
           </div>
@@ -519,7 +532,7 @@ const [showMapa, setShowMapa] = useState(false);
             </select>
           </div>
           <div>
-            <label style={labelStyle}>Problema Inicial (Scanning)</label>
+            <label style={labelStyle}>Problema inicial</label>
             <input style={inputStyle} placeholder="Describe el patrón detectado"
               value={formProyecto.scanning_problema} onChange={e => setFormProyecto({ ...formProyecto, scanning_problema: e.target.value })} />
           </div>
@@ -532,7 +545,7 @@ const [showMapa, setShowMapa] = useState(false);
         <div style={{ display: 'flex', gap: 10, marginTop: 18, justifyContent: 'flex-end' }}>
           <button style={btnSecondary} onClick={() => setVista('listado')}>Cancelar</button>
           <button style={btnPrimary} onClick={handleCrear} disabled={loading}>
-            <Target size={15} /> {loading ? 'Creando...' : 'Crear Proyecto SARA'}
+            <Target size={15} /> {loading ? 'Creando...' : 'Crear plan de acción'}
           </button>
         </div>
       </div>
@@ -633,9 +646,9 @@ const [showMapa, setShowMapa] = useState(false);
   const renderCerrado = (p) => (
     <div style={{ ...cardStyle, background: '#f9fafb', textAlign: 'center', padding: 30 }}>
       <CheckCircle size={40} color="#10b981" style={{ marginBottom: 10 }} />
-      <div style={{ fontSize: 16, fontWeight: 800, color: COLORS.primary, marginBottom: 6 }}>Proyecto SARA Completado</div>
+      <div style={{ fontSize: 16, fontWeight: 800, color: COLORS.primary, marginBottom: 6 }}>Plan de acción completado</div>
       <div style={{ fontSize: 15, color: '#6b7280' }}>
-        Las 4 fases fueron completadas. {p.assessment_requiere_nuevo_ciclo ? 'Se recomienda iniciar un nuevo ciclo SARA.' : 'El problema fue abordado exitosamente.'}
+        Los 4 pasos fueron completados. {p.assessment_requiere_nuevo_ciclo ? 'Se recomienda iniciar un nuevo plan de acción.' : 'Revisa la evaluación para confirmar si el problema se resolvió.'}
       </div>
     </div>
   );
@@ -652,22 +665,56 @@ const [showMapa, setShowMapa] = useState(false);
         </div>
       )}
 
-{/* Mapa de Calor (se muestra solo si MOSTRAR_MAPA_CALOR = true) */}
-      {MOSTRAR_MAPA_CALOR && (
-        <>
-          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 10 }}>
-            <button onClick={() => setShowMapa(!showMapa)} style={{ ...btnSecondary, padding: '12px 20px', fontSize: 15 }}>
-              <MapPin size={15} /> {showMapa ? 'Ocultar Mapa de Calor' : 'Mapa de Calor'}
+{/* Encabezado de la sección */}
+      <div style={{ marginBottom: 12 }}>
+        <h2 style={{ margin: '0 0 4px', color: COLORS.primary, fontSize: 22, display: 'flex', alignItems: 'center', gap: 8 }}>
+          <Target size={22} color={COLORS.gold} /> Análisis Criminal
+        </h2>
+        <div style={{ fontSize: 15, color: '#6b7280' }}>Dónde y cuándo ocurre el delito, y qué hacemos al respecto.</div>
+      </div>
+
+      {/* Pestañas horizontales, como en Expediente Policial y Detenidos */}
+      <div role="tablist" style={{ display: 'flex', gap: 4, overflowX: 'auto', borderBottom: '2px solid #e5e7eb', marginBottom: 14 }}>
+        {TABS.map((t) => {
+          const Icono = t.icon; const activa = tab === t.key;
+          return (
+            <button key={t.key} role="tab" aria-selected={activa} onClick={() => abrirTab(t.key)}
+              style={{ background: 'none', border: 'none', borderBottom: activa ? '3px solid ' + COLORS.gold : '3px solid transparent', marginBottom: -2, padding: '12px 18px', minHeight: 44, cursor: 'pointer', fontSize: 15, fontWeight: activa ? 800 : 600, color: activa ? COLORS.primary : '#6b7280', display: 'inline-flex', alignItems: 'center', gap: 8, whiteSpace: 'nowrap' }}>
+              <Icono size={16} /> {t.label}
             </button>
-          </div>
-          {showMapa && <MapaCalor user={user} onIniciarProyecto={handleIniciarDesdeCheers} />}
+          );
+        })}
+      </div>
+
+      {/* Mapa y panel comparten datos y filtros: se mantienen montados y solo cambia lo que se ve */}
+      {MOSTRAR_MAPA_CALOR && visitadas.mapa && (
+        <div style={{ display: tab === 'mapa' || tab === 'panel' ? 'block' : 'none' }}>
+          {tab === 'panel'
+            ? <NotaUso objetivo="Comparar qué municipios, colonias y delitos tienen más incidencia." uso="Usa los mismos filtros del mapa; las gráficas cambian al instante." />
+            : <NotaUso objetivo="Ver dónde se concentran los homicidios y qué zonas requieren atención prioritaria." uso="Elige fechas o delito en los filtros y presiona una zona para verla en el mapa." />}
+          <MapaCalor user={user} seccion={tab === 'panel' ? 'panel' : 'mapa'} onIniciarProyecto={handleIniciarDesdeCheers} />
+        </div>
+      )}
+
+      {visitadas.cheers && (
+        <div style={{ display: tab === 'cheers' ? 'block' : 'none' }}>
+          <ChecklistCHEERS onIniciarProyecto={handleIniciarDesdeCheers} />
+        </div>
+      )}
+      {visitadas.triangulo && (
+        <div style={{ display: tab === 'triangulo' ? 'block' : 'none' }}>
+          <TrianguloProblema />
+        </div>
+      )}
+
+      {tab === 'plan' && (
+        <>
+          {vista === 'listado' && <NotaUso objetivo="Documentar y dar seguimiento a lo que se hará en una zona." uso="Se abre desde una zona del mapa o desde el checklist, y avanza en 4 pasos: Identificar, Analizar, Responder y Evaluar (método SARA)." />}
+          {vista === 'listado' && renderListado()}
+          {vista === 'nuevo' && renderFormNuevo()}
+          {vista === 'detalle' && renderDetalle()}
         </>
       )}
-      <ChecklistCHEERS onIniciarProyecto={handleIniciarDesdeCheers} />
-<TrianguloProblema />
-      {vista === 'listado' && renderListado()}
-      {vista === 'nuevo' && renderFormNuevo()}
-      {vista === 'detalle' && renderDetalle()}
 
       {loading && (
         <div style={{ textAlign: 'center', padding: 20, color: '#9ca3af' }}>
