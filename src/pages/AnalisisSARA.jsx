@@ -43,6 +43,233 @@ const badge = (color) => ({
   textTransform: 'uppercase', letterSpacing: 0.5
 });
 
+// Cada fase es un componente propio: sus hooks (useState) deben vivir en un componente, no en una función de dibujo
+function FaseScanning({ p, onGuardar }) {
+    const [form, setForm] = useState({
+      scanning_problema: p.scanning_problema || '',
+      scanning_datos_fuente: p.scanning_datos_fuente || '',
+      scanning_periodo_analisis: p.scanning_periodo_analisis || '',
+      scanning_patron_identificado: p.scanning_patron_identificado || '',
+      scanning_frecuencia: p.scanning_frecuencia || '',
+      scanning_zona_concentracion: p.scanning_zona_concentracion || '',
+      scanning_victimas_perfil: p.scanning_victimas_perfil || '',
+      scanning_sospechosos_perfil: p.scanning_sospechosos_perfil || '',
+      scanning_horarios_patron: p.scanning_horarios_patron || ''
+    });
+
+    return (
+      <div style={{ ...cardStyle, borderLeft: '4px solid #3b82f6' }}>
+        <div style={{ fontSize: 15, fontWeight: 800, color: '#3b82f6', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
+          <Search size={18} /> Fase 1: Scanning — Identificación del Problema
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+          <div style={{ gridColumn: '1 / -1' }}>
+            <label style={labelStyle}>Problema Identificado</label>
+            <textarea style={textareaStyle} value={form.scanning_problema} onChange={e => setForm({ ...form, scanning_problema: e.target.value })}
+              placeholder="Describe el problema criminal persistente identificado..." />
+          </div>
+          <div>
+            <label style={labelStyle}>Fuentes de Datos Consultadas</label>
+            <input style={inputStyle} value={form.scanning_datos_fuente} onChange={e => setForm({ ...form, scanning_datos_fuente: e.target.value })}
+              placeholder="Reportes 911, oficios MP, estadísticas..." />
+          </div>
+          <div>
+            <label style={labelStyle}>Período de Análisis</label>
+            <input style={inputStyle} value={form.scanning_periodo_analisis} onChange={e => setForm({ ...form, scanning_periodo_analisis: e.target.value })}
+              placeholder="Ej: Enero-Junio 2026" />
+          </div>
+          <div>
+            <label style={labelStyle}>Patrón Identificado</label>
+            <input style={inputStyle} value={form.scanning_patron_identificado} onChange={e => setForm({ ...form, scanning_patron_identificado: e.target.value })}
+              placeholder="Ej: Cluster de robos en horario nocturno" />
+          </div>
+          <div>
+            <label style={labelStyle}>Frecuencia del Problema</label>
+            <input style={inputStyle} value={form.scanning_frecuencia} onChange={e => setForm({ ...form, scanning_frecuencia: e.target.value })}
+              placeholder="Ej: 15 incidentes/mes, tendencia creciente" />
+          </div>
+          <div>
+            <label style={labelStyle}>Zona de Concentración</label>
+            <input style={inputStyle} value={form.scanning_zona_concentracion} onChange={e => setForm({ ...form, scanning_zona_concentracion: e.target.value })}
+              placeholder="Ej: Blvd. Vicente Guerrero, Col. Renacimiento" />
+          </div>
+          <div>
+            <label style={labelStyle}>Horarios con Mayor Incidencia</label>
+            <input style={inputStyle} value={form.scanning_horarios_patron} onChange={e => setForm({ ...form, scanning_horarios_patron: e.target.value })}
+              placeholder="Ej: 20:00 - 02:00 hrs" />
+          </div>
+          <div>
+            <label style={labelStyle}>Perfil de Víctimas</label>
+            <input style={inputStyle} value={form.scanning_victimas_perfil} onChange={e => setForm({ ...form, scanning_victimas_perfil: e.target.value })}
+              placeholder="Ej: Transeúntes, usuarios de cajeros" />
+          </div>
+          <div>
+            <label style={labelStyle}>Perfil de Sospechosos</label>
+            <input style={inputStyle} value={form.scanning_sospechosos_perfil} onChange={e => setForm({ ...form, scanning_sospechosos_perfil: e.target.value })}
+              placeholder="Ej: Hombres 18-25 años, en motocicleta" />
+          </div>
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 14 }}>
+          <button style={btnPrimary} onClick={() => onGuardar(form)}>
+            <FileText size={14} /> Guardar Scanning
+          </button>
+        </div>
+      </div>
+    );
+}
+
+// Cada fase es un componente propio: sus hooks (useState) deben vivir en un componente, no en una función de dibujo
+function FaseAnalysis({ p, onGuardar }) {
+    const [form, setForm] = useState({
+      analysis_causas_raiz: p.analysis_causas_raiz || '',
+      analysis_factores_contribuyentes: p.analysis_factores_contribuyentes || '',
+      analysis_triangulo_delito: p.analysis_triangulo_delito || '',
+      analysis_victima_perfil_detallado: p.analysis_victima_perfil_detallado || '',
+      analysis_agresor_perfil_detallado: p.analysis_agresor_perfil_detallado || '',
+      analysis_lugar_caracteristicas: p.analysis_lugar_caracteristicas || '',
+      analysis_oportunidades_intervencion: p.analysis_oportunidades_intervencion || '',
+      analysis_hipotesis: p.analysis_hipotesis || ''
+    });
+
+    return (
+      <div style={{ ...cardStyle, borderLeft: '4px solid #8b5cf6' }}>
+        <div style={{ fontSize: 15, fontWeight: 800, color: '#8b5cf6', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
+          <BarChart3 size={18} /> Fase 2: Analysis — Causas y Factores
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+          <div style={{ gridColumn: '1 / -1' }}>
+            <label style={labelStyle}>Causas Raíz del Problema</label>
+            <textarea style={textareaStyle} value={form.analysis_causas_raiz} onChange={e => setForm({ ...form, analysis_causas_raiz: e.target.value })}
+              placeholder="¿Por qué ocurre este problema? Causas estructurales..." />
+          </div>
+          <div style={{ gridColumn: '1 / -1' }}>
+            <label style={labelStyle}>Factores Contribuyentes</label>
+            <textarea style={textareaStyle} value={form.analysis_factores_contribuyentes} onChange={e => setForm({ ...form, analysis_factores_contribuyentes: e.target.value })}
+              placeholder="Falta de iluminación, baja presencia policial, falta de cámaras..." />
+          </div>
+          <div style={{ gridColumn: '1 / -1' }}>
+            <label style={labelStyle}>Triángulo del Delito (Víctima + Agresor + Lugar)</label>
+            <textarea style={textareaStyle} value={form.analysis_triangulo_delito} onChange={e => setForm({ ...form, analysis_triangulo_delito: e.target.value })}
+              placeholder="Análisis de la convergencia espacio-temporal de víctima, agresor y lugar..." />
+          </div>
+          <div>
+            <label style={labelStyle}>Perfil Detallado de Víctimas</label>
+            <textarea style={{ ...textareaStyle, minHeight: 55 }} value={form.analysis_victima_perfil_detallado} onChange={e => setForm({ ...form, analysis_victima_perfil_detallado: e.target.value })} />
+          </div>
+          <div>
+            <label style={labelStyle}>Perfil Detallado de Agresores</label>
+            <textarea style={{ ...textareaStyle, minHeight: 55 }} value={form.analysis_agresor_perfil_detallado} onChange={e => setForm({ ...form, analysis_agresor_perfil_detallado: e.target.value })} />
+          </div>
+          <div>
+            <label style={labelStyle}>Características del Lugar</label>
+            <textarea style={{ ...textareaStyle, minHeight: 55 }} value={form.analysis_lugar_caracteristicas} onChange={e => setForm({ ...form, analysis_lugar_caracteristicas: e.target.value })} />
+          </div>
+          <div>
+            <label style={labelStyle}>Oportunidades de Intervención</label>
+            <textarea style={{ ...textareaStyle, minHeight: 55 }} value={form.analysis_oportunidades_intervencion} onChange={e => setForm({ ...form, analysis_oportunidades_intervencion: e.target.value })} />
+          </div>
+          <div style={{ gridColumn: '1 / -1' }}>
+            <label style={labelStyle}>Hipótesis de Trabajo</label>
+            <textarea style={textareaStyle} value={form.analysis_hipotesis} onChange={e => setForm({ ...form, analysis_hipotesis: e.target.value })}
+              placeholder="Si implementamos X, entonces Y debería reducirse porque Z..." />
+          </div>
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 14 }}>
+          <button style={{ ...btnPrimary, background: '#8b5cf6' }} onClick={() => onGuardar(form)}>
+            <FileText size={14} /> Guardar Analysis
+          </button>
+        </div>
+      </div>
+    );
+}
+
+// Cada fase es un componente propio: sus hooks (useState) deben vivir en un componente, no en una función de dibujo
+function FaseResponse({ p, onGuardar }) {
+    const [form, setForm] = useState({
+      response_estrategia: p.response_estrategia || '',
+      response_recursos_necesarios: p.response_recursos_necesarios || '',
+      response_coordinacion_externa: p.response_coordinacion_externa || ''
+    });
+
+    return (
+      <div style={{ ...cardStyle, borderLeft: '4px solid #f59e0b' }}>
+        <div style={{ fontSize: 15, fontWeight: 800, color: '#f59e0b', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
+          <Zap size={18} /> Fase 3: Response — Estrategia de Intervención
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 12 }}>
+          <div>
+            <label style={labelStyle}>Estrategia de Respuesta</label>
+            <textarea style={{ ...textareaStyle, minHeight: 90 }} value={form.response_estrategia} onChange={e => setForm({ ...form, response_estrategia: e.target.value })}
+              placeholder="Describe la estrategia: patrullaje focalizado, operativos, coordinación con C4..." />
+          </div>
+          <div>
+            <label style={labelStyle}>Recursos Necesarios</label>
+            <textarea style={textareaStyle} value={form.response_recursos_necesarios} onChange={e => setForm({ ...form, response_recursos_necesarios: e.target.value })}
+              placeholder="Personal, vehículos, tecnología, presupuesto..." />
+          </div>
+          <div>
+            <label style={labelStyle}>Coordinación con Otras Instituciones</label>
+            <textarea style={textareaStyle} value={form.response_coordinacion_externa} onChange={e => setForm({ ...form, response_coordinacion_externa: e.target.value })}
+              placeholder="Policía Municipal, Guardia Nacional, C4, SSPE..." />
+          </div>
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 14 }}>
+          <button style={{ ...btnPrimary, background: '#f59e0b' }} onClick={() => onGuardar(form)}>
+            <FileText size={14} /> Guardar Response
+          </button>
+        </div>
+      </div>
+    );
+}
+
+// Cada fase es un componente propio: sus hooks (useState) deben vivir en un componente, no en una función de dibujo
+function FaseAssessment({ p, onGuardar }) {
+    const [form, setForm] = useState({
+      assessment_resultado_general: p.assessment_resultado_general || '',
+      assessment_lecciones_aprendidas: p.assessment_lecciones_aprendidas || '',
+      assessment_recomendaciones: p.assessment_recomendaciones || '',
+      assessment_requiere_nuevo_ciclo: p.assessment_requiere_nuevo_ciclo || false
+    });
+
+    return (
+      <div style={{ ...cardStyle, borderLeft: '4px solid #10b981' }}>
+        <div style={{ fontSize: 15, fontWeight: 800, color: '#10b981', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
+          <CheckCircle size={18} /> Fase 4: Assessment — Evaluación de Resultados
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 12 }}>
+          <div>
+            <label style={labelStyle}>Resultado General de la Intervención</label>
+            <textarea style={{ ...textareaStyle, minHeight: 90 }} value={form.assessment_resultado_general} onChange={e => setForm({ ...form, assessment_resultado_general: e.target.value })}
+              placeholder="¿Se redujo el problema? ¿En qué porcentaje? ¿Hubo efectos no deseados?" />
+          </div>
+          <div>
+            <label style={labelStyle}>Lecciones Aprendidas</label>
+            <textarea style={textareaStyle} value={form.assessment_lecciones_aprendidas} onChange={e => setForm({ ...form, assessment_lecciones_aprendidas: e.target.value })}
+              placeholder="¿Qué funcionó? ¿Qué no? ¿Qué se haría diferente?" />
+          </div>
+          <div>
+            <label style={labelStyle}>Recomendaciones para el Futuro</label>
+            <textarea style={textareaStyle} value={form.assessment_recomendaciones} onChange={e => setForm({ ...form, assessment_recomendaciones: e.target.value })}
+              placeholder="Acciones recomendadas para mantener los resultados o mejorarlos..." />
+          </div>
+          <div>
+            <label style={{ ...labelStyle, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <input type="checkbox" checked={form.assessment_requiere_nuevo_ciclo}
+                onChange={e => setForm({ ...form, assessment_requiere_nuevo_ciclo: e.target.checked })}
+                style={{ width: 16, height: 16 }} />
+              ¿Requiere un nuevo ciclo SARA? (El problema persiste o se transformó)
+            </label>
+          </div>
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 14 }}>
+          <button style={{ ...btnPrimary, background: '#10b981' }} onClick={() => onGuardar(form)}>
+            <FileText size={14} /> Guardar Assessment
+          </button>
+        </div>
+      </div>
+    );
+}
+
 export default function AnalisisSARA({ user }) {
   const hook = useAnalisisSARA(user);
   const {
@@ -369,10 +596,10 @@ const [showMapa, setShowMapa] = useState(false);
         </div>
 
         {/* Contenido de la fase actual */}
-        {p.fase_actual === 'scanning' && renderScanning(p)}
-        {p.fase_actual === 'analysis' && renderAnalysis(p)}
-        {p.fase_actual === 'response' && renderResponse(p)}
-        {p.fase_actual === 'assessment' && renderAssessment(p)}
+        {p.fase_actual === 'scanning' && <FaseScanning key={p.id} p={p} onGuardar={handleGuardarFase} />}
+        {p.fase_actual === 'analysis' && <FaseAnalysis key={p.id} p={p} onGuardar={handleGuardarFase} />}
+        {p.fase_actual === 'response' && <FaseResponse key={p.id} p={p} onGuardar={handleGuardarFase} />}
+        {p.fase_actual === 'assessment' && <FaseAssessment key={p.id} p={p} onGuardar={handleGuardarFase} />}
         {p.fase_actual === 'cerrado' && renderCerrado(p)}
 
         {/* Botón avanzar fase */}
@@ -391,231 +618,12 @@ const [showMapa, setShowMapa] = useState(false);
   };
 
   // === FASE: SCANNING ===
-  const renderScanning = (p) => {
-    const [form, setForm] = useState({
-      scanning_problema: p.scanning_problema || '',
-      scanning_datos_fuente: p.scanning_datos_fuente || '',
-      scanning_periodo_analisis: p.scanning_periodo_analisis || '',
-      scanning_patron_identificado: p.scanning_patron_identificado || '',
-      scanning_frecuencia: p.scanning_frecuencia || '',
-      scanning_zona_concentracion: p.scanning_zona_concentracion || '',
-      scanning_victimas_perfil: p.scanning_victimas_perfil || '',
-      scanning_sospechosos_perfil: p.scanning_sospechosos_perfil || '',
-      scanning_horarios_patron: p.scanning_horarios_patron || ''
-    });
-
-    return (
-      <div style={{ ...cardStyle, borderLeft: '4px solid #3b82f6' }}>
-        <div style={{ fontSize: 15, fontWeight: 800, color: '#3b82f6', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
-          <Search size={18} /> Fase 1: Scanning — Identificación del Problema
-        </div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-          <div style={{ gridColumn: '1 / -1' }}>
-            <label style={labelStyle}>Problema Identificado</label>
-            <textarea style={textareaStyle} value={form.scanning_problema} onChange={e => setForm({ ...form, scanning_problema: e.target.value })}
-              placeholder="Describe el problema criminal persistente identificado..." />
-          </div>
-          <div>
-            <label style={labelStyle}>Fuentes de Datos Consultadas</label>
-            <input style={inputStyle} value={form.scanning_datos_fuente} onChange={e => setForm({ ...form, scanning_datos_fuente: e.target.value })}
-              placeholder="Reportes 911, oficios MP, estadísticas..." />
-          </div>
-          <div>
-            <label style={labelStyle}>Período de Análisis</label>
-            <input style={inputStyle} value={form.scanning_periodo_analisis} onChange={e => setForm({ ...form, scanning_periodo_analisis: e.target.value })}
-              placeholder="Ej: Enero-Junio 2026" />
-          </div>
-          <div>
-            <label style={labelStyle}>Patrón Identificado</label>
-            <input style={inputStyle} value={form.scanning_patron_identificado} onChange={e => setForm({ ...form, scanning_patron_identificado: e.target.value })}
-              placeholder="Ej: Cluster de robos en horario nocturno" />
-          </div>
-          <div>
-            <label style={labelStyle}>Frecuencia del Problema</label>
-            <input style={inputStyle} value={form.scanning_frecuencia} onChange={e => setForm({ ...form, scanning_frecuencia: e.target.value })}
-              placeholder="Ej: 15 incidentes/mes, tendencia creciente" />
-          </div>
-          <div>
-            <label style={labelStyle}>Zona de Concentración</label>
-            <input style={inputStyle} value={form.scanning_zona_concentracion} onChange={e => setForm({ ...form, scanning_zona_concentracion: e.target.value })}
-              placeholder="Ej: Blvd. Vicente Guerrero, Col. Renacimiento" />
-          </div>
-          <div>
-            <label style={labelStyle}>Horarios con Mayor Incidencia</label>
-            <input style={inputStyle} value={form.scanning_horarios_patron} onChange={e => setForm({ ...form, scanning_horarios_patron: e.target.value })}
-              placeholder="Ej: 20:00 - 02:00 hrs" />
-          </div>
-          <div>
-            <label style={labelStyle}>Perfil de Víctimas</label>
-            <input style={inputStyle} value={form.scanning_victimas_perfil} onChange={e => setForm({ ...form, scanning_victimas_perfil: e.target.value })}
-              placeholder="Ej: Transeúntes, usuarios de cajeros" />
-          </div>
-          <div>
-            <label style={labelStyle}>Perfil de Sospechosos</label>
-            <input style={inputStyle} value={form.scanning_sospechosos_perfil} onChange={e => setForm({ ...form, scanning_sospechosos_perfil: e.target.value })}
-              placeholder="Ej: Hombres 18-25 años, en motocicleta" />
-          </div>
-        </div>
-        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 14 }}>
-          <button style={btnPrimary} onClick={() => handleGuardarFase(form)}>
-            <FileText size={14} /> Guardar Scanning
-          </button>
-        </div>
-      </div>
-    );
-  };
 
   // === FASE: ANALYSIS ===
-  const renderAnalysis = (p) => {
-    const [form, setForm] = useState({
-      analysis_causas_raiz: p.analysis_causas_raiz || '',
-      analysis_factores_contribuyentes: p.analysis_factores_contribuyentes || '',
-      analysis_triangulo_delito: p.analysis_triangulo_delito || '',
-      analysis_victima_perfil_detallado: p.analysis_victima_perfil_detallado || '',
-      analysis_agresor_perfil_detallado: p.analysis_agresor_perfil_detallado || '',
-      analysis_lugar_caracteristicas: p.analysis_lugar_caracteristicas || '',
-      analysis_oportunidades_intervencion: p.analysis_oportunidades_intervencion || '',
-      analysis_hipotesis: p.analysis_hipotesis || ''
-    });
-
-    return (
-      <div style={{ ...cardStyle, borderLeft: '4px solid #8b5cf6' }}>
-        <div style={{ fontSize: 15, fontWeight: 800, color: '#8b5cf6', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
-          <BarChart3 size={18} /> Fase 2: Analysis — Causas y Factores
-        </div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-          <div style={{ gridColumn: '1 / -1' }}>
-            <label style={labelStyle}>Causas Raíz del Problema</label>
-            <textarea style={textareaStyle} value={form.analysis_causas_raiz} onChange={e => setForm({ ...form, analysis_causas_raiz: e.target.value })}
-              placeholder="¿Por qué ocurre este problema? Causas estructurales..." />
-          </div>
-          <div style={{ gridColumn: '1 / -1' }}>
-            <label style={labelStyle}>Factores Contribuyentes</label>
-            <textarea style={textareaStyle} value={form.analysis_factores_contribuyentes} onChange={e => setForm({ ...form, analysis_factores_contribuyentes: e.target.value })}
-              placeholder="Falta de iluminación, baja presencia policial, falta de cámaras..." />
-          </div>
-          <div style={{ gridColumn: '1 / -1' }}>
-            <label style={labelStyle}>Triángulo del Delito (Víctima + Agresor + Lugar)</label>
-            <textarea style={textareaStyle} value={form.analysis_triangulo_delito} onChange={e => setForm({ ...form, analysis_triangulo_delito: e.target.value })}
-              placeholder="Análisis de la convergencia espacio-temporal de víctima, agresor y lugar..." />
-          </div>
-          <div>
-            <label style={labelStyle}>Perfil Detallado de Víctimas</label>
-            <textarea style={{ ...textareaStyle, minHeight: 55 }} value={form.analysis_victima_perfil_detallado} onChange={e => setForm({ ...form, analysis_victima_perfil_detallado: e.target.value })} />
-          </div>
-          <div>
-            <label style={labelStyle}>Perfil Detallado de Agresores</label>
-            <textarea style={{ ...textareaStyle, minHeight: 55 }} value={form.analysis_agresor_perfil_detallado} onChange={e => setForm({ ...form, analysis_agresor_perfil_detallado: e.target.value })} />
-          </div>
-          <div>
-            <label style={labelStyle}>Características del Lugar</label>
-            <textarea style={{ ...textareaStyle, minHeight: 55 }} value={form.analysis_lugar_caracteristicas} onChange={e => setForm({ ...form, analysis_lugar_caracteristicas: e.target.value })} />
-          </div>
-          <div>
-            <label style={labelStyle}>Oportunidades de Intervención</label>
-            <textarea style={{ ...textareaStyle, minHeight: 55 }} value={form.analysis_oportunidades_intervencion} onChange={e => setForm({ ...form, analysis_oportunidades_intervencion: e.target.value })} />
-          </div>
-          <div style={{ gridColumn: '1 / -1' }}>
-            <label style={labelStyle}>Hipótesis de Trabajo</label>
-            <textarea style={textareaStyle} value={form.analysis_hipotesis} onChange={e => setForm({ ...form, analysis_hipotesis: e.target.value })}
-              placeholder="Si implementamos X, entonces Y debería reducirse porque Z..." />
-          </div>
-        </div>
-        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 14 }}>
-          <button style={{ ...btnPrimary, background: '#8b5cf6' }} onClick={() => handleGuardarFase(form)}>
-            <FileText size={14} /> Guardar Analysis
-          </button>
-        </div>
-      </div>
-    );
-  };
 
   // === FASE: RESPONSE ===
-  const renderResponse = (p) => {
-    const [form, setForm] = useState({
-      response_estrategia: p.response_estrategia || '',
-      response_recursos_necesarios: p.response_recursos_necesarios || '',
-      response_coordinacion_externa: p.response_coordinacion_externa || ''
-    });
-
-    return (
-      <div style={{ ...cardStyle, borderLeft: '4px solid #f59e0b' }}>
-        <div style={{ fontSize: 15, fontWeight: 800, color: '#f59e0b', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
-          <Zap size={18} /> Fase 3: Response — Estrategia de Intervención
-        </div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 12 }}>
-          <div>
-            <label style={labelStyle}>Estrategia de Respuesta</label>
-            <textarea style={{ ...textareaStyle, minHeight: 90 }} value={form.response_estrategia} onChange={e => setForm({ ...form, response_estrategia: e.target.value })}
-              placeholder="Describe la estrategia: patrullaje focalizado, operativos, coordinación con C4..." />
-          </div>
-          <div>
-            <label style={labelStyle}>Recursos Necesarios</label>
-            <textarea style={textareaStyle} value={form.response_recursos_necesarios} onChange={e => setForm({ ...form, response_recursos_necesarios: e.target.value })}
-              placeholder="Personal, vehículos, tecnología, presupuesto..." />
-          </div>
-          <div>
-            <label style={labelStyle}>Coordinación con Otras Instituciones</label>
-            <textarea style={textareaStyle} value={form.response_coordinacion_externa} onChange={e => setForm({ ...form, response_coordinacion_externa: e.target.value })}
-              placeholder="Policía Municipal, Guardia Nacional, C4, SSPE..." />
-          </div>
-        </div>
-        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 14 }}>
-          <button style={{ ...btnPrimary, background: '#f59e0b' }} onClick={() => handleGuardarFase(form)}>
-            <FileText size={14} /> Guardar Response
-          </button>
-        </div>
-      </div>
-    );
-  };
 
   // === FASE: ASSESSMENT ===
-  const renderAssessment = (p) => {
-    const [form, setForm] = useState({
-      assessment_resultado_general: p.assessment_resultado_general || '',
-      assessment_lecciones_aprendidas: p.assessment_lecciones_aprendidas || '',
-      assessment_recomendaciones: p.assessment_recomendaciones || '',
-      assessment_requiere_nuevo_ciclo: p.assessment_requiere_nuevo_ciclo || false
-    });
-
-    return (
-      <div style={{ ...cardStyle, borderLeft: '4px solid #10b981' }}>
-        <div style={{ fontSize: 15, fontWeight: 800, color: '#10b981', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
-          <CheckCircle size={18} /> Fase 4: Assessment — Evaluación de Resultados
-        </div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 12 }}>
-          <div>
-            <label style={labelStyle}>Resultado General de la Intervención</label>
-            <textarea style={{ ...textareaStyle, minHeight: 90 }} value={form.assessment_resultado_general} onChange={e => setForm({ ...form, assessment_resultado_general: e.target.value })}
-              placeholder="¿Se redujo el problema? ¿En qué porcentaje? ¿Hubo efectos no deseados?" />
-          </div>
-          <div>
-            <label style={labelStyle}>Lecciones Aprendidas</label>
-            <textarea style={textareaStyle} value={form.assessment_lecciones_aprendidas} onChange={e => setForm({ ...form, assessment_lecciones_aprendidas: e.target.value })}
-              placeholder="¿Qué funcionó? ¿Qué no? ¿Qué se haría diferente?" />
-          </div>
-          <div>
-            <label style={labelStyle}>Recomendaciones para el Futuro</label>
-            <textarea style={textareaStyle} value={form.assessment_recomendaciones} onChange={e => setForm({ ...form, assessment_recomendaciones: e.target.value })}
-              placeholder="Acciones recomendadas para mantener los resultados o mejorarlos..." />
-          </div>
-          <div>
-            <label style={{ ...labelStyle, display: 'flex', alignItems: 'center', gap: 8 }}>
-              <input type="checkbox" checked={form.assessment_requiere_nuevo_ciclo}
-                onChange={e => setForm({ ...form, assessment_requiere_nuevo_ciclo: e.target.checked })}
-                style={{ width: 16, height: 16 }} />
-              ¿Requiere un nuevo ciclo SARA? (El problema persiste o se transformó)
-            </label>
-          </div>
-        </div>
-        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 14 }}>
-          <button style={{ ...btnPrimary, background: '#10b981' }} onClick={() => handleGuardarFase(form)}>
-            <FileText size={14} /> Guardar Assessment
-          </button>
-        </div>
-      </div>
-    );
-  };
 
   // === CERRADO ===
   const renderCerrado = (p) => (
