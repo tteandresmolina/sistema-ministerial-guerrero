@@ -21,7 +21,11 @@ const C = {
   verde: '#2e7d32', ambar: '#b8860b', rojo: '#c62828',
 };
 
-const REGION = 'Región Acapulco';
+// Regiones del estado. Solo las "listas" tienen cargados su catálogo de colonias y su zona de búsqueda de direcciones.
+// Para activar otra región: cuando llegue su estadística histórica, se carga su catálogo y se agrega a REGIONES_LISTAS.
+// Mientras tanto no se puede importar a esa región, para no guardarla mal etiquetada.
+const REGIONES = ['Región Centro', 'Región Montaña', 'Región Costa Grande', 'Región Costa Chica', 'Región Tierra Caliente', 'Región Acapulco', 'Región Norte'];
+const REGIONES_LISTAS = ['Región Acapulco'];
 const SECTORES = ['Renacimiento', 'Zapata', 'Garita', 'Coloso', 'Costa Azul', 'Central',
   'Barrios Históricos', 'Mozimba', 'Jardín', 'Coyuca de Benítez', 'San Marcos'];
 const ALIAS_SECTOR = { 'BARRIOS': 'Barrios Históricos', 'COYUCA': 'Coyuca de Benítez' };
@@ -367,6 +371,7 @@ export default function ImportarIncidenciaRegional({ perfil, onImportado, leafle
   const [abierto, setAbierto] = useState(false);
   const [modo, setModo] = useState('importar'); // 'importar' | 'revisar'
   const [fase, setFase] = useState('inicio'); // 'inicio' | 'revision'
+  const [region, setRegion] = useState(REGIONES_LISTAS[0]);
   const [resumen, setResumen] = useState(null);
   const [filas, setFilas] = useState([]);
   const [sel, setSel] = useState(null);
@@ -485,7 +490,7 @@ export default function ImportarIncidenciaRegional({ perfil, onImportado, leafle
     if (incompletas > 0) { setMsg({ tipo: 'error', texto: `Hay ${incompletas} caso(s) sin sector o sin fecha válida. Selecciónalos en la lista y complétalos.` }); return; }
     setGuardando(true); setMsg(null);
     const payload = filas.map((f) => ({
-      carpeta_investigacion: f.ci, region: REGION, zona: f.sector, fecha: f.fecha,
+      carpeta_investigacion: f.ci, region: region, zona: f.sector, fecha: f.fecha,
       delito: f.delito || null, lugar_hechos: f.lugar, observaciones: f.obs || null,
       coordenadas_lat: f.lat, coordenadas_lng: f.lng, ubicacion_confirmada: f.confirmada,
       lugar_es_hospital: f.esHospital, cartulina: f.cartulina, vehiculo_asegurado: f.vehiculo,
@@ -517,7 +522,7 @@ export default function ImportarIncidenciaRegional({ perfil, onImportado, leafle
   if (!abierto) {
     return (
       <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 10 }}>
-        <button onClick={() => setAbierto(true)} style={btnSecundario}><Upload size={16} /> Importar incidencia regional</button>
+        <button onClick={() => setAbierto(true)} style={btnSecundario}><Upload size={16} /> Importar Excel</button>
       </div>
     );
   }
@@ -526,14 +531,19 @@ export default function ImportarIncidenciaRegional({ perfil, onImportado, leafle
     <div style={caja}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
         <div style={{ fontSize: 15, fontWeight: 800, color: C.gold, textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: 8 }}>
-          <Upload size={16} /> Importar incidencia regional (homicidios dolosos · {REGION})
+          <Upload size={16} /> Importar homicidios dolosos
         </div>
-        <X size={20} style={{ cursor: 'pointer', color: C.gray }} onClick={() => { cancelar(); setAbierto(false); }} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <select aria-label="Región" value={region} onChange={(e) => setRegion(e.target.value)} style={{ ...campo, width: 'auto', padding: '6px 10px', fontSize: 14, minHeight: 38 }}>
+            {REGIONES.map((r) => <option key={r} value={r} disabled={!REGIONES_LISTAS.includes(r)}>{r}{REGIONES_LISTAS.includes(r) ? '' : ' (próximamente)'}</option>)}
+          </select>
+          <X size={20} style={{ cursor: 'pointer', color: C.gray }} onClick={() => { cancelar(); setAbierto(false); }} />
+        </div>
       </div>
 
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 12 }}>
-        <button onClick={() => setModo('importar')} style={{ ...btn, padding: '8px 16px', minHeight: 40, fontSize: 14, background: modo === 'importar' ? C.navy : 'transparent', color: modo === 'importar' ? '#fff' : C.navy, border: '2px solid ' + C.navy }}>Importar archivo</button>
-        <button onClick={() => setModo('revisar')} style={{ ...btn, padding: '8px 16px', minHeight: 40, fontSize: 14, background: modo === 'revisar' ? C.navy : 'transparent', color: modo === 'revisar' ? '#fff' : C.navy, border: '2px solid ' + C.navy }}>Revisar ubicaciones guardadas</button>
+        <button onClick={() => setModo('importar')} style={{ ...btn, padding: '8px 16px', minHeight: 40, fontSize: 14, background: modo === 'importar' ? C.navy : 'transparent', color: modo === 'importar' ? '#fff' : C.navy, border: '2px solid ' + C.navy }}>Importar</button>
+        <button onClick={() => setModo('revisar')} style={{ ...btn, padding: '8px 16px', minHeight: 40, fontSize: 14, background: modo === 'revisar' ? C.navy : 'transparent', color: modo === 'revisar' ? '#fff' : C.navy, border: '2px solid ' + C.navy }}>Revisar ubicaciones</button>
       </div>
 
       {modo === 'revisar' && <RevisarGuardadas leafletListo={leafletListo} onCambio={onImportado} />}
@@ -546,10 +556,7 @@ export default function ImportarIncidenciaRegional({ perfil, onImportado, leafle
 
       {modo === 'importar' && fase === 'inicio' && (
         <div>
-          <p style={{ color: C.gray, fontSize: 15, margin: '0 0 12px 0', lineHeight: 1.5 }}>
-            Sube el Excel del regional. Se lee la hoja de homicidios dolosos y solo se agregan los casos que aún no estén registrados
-            (puedes volver a subir el archivo acumulado del mes sin duplicar). Los casos sin carpeta de investigación real se omiten.
-          </p>
+          <p style={{ color: C.gray, fontSize: 15, margin: '0 0 12px 0' }}>Se agregan solo los casos nuevos. Sin C.I. se omiten.</p>
           <input type="file" accept=".xlsx,.xls" onChange={cargarArchivo} style={{ ...campo, width: '100%' }} />
         </div>
       )}
