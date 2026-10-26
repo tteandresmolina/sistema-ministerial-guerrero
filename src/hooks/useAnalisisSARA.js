@@ -76,6 +76,28 @@ export function useAnalisisSARA(user) {
     }
   }, [fetchProyectos]);
 
+  // Elimina un plan de acción de forma definitiva. Si la base no deja borrarlo (permisos), no devuelve error:
+  // simplemente no borra nada, por eso se verifica que sí se haya eliminado una fila.
+  const eliminarProyecto = useCallback(async (id) => {
+    try {
+      const { data, error: err } = await supabase
+        .from('proyectos_sara')
+        .delete()
+        .eq('id', id)
+        .select('id');
+      if (err) throw err;
+      if (!data || data.length === 0) {
+        setError('No se pudo eliminar: tu usuario no tiene permiso para borrar planes de acción en la base de datos.');
+        return false;
+      }
+      await fetchProyectos();
+      return true;
+    } catch (e) {
+      setError(e.message);
+      return false;
+    }
+  }, [fetchProyectos]);
+
   const avanzarFase = useCallback(async (proyecto) => {
     const orden = ['scanning', 'analysis', 'response', 'assessment', 'cerrado'];
     const idx = orden.indexOf(proyecto.fase_actual);
@@ -131,7 +153,7 @@ export function useAnalisisSARA(user) {
   return {
     proyectos, loading, error, setError,
     filtroFase, setFiltroFase, filtroPrioridad, setFiltroPrioridad,
-    fetchProyectos, crearProyecto, actualizarProyecto, avanzarFase,
+    fetchProyectos, crearProyecto, actualizarProyecto, eliminarProyecto, avanzarFase,
     FASES, getPrioridadColor, getFaseInfo, getProgreso, formatFecha
   };
 }
