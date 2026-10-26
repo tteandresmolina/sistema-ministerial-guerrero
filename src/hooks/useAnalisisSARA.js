@@ -98,11 +98,11 @@ export function useAnalisisSARA(user) {
   }, [user, fetchProyectos]);
 
   const FASES = [
-    { key: 'scanning', label: 'Scanning', color: '#3b82f6', icon: '🔍', desc: 'Identificar el problema' },
-    { key: 'analysis', label: 'Analysis', color: '#8b5cf6', icon: '📊', desc: 'Analizar causas raíz' },
-    { key: 'response', label: 'Response', color: '#f59e0b', icon: '⚡', desc: 'Implementar respuesta' },
-    { key: 'assessment', label: 'Assessment', color: '#10b981', icon: '✅', desc: 'Evaluar resultados' },
-    { key: 'cerrado', label: 'Cerrado', color: '#6b7280', icon: '📁', desc: 'Proyecto finalizado' }
+    { key: 'scanning', label: 'Identificar', color: '#3b82f6', icon: '🔍', desc: 'Definir el problema' },
+    { key: 'analysis', label: 'Analizar', color: '#8b5cf6', icon: '📊', desc: 'Analizar causas raíz' },
+    { key: 'response', label: 'Responder', color: '#f59e0b', icon: '⚡', desc: 'Implementar respuesta' },
+    { key: 'assessment', label: 'Evaluar', color: '#10b981', icon: '✅', desc: 'Evaluar resultados' },
+    { key: 'cerrado', label: 'Cerrado', color: '#6b7280', icon: '📁', desc: 'Plan finalizado' }
   ];
 
   const getPrioridadColor = (p) => {
