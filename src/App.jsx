@@ -512,7 +512,7 @@ export default function App() {
 
             {/* ── GRUPO 3: Análisis ── */}
             <button onClick={() => setTabApp("dashoperativo")} style={{ background: "none", border: "none", borderBottom: tabApp === "dashoperativo" ? "2px solid #001a4d" : "2px solid transparent", padding: "10px 18px", fontWeight: tabApp === "dashoperativo" ? 700 : 500, color: tabApp === "dashoperativo" ? "#001a4d" : "#888", cursor: "pointer", fontSize: 15 }}>Dashboard</button>
-            <button onClick={() => setTabApp("sara")} style={{ background: "none", border: "none", borderBottom: tabApp === "sara" ? "2px solid #001a4d" : "2px solid transparent", padding: "10px 18px", fontWeight: tabApp === "sara" ? 700 : 500, color: tabApp === "sara" ? "#001a4d" : "#888", cursor: "pointer", fontSize: 15 }}>SARA</button>
+            <button onClick={() => setTabApp("sara")} style={{ background: "none", border: "none", borderBottom: tabApp === "sara" ? "2px solid #001a4d" : "2px solid transparent", padding: "10px 18px", fontWeight: tabApp === "sara" ? 700 : 500, color: tabApp === "sara" ? "#001a4d" : "#888", cursor: "pointer", fontSize: 15 }}>Análisis Criminal</button>
             {puedeVerDashboard && (
               <button onClick={() => setTabApp("dashboard")} style={{ background: "none", border: "none", borderBottom: tabApp === "dashboard" ? "2px solid #001a4d" : "2px solid transparent", padding: "10px 18px", fontWeight: tabApp === "dashboard" ? 700 : 500, color: tabApp === "dashboard" ? "#001a4d" : "#888", cursor: "pointer", fontSize: 15 }}>Histórico</button>
             )}
