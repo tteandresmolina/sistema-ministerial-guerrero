@@ -303,7 +303,7 @@ const [showMapa, setShowMapa] = useState(false);
   // Viene del checklist CHEERS: abre "Nuevo proyecto" con el problema, la zona, la prioridad y el resumen ya llenos
   const handleIniciarDesdeCheers = (d) => {
     setProyectoActivo(null);
-    setFormProyecto({ ...emptyProyecto, titulo: d.problema || '', zona_geografica: d.zona || '', prioridad: d.prioridad, scanning_problema: d.problema || '', descripcion: d.resumen });
+    setFormProyecto({ ...emptyProyecto, titulo: d.problema || '', categoria_delito: d.categoria || '', zona_geografica: d.zona || '', prioridad: d.prioridad, scanning_problema: d.problema || '', descripcion: d.resumen, ...(d.extra || {}) });
     setVista('nuevo');
     setTimeout(() => { const el = document.getElementById('sara-form-nuevo'); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 150);
   };
@@ -654,7 +654,7 @@ const [showMapa, setShowMapa] = useState(false);
           <MapPin size={15} /> {showMapa ? 'Ocultar Mapa de Calor' : 'Mapa de Calor'}
         </button>
       </div>
-      {showMapa && <MapaCalor user={user} />}
+      {showMapa && <MapaCalor user={user} onIniciarProyecto={handleIniciarDesdeCheers} />}
       <ChecklistCHEERS onIniciarProyecto={handleIniciarDesdeCheers} />
 <TrianguloProblema />
       {vista === 'listado' && renderListado()}
