@@ -25,6 +25,64 @@ const FUENTES = [
   { key: 'incidencia_regional', label: 'Homicidios (Acapulco)', color: '#8b1e1e', lat: 'coordenadas_lat', lng: 'coordenadas_lng', fecha: 'fecha', delito: 'delito', muni: 'zona', desc: 'lugar_hechos' },
 ];
 
+// Calor tipo semáforo. El mapa y la leyenda usan los mismos colores y niveles:
+// 1 caso verde, 2 amarillo, 3 naranja, 4 o más rojo (probado con el motor de dibujo real de leaflet.heat).
+const NIVELES_CALOR = [
+  { color: '#43a047', label: 'Baja', casos: '1 caso' },
+  { color: '#fdd835', label: 'Media', casos: '2 casos' },
+  { color: '#fb8c00', label: 'Alta', casos: '3 casos' },
+  { color: '#e53935', label: 'Crítica', casos: '4 o más' },
+];
+const GRADIENTE_CALOR = { 0.30: NIVELES_CALOR[0].color, 0.51: NIVELES_CALOR[1].color, 0.66: NIVELES_CALOR[2].color, 0.76: NIVELES_CALOR[3].color };
+const RADIO_CALOR_M = 300; // radio del núcleo de cada caso en metros; con el difuminado cubre unos 500 m
+
+// Radio del calor en píxeles para el zoom actual, de modo que cubra siempre los mismos metros
+function radioCalorPx(mapa) {
+  var lat = mapa.getCenter().lat;
+  var mpp = 156543.03392 * Math.cos(lat * Math.PI / 180) / Math.pow(2, mapa.getZoom());
+  return Math.max(6, Math.min(120, RADIO_CALOR_M / mpp));
+}
+
+// Las colonias/sectores del reporte regional pertenecen al municipio de Acapulco de Juárez,
+// salvo Coyuca de Benítez y San Marcos, que son municipios aparte. Se amplía cuando lleguen otras regiones.
+const MUNICIPIO_DE_SECTOR_APARTE = { 'coyuca de benítez': 'Coyuca de Benítez', 'coyuca de benitez': 'Coyuca de Benítez', 'san marcos': 'San Marcos' };
+function municipioDeSector(sector) {
+  var k = String(sector || '').trim().toLowerCase();
+  if (!k) return '';
+  return MUNICIPIO_DE_SECTOR_APARTE[k] || 'Acapulco de Juárez';
+}
+
+// Color suave tipo semáforo según el peso de la barra frente a la mayor
+function colorSuave(valor, max) {
+  var r = max > 0 ? valor / max : 0;
+  return r >= 0.67 ? '#f2b8b0' : r >= 0.34 ? '#f8dc9b' : '#bfe0b8';
+}
+
+// Ranking en barras: la etiqueta completa va arriba de la barra para que siempre se lea
+function RankingBarras({ titulo, icono, items }) {
+  var max = items.length > 0 ? items[0][1] : 1;
+  return (
+    <div>
+      <div style={{ fontSize: 15, fontWeight: 700, color: C.darkBlue, marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 }}>{icono} {titulo}</div>
+      {items.length === 0 ? (
+        <div style={{ fontSize: 14, color: C.gray, textAlign: 'center', padding: 20 }}>Sin datos</div>
+      ) : (
+        items.map(function(item, i) { return (
+          <div key={item[0]} style={{ marginBottom: 10 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, fontSize: 14, fontWeight: 600, color: '#1f2937', lineHeight: 1.3 }}>
+              <span><span style={{ color: C.gray, fontWeight: 700 }}>#{i + 1}</span> {item[0]}</span>
+              <span style={{ fontWeight: 800, fontSize: 15 }}>{item[1]}</span>
+            </div>
+            <div style={{ height: 10, background: C.bg, borderRadius: 5, overflow: 'hidden', marginTop: 4 }}>
+              <div style={{ width: (item[1] / max * 100) + '%', height: '100%', background: colorSuave(item[1], max), borderRadius: 5 }} />
+            </div>
+          </div>
+        ); })
+      )}
+    </div>
+  );
+}
+
 // Estado inicial de las capas: todas activas (se arma desde FUENTES para no repetir la lista)
 function filtrosIniciales() {
   var f = {};
@@ -99,7 +157,7 @@ export default function MapaCalor({ user, onIniciarProyecto }) {
       const coords = (data || []).map(function(r) {
         return {
           lat: parseFloat(r[f.lat]), lng: parseFloat(r[f.lng]), fuente: f.key,
-          fecha: r[f.fecha] || '', delito: r[f.delito] || '', municipio: r[f.muni] || '',
+          fecha: r[f.fecha] || '', delito: r[f.delito] || '', municipio: f.key === 'incidencia_regional' ? municipioDeSector(r[f.muni]) : (r[f.muni] || ''), sector: f.key === 'incidencia_regional' ? (r[f.muni] || '') : '',
           descripcion: r[f.desc] || '', label: f.label, color: f.color,
         };
       }).filter(function(p) { return !isNaN(p.lat) && !isNaN(p.lng) && p.lat !== 0 && p.lng !== 0; });
@@ -132,16 +190,17 @@ export default function MapaCalor({ user, onIniciarProyecto }) {
 
   const analysisPorMunicipio = {};
   const analysisPorDelito = {};
+  const analysisPorSector = {};
   puntosFiltrados.forEach(function(p) {
     var m = p.municipio || 'Sin municipio';
     analysisPorMunicipio[m] = (analysisPorMunicipio[m] || 0) + 1;
     var d = p.delito || 'Sin tipificar';
     analysisPorDelito[d] = (analysisPorDelito[d] || 0) + 1;
+    if (p.sector) analysisPorSector[p.sector] = (analysisPorSector[p.sector] || 0) + 1;
   });
   const topMunicipios = Object.entries(analysisPorMunicipio).sort(function(a, b) { return b[1] - a[1]; }).slice(0, 10);
   const topDelitos = Object.entries(analysisPorDelito).sort(function(a, b) { return b[1] - a[1]; }).slice(0, 10);
-  const maxMuni = topMunicipios.length > 0 ? topMunicipios[0][1] : 1;
-  const maxDelito = topDelitos.length > 0 ? topDelitos[0][1] : 1;
+  const topSectores = Object.entries(analysisPorSector).sort(function(a, b) { return b[1] - a[1]; }).slice(0, 10);
 
   useEffect(function() {
     if (!leafletReady || !mapRef.current || !window.L) return;
@@ -155,14 +214,22 @@ export default function MapaCalor({ user, onIniciarProyecto }) {
       mapInstance.current = window.L.map(mapRef.current, { center: [17.4, -99.5], zoom: 8, scrollWheelZoom: true });
       window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap', maxZoom: 18 }).addTo(mapInstance.current);
       layerGroup.current = window.L.layerGroup().addTo(mapInstance.current);
+      // Al hacer zoom, el calor sigue cubriendo los mismos metros (los colores no dependen del acercamiento)
+      mapInstance.current.on('zoomend', function() {
+        if (heatLayer.current && heatLayer.current.setOptions && mapInstance.current) {
+          var r = radioCalorPx(mapInstance.current);
+          heatLayer.current.setOptions({ radius: r, blur: r * 0.6 });
+        }
+      });
     }
     layerGroup.current.clearLayers();
     if (heatLayer.current) { mapInstance.current.removeLayer(heatLayer.current); heatLayer.current = null; }
     var heatData = puntosFiltrados.map(function(p) { return [p.lat, p.lng, 1]; });
     if (heatData.length > 0 && window.L.heatLayer) {
       heatLayer.current = window.L.heatLayer(heatData, {
-        radius: 35, blur: 25, maxZoom: 16, max: 0.6, minOpacity: 0.4,
-        gradient: { 0.2: '#2196f3', 0.4: '#4caf50', 0.6: '#ffeb3b', 0.8: '#ff9800', 1.0: '#f44336' },
+        radius: radioCalorPx(mapInstance.current), blur: radioCalorPx(mapInstance.current) * 0.6,
+        maxZoom: 1, max: 3.33, minOpacity: 0.05,
+        gradient: GRADIENTE_CALOR,
       }).addTo(mapInstance.current);
     }
     puntosFiltrados.forEach(function(p) {
@@ -247,7 +314,7 @@ export default function MapaCalor({ user, onIniciarProyecto }) {
         </div>
         {filtros.incidencia_regional && (
           <div style={{ fontSize: 12, color: C.gray, marginBottom: 10 }}>
-            Homicidios (Acapulco): solo incluye casos con carpeta de investigación asignada. Los casos con C.I. pendiente no se muestran.
+            Homicidios (Acapulco): solo casos con carpeta de investigación.
           </div>
         )}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 10 }}>
@@ -290,13 +357,14 @@ export default function MapaCalor({ user, onIniciarProyecto }) {
         </div>
       )}
 
-      <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 16, fontSize: 13, color: C.gray }}>
-        <span style={{ fontWeight: 600 }}>Intensidad:</span>
-        <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><span style={{ width: 12, height: 12, borderRadius: 3, background: '#2196f3', display: 'inline-block' }} /> Baja</span>
-        <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><span style={{ width: 12, height: 12, borderRadius: 3, background: '#4caf50', display: 'inline-block' }} /> Media</span>
-        <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><span style={{ width: 12, height: 12, borderRadius: 3, background: '#ffeb3b', display: 'inline-block' }} /> Alta</span>
-        <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><span style={{ width: 12, height: 12, borderRadius: 3, background: '#ff9800', display: 'inline-block' }} /> Muy alta</span>
-        <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><span style={{ width: 12, height: 12, borderRadius: 3, background: '#f44336', display: 'inline-block' }} /> Crítica</span>
+      <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 18, fontSize: 14, color: C.gray, flexWrap: 'wrap' }} title="Casos juntos, a menos de unos 500 m uno de otro">
+        <span style={{ fontWeight: 600 }}>Concentración:</span>
+        {NIVELES_CALOR.map(function(n) { return (
+          <span key={n.label} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span style={{ width: 14, height: 14, borderRadius: 3, background: n.color, display: 'inline-block' }} />
+            <span><strong style={{ color: '#374151' }}>{n.label}</strong> · {n.casos}</span>
+          </span>
+        ); })}
       </div>
 
       <div style={{ marginTop: 16 }}>
@@ -319,45 +387,12 @@ export default function MapaCalor({ user, onIniciarProyecto }) {
 
         {showAnalisis && (
           <div style={{ background: C.white, borderRadius: '0 0 10px 10px', border: '1px solid #b6905440', borderTop: 'none', padding: 20 }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
-              <div>
-                <div style={{ fontSize: 15, fontWeight: 700, color: C.darkBlue, marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <MapPin size={14} color={C.gold} /> Incidencia por Municipio (Top 10)
-                </div>
-                {topMunicipios.length === 0 ? (
-                  <div style={{ fontSize: 14, color: C.gray, textAlign: 'center', padding: 20 }}>Sin datos</div>
-                ) : (
-                  topMunicipios.map(function(item, i) { var muni = item[0]; var count = item[1]; return (
-                    <div key={muni} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-                      <span style={{ fontSize: 13, fontWeight: 700, color: C.gray, minWidth: 18, textAlign: 'right' }}>#{i + 1}</span>
-                      <div style={{ flex: 1, position: 'relative', height: 24, backgroundColor: C.bg, borderRadius: 6, overflow: 'hidden' }}>
-                        <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: (count / maxMuni * 100) + '%', backgroundColor: i === 0 ? C.red : i < 3 ? C.orange : '#b6905480', borderRadius: 6 }} />
-                        <span style={{ position: 'relative', zIndex: 1, fontSize: 13, fontWeight: 600, color: C.darkBlue, padding: '0 8px', lineHeight: '24px' }}>{muni}</span>
-                      </div>
-                      <span style={{ fontSize: 15, fontWeight: 700, color: C.darkBlue, minWidth: 28, textAlign: 'right' }}>{count}</span>
-                    </div>
-                  ); })
-                )}
-              </div>
-              <div>
-                <div style={{ fontSize: 15, fontWeight: 700, color: C.darkBlue, marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <BarChart3 size={14} color={C.red} /> Incidencia por Tipo de Delito (Top 10)
-                </div>
-                {topDelitos.length === 0 ? (
-                  <div style={{ fontSize: 14, color: C.gray, textAlign: 'center', padding: 20 }}>Sin datos</div>
-                ) : (
-                  topDelitos.map(function(item, i) { var delito = item[0]; var count = item[1]; return (
-                    <div key={delito} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-                      <span style={{ fontSize: 13, fontWeight: 700, color: C.gray, minWidth: 18, textAlign: 'right' }}>#{i + 1}</span>
-                      <div style={{ flex: 1, position: 'relative', height: 24, backgroundColor: C.bg, borderRadius: 6, overflow: 'hidden' }}>
-                        <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: (count / maxDelito * 100) + '%', backgroundColor: i === 0 ? '#b71c1c' : i < 3 ? C.red : '#fd7e1480', borderRadius: 6 }} />
-                        <span style={{ position: 'relative', zIndex: 1, fontSize: 12, fontWeight: 600, color: C.darkBlue, padding: '0 8px', lineHeight: '24px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'block', maxWidth: '80%' }}>{delito}</span>
-                      </div>
-                      <span style={{ fontSize: 15, fontWeight: 700, color: C.darkBlue, minWidth: 28, textAlign: 'right' }}>{count}</span>
-                    </div>
-                  ); })
-                )}
-              </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 24 }}>
+              <RankingBarras titulo="Incidencia por Municipio (Top 10)" icono={<MapPin size={14} color={C.gold} />} items={topMunicipios} />
+              <RankingBarras titulo="Incidencia por Colonia (Top 10)" icono={<MapPin size={14} color={C.gold} />} items={topSectores} />
+            </div>
+            <div style={{ marginTop: 22 }}>
+              <RankingBarras titulo="Incidencia por Tipo de Delito (Top 10)" icono={<BarChart3 size={14} color={C.red} />} items={topDelitos} />
             </div>
 
             {puntosFiltrados.length > 0 && (
@@ -369,6 +404,7 @@ export default function MapaCalor({ user, onIniciarProyecto }) {
                   {filtroMunicipio ? ' en ' + filtroMunicipio : ''}
                   {filtroDelito ? ' del tipo "' + filtroDelito + '"' : ''}.
                   {topMunicipios.length > 0 && <span> El municipio con mayor incidencia es <strong>{topMunicipios[0][0]}</strong> con {topMunicipios[0][1]} evento{topMunicipios[0][1] > 1 ? 's' : ''}.</span>}
+                  {topSectores.length > 0 && <span> La colonia con mayor incidencia es <strong>{topSectores[0][0]}</strong> con {topSectores[0][1]} evento{topSectores[0][1] > 1 ? 's' : ''}.</span>}
                   {topDelitos.length > 0 && <span> El delito más frecuente es <strong>{topDelitos[0][0]}</strong> con {topDelitos[0][1]} registro{topDelitos[0][1] > 1 ? 's' : ''}.</span>}
                 </div>
               </div>
