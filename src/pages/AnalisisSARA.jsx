@@ -14,6 +14,10 @@ import TrianguloProblema from './TrianguloProblema';
 import ChecklistCHEERS from './ChecklistCHEERS';
 const COLORS = { primary: '#001a4d', gold: '#b69054', white: '#ffffff' };
 
+// Interruptor del Mapa de Calor: false = el botón y el mapa no aparecen (p. ej. durante el demo); true = se muestran.
+// No borra ningún dato: solo oculta la herramienta. Para activarlo, cambia false por true y sube el archivo.
+const MOSTRAR_MAPA_CALOR = true;
+
 const cardStyle = {
   background: COLORS.white, borderRadius: 10, padding: 18,
   boxShadow: '0 2px 8px rgba(0,0,0,0.07)', marginBottom: 14
@@ -648,13 +652,17 @@ const [showMapa, setShowMapa] = useState(false);
         </div>
       )}
 
-{/* Mapa de Calor */}
-      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 10 }}>
-        <button onClick={() => setShowMapa(!showMapa)} style={{ ...btnSecondary, padding: '12px 20px', fontSize: 15 }}>
-          <MapPin size={15} /> {showMapa ? 'Ocultar Mapa de Calor' : 'Mapa de Calor'}
-        </button>
-      </div>
-      {showMapa && <MapaCalor user={user} onIniciarProyecto={handleIniciarDesdeCheers} />}
+{/* Mapa de Calor (se muestra solo si MOSTRAR_MAPA_CALOR = true) */}
+      {MOSTRAR_MAPA_CALOR && (
+        <>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 10 }}>
+            <button onClick={() => setShowMapa(!showMapa)} style={{ ...btnSecondary, padding: '12px 20px', fontSize: 15 }}>
+              <MapPin size={15} /> {showMapa ? 'Ocultar Mapa de Calor' : 'Mapa de Calor'}
+            </button>
+          </div>
+          {showMapa && <MapaCalor user={user} onIniciarProyecto={handleIniciarDesdeCheers} />}
+        </>
+      )}
       <ChecklistCHEERS onIniciarProyecto={handleIniciarDesdeCheers} />
 <TrianguloProblema />
       {vista === 'listado' && renderListado()}
