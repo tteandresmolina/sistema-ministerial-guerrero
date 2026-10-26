@@ -8,6 +8,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 import { Users, User, MapPin, Shield, Target, AlertTriangle, RefreshCw, ChevronDown, ChevronUp, BarChart3 } from 'lucide-react';
+import NotaUso from './NotaUso';
 
 const C = {
   darkBlue: '#001a4d', gold: '#b69054', lightGold: '#f5ede0',
@@ -120,9 +121,7 @@ export default function TrianguloProblema() {
         </button>
       </div>
 
-      <p style={{ fontSize: 14, color: C.gray, marginBottom: 16 }}>
-        Teoría de la Actividad Rutinaria (Cohen & Felson): un delito ocurre cuando convergen un <strong>agresor motivado</strong>, una <strong>víctima vulnerable</strong> y un <strong>lugar propicio</strong> sin vigilancia adecuada. Identificar patrones en cada vértice permite diseñar intervenciones focalizadas.
-      </p>
+      <NotaUso objetivo="Ver dónde coinciden víctimas, agresores y lugares de un mismo problema, para elegir dónde intervenir." uso="Se llena solo con los casos capturados en el sistema; no requiere captura aparte." />
 
       {/* Stats generales */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 14, marginBottom: 20 }}>
