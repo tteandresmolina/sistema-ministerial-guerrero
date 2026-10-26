@@ -102,7 +102,7 @@ const km1 = (m) => (Math.round(m / 100) / 10).toFixed(1);
 
 const btn = { borderRadius: 7, padding: '10px 16px', fontSize: 14, fontWeight: 700, cursor: 'pointer', minHeight: 44, display: 'inline-flex', alignItems: 'center', gap: 6, justifyContent: 'center' };
 
-export default function ZonasAtencion({ puntos, seleccionada, onSeleccionar, onIniciarProyecto }) {
+export default function ZonasAtencion({ puntos, seleccionada, onSeleccionar, onIniciarProyecto, onZonas }) {
   const [km, setKm] = useState(2);
   const [sinUbicar, setSinUbicar] = useState(null);
 
@@ -116,13 +116,19 @@ export default function ZonasAtencion({ puntos, seleccionada, onSeleccionar, onI
 
   const { focos, aislados } = calcularFocos(puntos, km * 1000, MIN_CASOS);
 
+  // Avisa al mapa qué zonas hay para que las marque siempre (solo cuando cambian)
+  const firma = km + '|' + focos.map((f) => f.clave + ':' + f.n).join(',');
+  useEffect(() => {
+    if (onZonas) onZonas(focos.map((f, i) => ({ clave: f.clave, numero: i + 1, n: f.n, centro: f.centro, radioM: f.radioM })));
+  }, [firma]);
+
   const cambiarDistancia = (k) => { setKm(k); if (onSeleccionar) onSeleccionar(null); };
 
   const iniciar = (f) => {
     const zona = textoZona(f);
     const periodo = f.desde && f.hasta ? 'Del ' + fechaLarga(f.desde) + ' al ' + fechaLarga(f.hasta) : '';
     const patron = f.n + ' casos agrupados en un radio aproximado de ' + km1(f.radioM) + ' km.'
-      + (f.delito ? ' Delito más frecuente: ' + f.delito.valor + ' (' + f.delito.n + ').' : '');
+      + (f.delito && f.delito.n >= 2 ? ' Delito más frecuente: ' + f.delito.valor + ' (' + f.delito.n + ').' : '');
     onIniciarProyecto({
       problema: 'Homicidios dolosos — ' + zona,
       zona: zona + ', Acapulco',
@@ -184,7 +190,9 @@ export default function ZonasAtencion({ puntos, seleccionada, onSeleccionar, onI
                 <div style={{ fontSize: 14, color: C.gray, marginTop: 4 }}>
                   Radio aprox. {km1(f.radioM)} km · {textoRango(f)}{f.porSemana ? ' · ≈ ' + f.porSemana + ' por semana' : ''}
                 </div>
-                {f.delito && <div style={{ fontSize: 13, color: C.gray, marginTop: 4 }}>Más frecuente: {f.delito.valor} ({f.delito.n})</div>}
+                {f.delito && f.delito.n >= 2
+                  ? <div style={{ fontSize: 13, color: C.gray, marginTop: 4 }}>Más frecuente: {f.delito.valor} ({f.delito.n})</div>
+                  : <div style={{ fontSize: 13, color: C.gray, marginTop: 4 }}>Sin delito predominante: cada caso es de un tipo distinto</div>}
                 <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 12 }}>
                   <button onClick={() => onSeleccionar && onSeleccionar(activa ? null : { clave: f.clave, centro: f.centro, radioM: f.radioM, miembros: f.miembros.map((m) => ({ lat: m.lat, lng: m.lng })) })}
                     style={{ ...btn, background: activa ? C.guinda : 'transparent', color: activa ? C.white : C.guinda, border: '2px solid ' + C.guinda }}>
