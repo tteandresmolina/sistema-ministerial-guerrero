@@ -13,6 +13,7 @@ import MapaCalor from './MapaCalor';
 import TrianguloProblema from './TrianguloProblema';
 import ChecklistCHEERS from './ChecklistCHEERS';
 import NotaUso from './NotaUso';
+import ErrorPestana from './ErrorPestana';
 const COLORS = { primary: '#001a4d', gold: '#b69054', white: '#ffffff' };
 
 // Interruptor del Mapa de Calor: false = el botón y el mapa no aparecen (p. ej. durante el demo); true = se muestran.
@@ -673,13 +674,13 @@ const [tab, setTab] = useState(MOSTRAR_MAPA_CALOR ? 'mapa' : 'plan');
         <div style={{ fontSize: 15, color: '#6b7280' }}>Dónde y cuándo ocurre el delito, y qué hacemos al respecto.</div>
       </div>
 
-      {/* Pestañas horizontales, como en Expediente Policial y Detenidos */}
-      <div role="tablist" style={{ display: 'flex', gap: 4, overflowX: 'auto', borderBottom: '2px solid #e5e7eb', marginBottom: 14 }}>
+      {/* Botones de sección con el mismo estilo que Detenidos y Víctimas y Testigos */}
+      <div role="tablist" style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 18 }}>
         {TABS.map((t) => {
           const Icono = t.icon; const activa = tab === t.key;
           return (
             <button key={t.key} role="tab" aria-selected={activa} onClick={() => abrirTab(t.key)}
-              style={{ background: 'none', border: 'none', borderBottom: activa ? '3px solid ' + COLORS.gold : '3px solid transparent', marginBottom: -2, padding: '12px 18px', minHeight: 44, cursor: 'pointer', fontSize: 15, fontWeight: activa ? 800 : 600, color: activa ? COLORS.primary : '#6b7280', display: 'inline-flex', alignItems: 'center', gap: 8, whiteSpace: 'nowrap' }}>
+              style={{ padding: '10px 20px', borderRadius: 8, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, minHeight: 44, border: activa ? '2px solid #b69054' : '1px solid #e8ecf1', background: activa ? '#f5ede0' : '#ffffff', color: activa ? '#001a4d' : '#666666', fontSize: 16, fontWeight: 700 }}>
               <Icono size={16} /> {t.label}
             </button>
           );
@@ -692,28 +693,30 @@ const [tab, setTab] = useState(MOSTRAR_MAPA_CALOR ? 'mapa' : 'plan');
           {tab === 'panel'
             ? <NotaUso objetivo="Comparar qué municipios, colonias y delitos tienen más incidencia." uso="Usa los mismos filtros del mapa; las gráficas cambian al instante." />
             : <NotaUso objetivo="Ver dónde se concentran los homicidios y qué zonas requieren atención prioritaria." uso="Elige fechas o delito en los filtros y presiona una zona para verla en el mapa." />}
-          <MapaCalor user={user} seccion={tab === 'panel' ? 'panel' : 'mapa'} onIniciarProyecto={handleIniciarDesdeCheers} />
+          <ErrorPestana>
+            <MapaCalor user={user} seccion={tab === 'panel' ? 'panel' : tab === 'mapa' ? 'mapa' : 'oculto'} onIniciarProyecto={handleIniciarDesdeCheers} />
+          </ErrorPestana>
         </div>
       )}
 
       {visitadas.cheers && (
         <div style={{ display: tab === 'cheers' ? 'block' : 'none' }}>
-          <ChecklistCHEERS onIniciarProyecto={handleIniciarDesdeCheers} />
+          <ErrorPestana><ChecklistCHEERS onIniciarProyecto={handleIniciarDesdeCheers} /></ErrorPestana>
         </div>
       )}
       {visitadas.triangulo && (
         <div style={{ display: tab === 'triangulo' ? 'block' : 'none' }}>
-          <TrianguloProblema />
+          <ErrorPestana><TrianguloProblema /></ErrorPestana>
         </div>
       )}
 
       {tab === 'plan' && (
-        <>
+        <ErrorPestana>
           {vista === 'listado' && <NotaUso objetivo="Documentar y dar seguimiento a lo que se hará en una zona." uso="Se abre desde una zona del mapa o desde el checklist, y avanza en 4 pasos: Identificar, Analizar, Responder y Evaluar (método SARA)." />}
           {vista === 'listado' && renderListado()}
           {vista === 'nuevo' && renderFormNuevo()}
           {vista === 'detalle' && renderDetalle()}
-        </>
+        </ErrorPestana>
       )}
 
       {loading && (
