@@ -142,6 +142,12 @@ export default function MapaCalor({ user }) {
 
   useEffect(function() {
     if (!leafletReady || !mapRef.current || !window.L) return;
+    // Si el contenedor del mapa se volvió a crear (p. ej. tras "Actualizar" o tras importar), el mapa
+    // anterior quedó pegado a un nodo que ya no existe: se descarta y se arma de nuevo sobre el actual.
+    if (mapInstance.current && mapInstance.current.getContainer() !== mapRef.current) {
+      try { mapInstance.current.remove(); } catch (e) { /* el nodo ya no existe */ }
+      mapInstance.current = null; layerGroup.current = null; heatLayer.current = null;
+    }
     if (!mapInstance.current) {
       mapInstance.current = window.L.map(mapRef.current, { center: [17.4, -99.5], zoom: 8, scrollWheelZoom: true });
       window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap', maxZoom: 18 }).addTo(mapInstance.current);
@@ -196,7 +202,7 @@ export default function MapaCalor({ user }) {
         </div>
       </div>
 
-      {user && user.rol === 'mando' && <ImportarIncidenciaRegional perfil={user} onImportado={cargarDatos} />}
+      {user && user.rol === 'mando' && <ImportarIncidenciaRegional perfil={user} onImportado={cargarDatos} leafletListo={leafletReady} />}
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: 10, marginBottom: 14 }}>
         <div style={{ background: C.white, borderRadius: 10, padding: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.08)', textAlign: 'center' }}>
