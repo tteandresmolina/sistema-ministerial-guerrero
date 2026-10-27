@@ -203,7 +203,7 @@ function BarraMedios({ porMedio, total }) {
   );
 }
 
-function ColumnasSimples({ items, subtitulos }) {
+function ColumnasSimples({ items, subtitulos, resaltadas }) {
   var max = Math.max.apply(null, items.map(function(i) { return i[1]; }).concat([1]));
   return (
     <div>
@@ -211,7 +211,7 @@ function ColumnasSimples({ items, subtitulos }) {
         {items.map(function(it) { return (
           <div key={it[0]} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-end', height: '100%' }}>
             <span style={{ fontSize: 22, fontWeight: 800, color: '#374151', marginBottom: 4 }}>{it[1]}</span>
-            <div style={{ width: '100%', maxWidth: 80, height: (it[1] / max * 74) + '%', minHeight: 5, background: '#b98386', borderRadius: '5px 5px 0 0' }} />
+            <div style={{ width: '100%', maxWidth: 80, height: (it[1] / max * 74) + '%', minHeight: 5, background: resaltadas && !resaltadas[items.indexOf(it)] ? '#e3d3d4' : '#b98386', borderRadius: '5px 5px 0 0' }} />
           </div>
         ); })}
       </div>
@@ -450,21 +450,29 @@ export default function MapaCalor({ user, onIniciarProyecto, onImportar, seccion
     var diasMes = new Date(Date.UTC(Number(k.slice(0, 4)), Number(k.slice(5, 7)), 0)).getUTCDate();
     var ultimo = i === arr.length - 1;
     var dias = ultimo ? Math.min(diasMes, Number(histFin.slice(8, 10))) : diasMes;
-    return { nombre: nombreMes(k).split(' ')[0], n: porMesHist[k], dias: dias, parcial: ultimo && dias < diasMes };
+    return { clave: k, nombre: nombreMes(k).split(' ')[0], n: porMesHist[k], dias: dias, parcial: ultimo && dias < diasMes };
   });
   const cambioRitmo = mesesHist.length >= 2 ? (function() {
     var a = mesesHist[mesesHist.length - 2], b = mesesHist[mesesHist.length - 1];
     return { pct: Math.round(((b.n / b.dias) / (a.n / a.dias) - 1) * 100), contra: a.nombre, actual: b };
   })() : null;
+  // La línea por semana sigue el periodo elegido; sin periodo muestra todo el historial
+  const hayFechas = !!(fechaDesde || fechaHasta);
+  const semIni = hayFechas ? (fechaDesde && fechaDesde >= histIni ? fechaDesde : histIni) : histIni;
+  const semFin = hayFechas ? (fechaHasta && fechaHasta < histFin ? fechaHasta : histFin) : histFin;
   let semHist = [], ultimaSemanaParcial = false;
-  if (histIni) {
-    var nSem = Math.floor((Date.parse(histFin) - Date.parse(histIni)) / (7 * DIAH)) + 1;
+  if (semIni && semFin && semIni <= semFin) {
+    var nSem = Math.floor((Date.parse(semFin) - Date.parse(semIni)) / (7 * DIAH)) + 1;
     var cs = []; for (var q = 0; q < nSem; q++) cs.push(0);
-    histFechas.forEach(function(d) { var i = Math.floor((Date.parse(d) - Date.parse(histIni)) / (7 * DIAH)); if (i >= 0 && i < nSem) cs[i]++; });
+    histFechas.forEach(function(d) { if (d < semIni || d > semFin) return; var i = Math.floor((Date.parse(d) - Date.parse(semIni)) / (7 * DIAH)); if (i >= 0 && i < nSem) cs[i]++; });
     var abr = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
-    semHist = cs.map(function(n, i) { var f = new Date(Date.parse(histIni) + 7 * i * DIAH); return [f.getUTCDate() + ' ' + abr[f.getUTCMonth()], n]; }).slice(-26);
-    ultimaSemanaParcial = (Math.floor((Date.parse(histFin) - Date.parse(histIni)) / DIAH) % 7) < 6;
+    semHist = cs.map(function(n, i) { var f = new Date(Date.parse(semIni) + 7 * i * DIAH); return [f.getUTCDate() + ' ' + abr[f.getUTCMonth()], n]; }).slice(-26);
+    ultimaSemanaParcial = (Math.floor((Date.parse(semFin) - Date.parse(semIni)) / DIAH) % 7) < 6 && (!fechaHasta || fechaHasta >= histFin);
   }
+  const maxSem = Math.max.apply(null, semHist.map(function(x) { return x[1]; }).concat([0]));
+  const nPicos = semHist.filter(function(x) { return x[1] === maxSem && maxSem > 0; }).length;
+  // Meses que caen dentro del periodo elegido (se resaltan en las columnas por mes)
+  const mesesResaltados = hayFechas ? mesesHist.map(function(m) { return m.clave >= (fechaDesde || '0000-00').slice(0, 7) && m.clave <= (fechaHasta || '9999-99').slice(0, 7); }) : null;
 
   // Periodo, ritmo y serie en el tiempo
   const fechasAn = puntosAnalisis.map(function(p) { return p.fecha ? String(p.fecha).slice(0, 10) : ''; }).filter(Boolean).sort();
@@ -798,19 +806,23 @@ export default function MapaCalor({ user, onIniciarProyecto, onImportar, seccion
 
               <div style={{ marginTop: 32, paddingTop: 22, borderTop: '2px solid #b6905440' }}>
                 <div style={{ fontSize: 22, fontWeight: 800, color: C.darkBlue, marginBottom: 4 }}>Cómo ha cambiado</div>
-                <div style={{ fontSize: 16, color: C.gray, marginBottom: 14 }}>Todo el historial cargado. No cambia con las fechas del filtro, sí con el delito y el municipio.</div>
-                {semHist.length > 0 && (
-                  <div>
-                    <div style={{ fontSize: 20, fontWeight: 700, color: C.darkBlue, marginBottom: 6 }}>Casos por semana</div>
-                    <LineaHistorica items={semHist} />
-                    <div style={{ fontSize: 15, color: C.gray, marginTop: 4 }}>El aro dorado marca la semana con más casos.{ultimaSemanaParcial ? ' La última semana puede estar incompleta.' : ''}</div>
-                  </div>
-                )}
+                <div style={{ fontSize: 16, color: C.gray, marginBottom: 14 }}>La línea sigue el periodo que elijas. Las columnas por mes muestran todo el historial y resaltan el mes elegido.</div>
+                <div>
+                  <div style={{ fontSize: 20, fontWeight: 700, color: C.darkBlue, marginBottom: 6 }}>Casos por semana · {hayFechas ? textoPeriodo : 'todo el historial'}</div>
+                  {semHist.length > 0 ? (
+                    <>
+                      <LineaHistorica items={semHist} />
+                      <div style={{ fontSize: 15, color: C.gray, marginTop: 4 }}>{nPicos > 1 ? 'El aro dorado marca las semanas con más casos (' + maxSem + ').' : 'El aro dorado marca la semana con más casos (' + maxSem + ').'}{ultimaSemanaParcial ? ' La última semana puede estar incompleta.' : ''}</div>
+                    </>
+                  ) : (
+                    <div style={{ fontSize: 17, color: C.gray, padding: '16px 0' }}>No hay casos en el periodo elegido.</div>
+                  )}
+                </div>
                 <div style={{ marginTop: 26, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 28 }}>
                   {mesesHist.length > 0 && (
                     <div>
                       <div style={{ fontSize: 20, fontWeight: 700, color: C.darkBlue, marginBottom: 10 }}>Casos por mes</div>
-                      <ColumnasSimples items={mesesHist.map(function(m) { return [m.nombre, m.n]; })} subtitulos={mesesHist.map(function(m) { return m.parcial ? 'hasta el ' + Number(histFin.slice(8, 10)) : null; })} />
+                      <ColumnasSimples items={mesesHist.map(function(m) { return [m.nombre, m.n]; })} subtitulos={mesesHist.map(function(m) { return m.parcial ? 'hasta el ' + Number(histFin.slice(8, 10)) : null; })} resaltadas={mesesResaltados} />
                     </div>
                   )}
                   <RankingBarras titulo="Colonias con más casos" icono={<MapPin size={20} color={C.gold} />} items={topSectores.slice(0, 8)} />
