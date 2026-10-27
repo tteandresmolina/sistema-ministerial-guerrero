@@ -23,7 +23,7 @@ const FUENTES = [
   { key: 'escenas_crimen', label: 'Procesamiento del Lugar', color: '#fd7e14', lat: 'coordenadas_lat', lng: 'coordenadas_lng', fecha: 'fecha_procesamiento', delito: 'tipo_escena', muni: 'municipio', desc: 'descripcion_escena' },
   { key: 'detenidos', label: 'Detenidos', color: '#001a4d', lat: 'latitud', lng: 'longitud', fecha: 'fecha_deteccion', delito: 'delito', muni: 'region', desc: 'lugar_deteccion' },
   { key: 'oficios_investigacion', label: 'Oficios de Investigación', color: '#b69054', lat: 'coordenadas_lat', lng: 'coordenadas_lng', fecha: 'fecha_emision', delito: 'delito', muni: 'municipio', desc: 'lugar_hechos' },
-  { key: 'incidencia_regional', label: 'Homicidios dolosos', color: '#8b1e1e', lat: 'coordenadas_lat', lng: 'coordenadas_lng', fecha: 'fecha', delito: 'delito', muni: 'zona', desc: 'lugar_hechos', region: 'region', hora: 'hora_conocimiento', conf: 'ubicacion_confirmada' },
+  { key: 'incidencia_regional', label: 'Homicidios dolosos', color: '#8b1e1e', lat: 'coordenadas_lat', lng: 'coordenadas_lng', fecha: 'fecha', delito: 'delito', muni: 'zona', desc: 'lugar_hechos', region: 'region', hora: 'hora_conocimiento', conf: 'ubicacion_confirmada', arma: 'arma_calibre' },
 ];
 
 // Las fuentes se muestran en dos grupos: lo que se captura en el sistema (por C.I.) y la estadística regional que llega en Excel
@@ -99,8 +99,8 @@ function colorSuave(valor, max) {
 }
 
 // Ranking en barras: la etiqueta completa va arriba de la barra para que siempre se lea
-function RankingBarras({ titulo, icono, items }) {
-  var max = items.length > 0 ? items[0][1] : 1;
+function RankingBarras({ titulo, icono, items, numerar }) {
+  var max = items.length > 0 ? Math.max.apply(null, items.map(function(i) { return i[1]; })) : 1;
   return (
     <div>
       <div style={{ fontSize: 15, fontWeight: 700, color: C.darkBlue, marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 }}>{icono} {titulo}</div>
@@ -110,7 +110,7 @@ function RankingBarras({ titulo, icono, items }) {
         items.map(function(item, i) { return (
           <div key={item[0]} style={{ marginBottom: 10 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, fontSize: 14, fontWeight: 600, color: '#1f2937', lineHeight: 1.3 }}>
-              <span><span style={{ color: C.gray, fontWeight: 700 }}>#{i + 1}</span> {item[0]}</span>
+              <span>{numerar !== false && <span style={{ color: C.gray, fontWeight: 700 }}>#{i + 1} </span>}{item[0]}</span>
               <span style={{ fontWeight: 800, fontSize: 15 }}>{item[1]}</span>
             </div>
             <div style={{ height: 10, background: C.bg, borderRadius: 5, overflow: 'hidden', marginTop: 4 }}>
@@ -167,6 +167,13 @@ function loadCSS(href) {
   document.head.appendChild(l);
 }
 
+function nombreMes(k) {
+  var m = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+  var p = String(k).split('-');
+  var n = m[Number(p[1]) - 1] || p[1];
+  return n.charAt(0).toUpperCase() + n.slice(1) + ' ' + p[0];
+}
+
 export default function MapaCalor({ user, onIniciarProyecto, onImportar, seccion = 'mapa' }) {
   const mapRef = useRef(null);
   const [zonas, setZonas] = useState([]); // zonas de atención calculadas por el panel (se marcan siempre en el mapa)
@@ -178,6 +185,7 @@ export default function MapaCalor({ user, onIniciarProyecto, onImportar, seccion
   const layerGroup = useRef(null);
   const heatLayer = useRef(null);
   const [puntos, setPuntos] = useState([]);
+  const [sinUbicar, setSinUbicar] = useState([]); // casos regionales sin coordenadas: no van al mapa, sí al panel de análisis
   const [loading, setLoading] = useState(true);
   const [leafletReady, setLeafletReady] = useState(false);
 
@@ -205,17 +213,18 @@ export default function MapaCalor({ user, onIniciarProyecto, onImportar, seccion
     const porFuente = {};
     const delitos = new Set();
     const municipios = new Set();
+    let listaSinUbicar = [];
 
     for (const f of FUENTES) {
       const campos = f.lat + ', ' + f.lng + ', ' + f.fecha + ', ' + f.delito + ', ' + f.muni + ', ' + f.desc + (f.region ? ', ' + f.region : '');
-      let resp = await supabase.from(f.key).select(campos + (f.hora ? ', ' + f.hora : '') + (f.conf ? ', ' + f.conf : '')).not(f.lat, 'is', null).not(f.lng, 'is', null);
+      let resp = await supabase.from(f.key).select(campos + (f.hora ? ', ' + f.hora : '') + (f.conf ? ', ' + f.conf : '') + (f.arma ? ', ' + f.arma : '')).not(f.lat, 'is', null).not(f.lng, 'is', null);
       // Si la columna opcional de hora todavía no existe en la base, se reintenta sin ella: el mapa nunca debe quedar vacío
-      if (resp.error && (f.hora || f.conf)) resp = await supabase.from(f.key).select(campos).not(f.lat, 'is', null).not(f.lng, 'is', null);
+      if (resp.error && (f.hora || f.conf || f.arma)) resp = await supabase.from(f.key).select(campos).not(f.lat, 'is', null).not(f.lng, 'is', null);
       const data = resp.data;
       const coords = (data || []).map(function(r) {
         return {
           lat: parseFloat(r[f.lat]), lng: parseFloat(r[f.lng]), fuente: f.key,
-          fecha: r[f.fecha] || '', delito: r[f.delito] || '', municipio: f.key === 'incidencia_regional' ? municipioDeSector(r[f.muni], r[f.region]) : (r[f.muni] || ''), sector: f.key === 'incidencia_regional' ? (r[f.muni] || '') : '', region: f.region ? (r[f.region] || '') : '', hora: f.hora ? String(r[f.hora] || '').slice(0, 5) : '', confirmada: f.conf ? r[f.conf] : null,
+          fecha: r[f.fecha] || '', delito: r[f.delito] || '', municipio: f.key === 'incidencia_regional' ? municipioDeSector(r[f.muni], r[f.region]) : (r[f.muni] || ''), sector: f.key === 'incidencia_regional' ? (r[f.muni] || '') : '', region: f.region ? (r[f.region] || '') : '', hora: f.hora ? String(r[f.hora] || '').slice(0, 5) : '', confirmada: f.conf ? r[f.conf] : null, arma: f.arma ? String(r[f.arma] || '').trim().toUpperCase() : '',
           descripcion: r[f.desc] || '', label: f.label, color: f.color,
         };
       }).filter(function(p) { return !isNaN(p.lat) && !isNaN(p.lng) && p.lat !== 0 && p.lng !== 0; });
@@ -224,11 +233,31 @@ export default function MapaCalor({ user, onIniciarProyecto, onImportar, seccion
         if (c.delito) delitos.add(c.delito.toUpperCase());
         if (c.municipio) municipios.add(c.municipio);
       });
+      if (f.key === 'incidencia_regional') {
+        // Casos del reporte regional que aún no tienen coordenadas: no se dibujan en el mapa, pero sí cuentan en el panel de análisis
+        const base = f.fecha + ', ' + f.delito + ', ' + f.muni + ', ' + f.desc + ', ' + f.region;
+        const filtroSU = f.lat + '.is.null,' + f.lng + '.is.null';
+        let su = await supabase.from(f.key).select(base + ', ' + f.hora + ', ' + f.arma).or(filtroSU);
+        if (su.error) su = await supabase.from(f.key).select(base).or(filtroSU);
+        listaSinUbicar = (su.data || []).map(function(r) {
+          return {
+            lat: null, lng: null, sinUbicar: true, fuente: f.key, fecha: r[f.fecha] || '', delito: r[f.delito] || '',
+            municipio: municipioDeSector(r[f.muni], r[f.region]), sector: r[f.muni] || '', region: r[f.region] || '',
+            hora: r[f.hora] ? String(r[f.hora]).slice(0, 5) : '', arma: r[f.arma] ? String(r[f.arma]).trim().toUpperCase() : '',
+            descripcion: r[f.desc] || '', label: f.label, color: f.color,
+          };
+        });
+        listaSinUbicar.forEach(function(c) {
+          if (c.delito) delitos.add(c.delito.toUpperCase());
+          if (c.municipio) municipios.add(c.municipio);
+        });
+      }
       porFuente[f.key] = coords.length;
       todos.push.apply(todos, coords);
     }
 
     setPuntos(todos);
+    setSinUbicar(listaSinUbicar);
     setStats({ total: todos.length, por_fuente: porFuente });
     setDelitosUnicos(Array.from(delitos).sort());
     setMunicipiosUnicos(Array.from(municipios).sort());
@@ -249,7 +278,15 @@ export default function MapaCalor({ user, onIniciarProyecto, onImportar, seccion
   const analysisPorMunicipio = {};
   const analysisPorDelito = {};
   const analysisPorSector = {};
-  puntosFiltrados.forEach(function(p) {
+  const analysisPorArma = {};
+  const analysisPorMes = {};
+  // El panel cuenta todos los casos, con o sin ubicación; el mapa solo dibuja los ubicados
+  const sinUbicarFiltrados = sinUbicar.filter(function(p) { return filtros[p.fuente] && pasaFiltros(p); });
+  const puntosAnalisis = puntosFiltrados.concat(sinUbicarFiltrados);
+  puntosAnalisis.forEach(function(p) {
+    if (p.arma) analysisPorArma[p.arma] = (analysisPorArma[p.arma] || 0) + 1;
+    var mk = p.fecha ? String(p.fecha).slice(0, 7) : '';
+    if (mk) analysisPorMes[mk] = (analysisPorMes[mk] || 0) + 1;
     var m = p.municipio || 'Sin municipio';
     analysisPorMunicipio[m] = (analysisPorMunicipio[m] || 0) + 1;
     var d = p.delito || 'Sin tipificar';
@@ -259,6 +296,8 @@ export default function MapaCalor({ user, onIniciarProyecto, onImportar, seccion
   const topMunicipios = Object.entries(analysisPorMunicipio).sort(function(a, b) { return b[1] - a[1]; }).slice(0, 10);
   const topDelitos = Object.entries(analysisPorDelito).sort(function(a, b) { return b[1] - a[1]; }).slice(0, 10);
   const topSectores = Object.entries(analysisPorSector).sort(function(a, b) { return b[1] - a[1]; }).slice(0, 10);
+  const topArmas = Object.entries(analysisPorArma).sort(function(a, b) { return b[1] - a[1]; }).slice(0, 10);
+  const casosPorMes = Object.keys(analysisPorMes).sort().map(function(k) { return [nombreMes(k), analysisPorMes[k]]; });
 
   useEffect(function() {
     if (!leafletReady || !mapRef.current || !window.L) return;
@@ -473,6 +512,11 @@ export default function MapaCalor({ user, onIniciarProyecto, onImportar, seccion
         <span style={{ color: '#8b1e1e', fontWeight: 600 }}>Resplandor: solo en zonas de atención prioritaria</span>
         <span style={{ color: '#001a4d', fontWeight: 600 }}>El número en cada punto es el orden cronológico (1 = el más antiguo del periodo mostrado)</span>
       </div>
+      {sinUbicarFiltrados.length > 0 && (
+        <div style={{ marginTop: 8, fontSize: 15, color: '#7a4b00', background: '#fff8e1', border: '1px solid #f0d58a', borderRadius: 8, padding: '8px 12px' }}>
+          <strong>{sinUbicarFiltrados.length} caso{sinUbicarFiltrados.length > 1 ? 's' : ''} sin ubicación</strong> no aparece{sinUbicarFiltrados.length > 1 ? 'n' : ''} en el mapa, pero sí cuenta{sinUbicarFiltrados.length > 1 ? 'n' : ''} en el panel de análisis. Para ubicarlos, usa la pestaña Importar.
+        </div>
+      )}
 
       <div style={{ marginTop: 10 }}>
         <ReglaMapa obtenerMapa={function() { return mapInstance.current; }} />
@@ -500,18 +544,26 @@ export default function MapaCalor({ user, onIniciarProyecto, onImportar, seccion
             <div style={{ marginTop: 22 }}>
               <RankingBarras titulo="Incidencia por Tipo de Delito (Top 10)" icono={<BarChart3 size={14} color={C.red} />} items={topDelitos} />
             </div>
+            <div style={{ marginTop: 22, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 24 }}>
+              <div>
+                <RankingBarras titulo="Casos por mes" icono={<Clock size={14} color={C.gold} />} items={casosPorMes} numerar={false} />
+                {casosPorMes.length > 1 && <div style={{ fontSize: 13, color: C.gray, marginTop: 4 }}>El mes más reciente puede estar incompleto.</div>}
+              </div>
+              <RankingBarras titulo="Arma o calibre (Top 10)" icono={<BarChart3 size={14} color={C.red} />} items={topArmas} />
+            </div>
 
-            {puntosFiltrados.length > 0 && (
+            {puntosAnalisis.length > 0 && (
               <div style={{ marginTop: 16, padding: 14, backgroundColor: C.lightGold, borderRadius: 8, border: '1px solid #b6905440' }}>
                 <div style={{ fontSize: 14, fontWeight: 700, color: C.gold, textTransform: 'uppercase', marginBottom: 6 }}>Resumen de Inteligencia</div>
                 <div style={{ fontSize: 15, color: C.darkBlue, lineHeight: 1.7 }}>
-                  Se analizaron <strong>{puntosFiltrados.length}</strong> incidentes
+                  Se analizaron <strong>{puntosAnalisis.length}</strong> incidentes
                   {fechaDesde && fechaHasta ? ' entre ' + fechaDesde + ' y ' + fechaHasta : fechaDesde ? ' desde ' + fechaDesde : fechaHasta ? ' hasta ' + fechaHasta : ''}
                   {filtroMunicipio ? ' en ' + filtroMunicipio : ''}
                   {filtroDelito ? ' del tipo "' + filtroDelito + '"' : ''}.
                   {topMunicipios.length > 0 && <span> El municipio con mayor incidencia es <strong>{topMunicipios[0][0]}</strong> con {topMunicipios[0][1]} evento{topMunicipios[0][1] > 1 ? 's' : ''}.</span>}
                   {topSectores.length > 0 && <span> La colonia con mayor incidencia es <strong>{topSectores[0][0]}</strong> con {topSectores[0][1]} evento{topSectores[0][1] > 1 ? 's' : ''}.</span>}
                   {topDelitos.length > 0 && <span> El delito más frecuente es <strong>{topDelitos[0][0]}</strong> con {topDelitos[0][1]} registro{topDelitos[0][1] > 1 ? 's' : ''}.</span>}
+                  {sinUbicarFiltrados.length > 0 && <span> De ellos, <strong>{sinUbicarFiltrados.length}</strong> todavía no tienen ubicación en el mapa.</span>}
                 </div>
               </div>
             )}
