@@ -203,15 +203,15 @@ function BarraMedios({ porMedio, total }) {
   );
 }
 
-function ColumnasSimples({ items, subtitulos, resaltadas }) {
+function ColumnasSimples({ items, subtitulos, resaltadas, picos }) {
   var max = Math.max.apply(null, items.map(function(i) { return i[1]; }).concat([1]));
   return (
     <div>
       <div style={{ display: 'flex', alignItems: 'flex-end', gap: 14, height: 190, borderBottom: '1px solid #d9dee5', padding: '0 4px' }}>
-        {items.map(function(it) { return (
+        {items.map(function(it, ix) { return (
           <div key={it[0]} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-end', height: '100%' }}>
             <span style={{ fontSize: 22, fontWeight: 800, color: '#374151', marginBottom: 4 }}>{it[1]}</span>
-            <div style={{ width: '100%', maxWidth: 80, height: (it[1] / max * 74) + '%', minHeight: 5, background: resaltadas && !resaltadas[items.indexOf(it)] ? '#e3d3d4' : '#b98386', borderRadius: '5px 5px 0 0' }} />
+            <div style={{ width: '100%', maxWidth: 80, height: (it[1] / max * 74) + '%', minHeight: 5, background: resaltadas && !resaltadas[ix] ? '#e3d3d4' : picos && picos[ix] ? '#8e4f54' : '#b98386', borderRadius: '5px 5px 0 0' }} />
           </div>
         ); })}
       </div>
@@ -270,6 +270,15 @@ function fechaLarga(iso) {
 // Para filtrar: en homicidios se usa la categoría (arma de fuego, torniquete...), no cada forma distinta de escribirla
 function etiquetaDelito(p) {
   return p.fuente === 'incidencia_regional' ? clasificarDelito(p.delito).medio.toUpperCase() : String(p.delito || '').toUpperCase();
+}
+
+// "del 15 al 21 de octubre" / "del 29 de septiembre al 5 de octubre" / "el 26 de octubre"
+function rangoLargo(a, b) {
+  var m = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+  var pa = a.split('-'), pb = b.split('-');
+  if (a === b) return 'el ' + Number(pa[2]) + ' de ' + m[Number(pa[1]) - 1];
+  if (pa[1] === pb[1]) return 'del ' + Number(pa[2]) + ' al ' + Number(pb[2]) + ' de ' + m[Number(pa[1]) - 1];
+  return 'del ' + Number(pa[2]) + ' de ' + m[Number(pa[1]) - 1] + ' al ' + Number(pb[2]) + ' de ' + m[Number(pb[1]) - 1];
 }
 
 function nombreMes(k) {
@@ -460,17 +469,27 @@ export default function MapaCalor({ user, onIniciarProyecto, onImportar, seccion
   const hayFechas = !!(fechaDesde || fechaHasta);
   const semIni = hayFechas ? (fechaDesde && fechaDesde >= histIni ? fechaDesde : histIni) : histIni;
   const semFin = hayFechas ? (fechaHasta && fechaHasta < histFin ? fechaHasta : histFin) : histFin;
-  let semHist = [], ultimaSemanaParcial = false;
+  let semHist = [], semMeta = [], ultimaSemanaParcial = false;
   if (semIni && semFin && semIni <= semFin) {
     var nSem = Math.floor((Date.parse(semFin) - Date.parse(semIni)) / (7 * DIAH)) + 1;
     var cs = []; for (var q = 0; q < nSem; q++) cs.push(0);
     histFechas.forEach(function(d) { if (d < semIni || d > semFin) return; var i = Math.floor((Date.parse(d) - Date.parse(semIni)) / (7 * DIAH)); if (i >= 0 && i < nSem) cs[i]++; });
     var abr = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
-    semHist = cs.map(function(n, i) { var f = new Date(Date.parse(semIni) + 7 * i * DIAH); return [f.getUTCDate() + ' ' + abr[f.getUTCMonth()], n]; }).slice(-26);
+    semMeta = cs.map(function(n, i) {
+      var f1 = new Date(Date.parse(semIni) + 7 * i * DIAH), f2 = new Date(Math.min(Date.parse(semIni) + (7 * i + 6) * DIAH, Date.parse(semFin)));
+      var et = f1.getUTCMonth() === f2.getUTCMonth()
+        ? (f1.getUTCDate() === f2.getUTCDate() ? '' + f1.getUTCDate() : f1.getUTCDate() + '–' + f2.getUTCDate()) + ' ' + abr[f1.getUTCMonth()]
+        : f1.getUTCDate() + ' ' + abr[f1.getUTCMonth()] + '–' + f2.getUTCDate() + ' ' + abr[f2.getUTCMonth()];
+      return { ini: f1.toISOString().slice(0, 10), fin: f2.toISOString().slice(0, 10), n: n, et: et };
+    }).slice(-26);
+    semHist = semMeta.map(function(m) { return [m.et, m.n]; });
     ultimaSemanaParcial = (Math.floor((Date.parse(semFin) - Date.parse(semIni)) / DIAH) % 7) < 6 && (!fechaHasta || fechaHasta >= histFin);
   }
   const maxSem = Math.max.apply(null, semHist.map(function(x) { return x[1]; }).concat([0]));
   const nPicos = semHist.filter(function(x) { return x[1] === maxSem && maxSem > 0; }).length;
+  const picosMeta = semMeta.filter(function(m) { return m.n === maxSem && maxSem > 0; });
+  const semPicos = semHist.map(function(x) { return semHist.length > 1 && maxSem > 0 && x[1] === maxSem; });
+  const semSub = semHist.map(function(x, i) { return i === semHist.length - 1 && ultimaSemanaParcial ? 'incompleta' : null; });
   // Meses que caen dentro del periodo elegido (se resaltan en las columnas por mes)
   const mesesResaltados = hayFechas ? mesesHist.map(function(m) { return m.clave >= (fechaDesde || '0000-00').slice(0, 7) && m.clave <= (fechaHasta || '9999-99').slice(0, 7); }) : null;
 
@@ -811,8 +830,16 @@ export default function MapaCalor({ user, onIniciarProyecto, onImportar, seccion
                   <div style={{ fontSize: 20, fontWeight: 700, color: C.darkBlue, marginBottom: 6 }}>Casos por semana · {hayFechas ? textoPeriodo : 'todo el historial'}</div>
                   {semHist.length > 0 ? (
                     <>
-                      <LineaHistorica items={semHist} />
-                      <div style={{ fontSize: 15, color: C.gray, marginTop: 4 }}>{nPicos > 1 ? 'El aro dorado marca las semanas con más casos (' + maxSem + ').' : 'El aro dorado marca la semana con más casos (' + maxSem + ').'}{ultimaSemanaParcial ? ' La última semana puede estar incompleta.' : ''}</div>
+                      <div style={{ fontSize: 16, color: C.gray, marginBottom: 10 }}>Cada columna suma los casos de esos 7 días (por ejemplo, "{semHist[0][0]}").</div>
+                      <ColumnasSimples items={semHist} subtitulos={semSub} picos={semPicos} />
+                      {semHist.length > 1 && maxSem > 0 && (
+                        <div style={{ fontSize: 18, color: C.darkBlue, marginTop: 12, lineHeight: 1.5 }}>
+                          {picosMeta.length === 1
+                            ? <span>La semana con más casos fue <strong>{rangoLargo(picosMeta[0].ini, picosMeta[0].fin)}</strong>, con <strong>{maxSem}</strong>.</span>
+                            : <span>Hay <strong>{picosMeta.length}</strong> semanas empatadas con más casos (<strong>{maxSem}</strong>): {picosMeta.map(function(m) { return rangoLargo(m.ini, m.fin); }).join('; ')}.</span>}
+                        </div>
+                      )}
+                      {ultimaSemanaParcial && <div style={{ fontSize: 15, color: C.gray, marginTop: 4 }}>La última columna es una semana incompleta.</div>}
                     </>
                   ) : (
                     <div style={{ fontSize: 17, color: C.gray, padding: '16px 0' }}>No hay casos en el periodo elegido.</div>
