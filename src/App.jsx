@@ -19,10 +19,13 @@ import OficialiaPartes from './pages/OficialiaPartes';
 import SubcoordAdmin from './pages/SubcoordAdmin';
 import BodegaIndicios from './pages/BodegaIndicios';
 import RegistroEstatalRedCriminal from './pages/RegistroEstatalRedCriminal';
+import MenuLateral from './pages/MenuLateral';
 import ModuloDetenidos, { BusquedaOperativa, calcularSemaforo, SEMAFORO, REGIONES, Input, Select, TextArea } from './pages/Detenidos';
 
 // ─── CONSTANTES ───────────────────────────────────────────────────────────────
 const rolLabel = { agente: "Agente", coordinador: "Coordinador de Zona", regional: "Director Regional", mando: "Director General" };
+// Interruptor del menú lateral: true = menú lateral nuevo · false = pestañas de siempre
+const MENU_LATERAL = true;
 const rolColor = { agente: "#001a4d", coordinador: "#f59e0b", regional: "#a78bfa", mando: "#ef4444" };
 
 // ─── PANTALLA DE BIENVENIDA ──────────────────────────────────────────────────────
@@ -457,6 +460,37 @@ export default function App() {
 
   const puedeVerDashboard = perfil && ["coordinador", "regional", "mando"].includes(perfil.rol);
 
+  // Menú lateral: mismas pestañas y mismas reglas de visibilidad que el menú horizontal
+  const coord = ((perfil && perfil.coordinacion_especializada) || "").toLowerCase();
+  const gruposMenu = [
+    { titulo: "Expediente de investigación", items: [
+      { id: "oficialia", label: "Oficialía" },
+      { id: "registro911", label: "Registro 911" },
+      { id: "primerrespondiente", label: "Primer Respondiente" },
+      { id: "escenacrimen", label: "Procesamiento del Lugar" },
+      { id: "indicios", label: "Indicios" },
+      { id: "victimastestigos", label: "Víctimas y Testigos" },
+      { id: "expediente", label: "Expediente Policial" },
+    ] },
+    { titulo: "Operación", items: [
+      { id: "ordenes", label: "Órdenes" },
+      { id: "vehiculos", label: "Vehículos" },
+      ...((perfil && (["mando", "regional"].includes(perfil.rol) || coord.includes("narcomenudeo"))) ? [{ id: "bodega", label: "Bodega" }] : []),
+      { id: "busqueda", label: "Búsqueda Detenidos" },
+      { id: "detenidos", label: "Detenidos" },
+    ] },
+    { titulo: "Análisis", items: [
+      { id: "dashoperativo", label: "Dashboard" },
+      { id: "sara", label: "Análisis Criminal" },
+      ...((perfil && coord.includes("analisis_forense")) ? [{ id: "redcriminal", label: "Red Criminal" }] : []),
+      ...(puedeVerDashboard ? [{ id: "dashboard", label: "Histórico" }] : []),
+      { id: "historico", label: "Histórico Detenidos" },
+    ] },
+    { titulo: "Administración", items: [
+      ...((perfil && ["mando", "subcoord_admin"].includes(perfil.rol)) ? [{ id: "subcoord_admin", label: "Subcoord. Admtivo." }] : []),
+    ] },
+  ];
+
   const abrirDesdeListaBusqueda = (d) => {
     setDetenidoParaAbrir(d);
     setTabApp("detenidos");
@@ -485,6 +519,7 @@ export default function App() {
         </div>
       </div>
 
+      {!MENU_LATERAL && (
       <div style={{ background: "#eef1f6", borderBottom: "1px solid #d9dee5", padding: "0 20px", display: "flex", gap: 4, flexWrap: "wrap", alignItems: "center" }}>
             {/* ── GRUPO 1: Expediente de Investigación Policial ── */}
             <button onClick={() => setTabApp("oficialia")} style={{ background: "none", border: "none", borderBottom: tabApp === "oficialia" ? "2px solid #001a4d" : "2px solid transparent", padding: "10px 18px", fontWeight: tabApp === "oficialia" ? 700 : 500, color: tabApp === "oficialia" ? "#001a4d" : "#888", cursor: "pointer", fontSize: 15 }}>Oficialía</button>
@@ -521,6 +556,13 @@ export default function App() {
               <button onClick={() => setTabApp("subcoord_admin")} style={{ background: "none", border: "none", borderBottom: tabApp === "subcoord_admin" ? "2px solid #001a4d" : "2px solid transparent", padding: "10px 18px", fontWeight: tabApp === "subcoord_admin" ? 700 : 500, color: tabApp === "subcoord_admin" ? "#001a4d" : "#888", cursor: "pointer", fontSize: 15 }}>Subcoord. Admtivo.</button>
             )}
           </div>
+      )}
+      {MENU_LATERAL && (
+        <style>{`.ml-wrap{display:flex;align-items:flex-start}.ml-main{flex:1;min-width:0}@media (max-width:899px){.ml-wrap{display:block}}`}</style>
+      )}
+      <div className={MENU_LATERAL ? "ml-wrap" : undefined}>
+      {MENU_LATERAL && <MenuLateral grupos={gruposMenu} tabApp={tabApp} setTabApp={setTabApp} />}
+      <div className={MENU_LATERAL ? "ml-main" : undefined}>
       <div style={{ padding: 20, maxWidth: tabApp === "dashboard" ? 1000 : tabApp === "sara" ? 1200 : 800, margin: "0 auto" }}>
         {tabApp === "busqueda" && <BusquedaOperativa perfil={perfil} onAbrirDetenido={abrirDesdeListaBusqueda} />}
         {tabApp === "dashboard" && puedeVerDashboard && <DashboardMandos perfil={perfil} />}
@@ -540,6 +582,8 @@ export default function App() {
         {tabApp === "bodega" && <BodegaIndicios perfil={perfil} />}
         {tabApp === "redcriminal" && <RegistroEstatalRedCriminal perfil={perfil} />}
         {tabApp === "detenidos" && <ModuloDetenidos perfil={perfil} detenidoInicial={detenidoParaAbrir} onDetenidoInicialUsado={() => setDetenidoParaAbrir(null)} />}
+      </div>
+      </div>
       </div>
     </div>
   );
