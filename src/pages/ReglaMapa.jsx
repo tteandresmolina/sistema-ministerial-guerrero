@@ -47,7 +47,12 @@ export function tiempoEntre(a, b) {
     const n = Math.round(ms / 86400000);
     texto = n === 0 ? 'mismo día' : n === 1 ? '1 día' : n + ' días';
   }
-  const dm = (p) => { const f = String(p.fecha).slice(0, 10).split('-'); return f[2] + '/' + f[1] + (p.hora ? ' ' + String(p.hora).slice(0, 5) : ''); };
+  const MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+  const dm = (p) => {
+    const f = String(p.fecha).slice(0, 10).split('-');
+    const mes = MESES[Number(f[1]) - 1] || f[1];
+    return Number(f[2]) + ' de ' + mes + ' de ' + f[0] + (p.hora ? ' · ' + String(p.hora).slice(0, 5) + ' h' : '');
+  };
   return { texto, orden, soloFechas: !conHora, a: dm(a), b: dm(b) };
 }
 
@@ -149,7 +154,7 @@ export default function ReglaMapa({ obtenerMapa }) {
       {detalle && <div style={{ fontSize: 15, color: '#374151', marginTop: 2 }}>{detalle}</div>}
     </div>
   );
-  const nom = (letra, num) => letra + (num ? ' · No. ' + num : '');
+  const nom = (letra, num) => 'Carpeta ' + letra + (num ? ' · No. ' + num : '');
 
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
@@ -175,8 +180,8 @@ export default function ReglaMapa({ obtenerMapa }) {
                 <Dato etiqueta="Tiempo entre avisos" valor={medida.t.texto}
                   detalle={(medida.t.orden || '') + (medida.t.soloFechas ? (medida.t.orden ? ' · ' : '') + 'solo fechas (falta la hora en uno de los casos)' : '')} />
               )}
-              <div style={{ minWidth: 200 }}>
-                <div style={{ fontSize: 15, fontWeight: 700, color: C.gray, letterSpacing: 0.3 }}>Casos medidos</div>
+              <div style={{ minWidth: 300 }}>
+                <div style={{ fontSize: 15, fontWeight: 700, color: C.gray, letterSpacing: 0.3 }}>Carpetas de investigación medidas</div>
                 <div style={{ fontSize: 18, fontWeight: 700, color: C.navy, marginTop: 4 }}>{nom('A', medida.aNum)}{medida.t ? <span style={{ fontWeight: 500, color: '#374151' }}> · {medida.t.a}</span> : null}</div>
                 <div style={{ fontSize: 18, fontWeight: 700, color: C.navy, marginTop: 2 }}>{nom('B', medida.bNum)}{medida.t ? <span style={{ fontWeight: 500, color: '#374151' }}> · {medida.t.b}</span> : null}</div>
               </div>
