@@ -10,7 +10,7 @@ import { supabase } from '../supabaseClient';
 import { RefreshCw, MapPin, Filter, X, Clock, BarChart3, ChevronDown, ChevronUp, Upload } from 'lucide-react';
 import ImportarIncidenciaRegional from './ImportarIncidenciaRegional';
 import ZonasAtencion from './ZonasAtencion';
-import ReglaMapa from './ReglaMapa';
+import ReglaMapa, { tiempoEntre, textoDistancia } from './ReglaMapa';
 
 const C = {
   darkBlue: '#001a4d', gold: '#b69054', lightGold: '#f5ede0',
@@ -297,18 +297,39 @@ export default function MapaCalor({ user, onIniciarProyecto, onImportar, seccion
       }).addTo(mapInstance.current);
     }
     var cercanos = contarCercanos(puntosFiltrados, distanciaKm * 1000);
+    // Numeración consecutiva de los homicidios: 1 = el más antiguo del periodo mostrado (por fecha y hora de conocimiento)
+    var numeroDe = {}, anteriorDe = {}, homicidios = [];
+    puntosFiltrados.forEach(function(p, i) { if (p.fuente === 'incidencia_regional') homicidios.push(i); });
+    var llaveOrden = function(p) { return (p.fecha ? String(p.fecha).slice(0, 10) : '9999-99-99') + ' ' + (p.hora || '00:00'); };
+    homicidios.sort(function(a, b) { var ka = llaveOrden(puntosFiltrados[a]), kb = llaveOrden(puntosFiltrados[b]); return ka < kb ? -1 : ka > kb ? 1 : a - b; });
+    homicidios.forEach(function(i, k) { numeroDe[i] = k + 1; if (k > 0) anteriorDe[i] = homicidios[k - 1]; });
     puntosFiltrados.forEach(function(p, idx) {
       var nCercanos = cercanos[idx];
       var nivel = NIVELES_CALOR[Math.min(nCercanos, 4) - 1];
-      var popup = '<div style="font-family:Segoe UI,sans-serif;min-width:180px">' +
+      var num = numeroDe[idx];
+      var ant = anteriorDe[idx] !== undefined ? puntosFiltrados[anteriorDe[idx]] : null;
+      var enlaceAnterior = '';
+      if (num && ant) {
+        var dAnt = distanciaMetros({ lat: p.lat, lng: p.lng }, { lat: ant.lat, lng: ant.lng });
+        var tAnt = tiempoEntre(ant, p);
+        enlaceAnterior = '<div style="margin-top:6px;padding:6px 8px;background:#f3f5fa;border-left:4px solid #001a4d;border-radius:4px;font-size:13px;color:#1f2937">' +
+          '<strong>Respecto al caso anterior (No. ' + (num - 1) + '):</strong><br>' + textoDistancia(dAnt) + (tAnt ? ' · ' + tAnt.texto + (tAnt.soloFechas ? ' (solo fechas)' : '') : '') + '</div>';
+      }
+      var popup = '<div style="font-family:Segoe UI,sans-serif;min-width:200px">' +
+        (num ? '<div style="font-weight:800;font-size:16px;color:#001a4d;margin-bottom:2px">Homicidio No. ' + num + ' de ' + homicidios.length + '</div>' : '') +
         '<div style="font-weight:700;font-size:13px;color:' + p.color + ';margin-bottom:4px">' + esc(p.label) + '</div>' +
         (p.delito ? '<div style="font-size:12px;color:#b71c1c;font-weight:600">' + esc(p.delito) + '</div>' : '') +
         (p.municipio ? '<div style="font-size:11px;color:#666;margin-top:2px">📍 ' + esc(p.municipio) + '</div>' : '') +
         (p.fecha ? '<div style="font-size:11px;color:#666">📅 ' + esc(p.fecha) + (p.hora ? ' · ' + esc(p.hora) + ' h' : '') + '</div>' : '') +
         '<div style="font-size:12px;font-weight:700;color:#374151;margin-top:3px">Casos en un radio de ' + distanciaKm + ' km: ' + nCercanos + ' (' + nivel.label + ')</div>' +
+        enlaceAnterior +
         (p.descripcion ? '<div style="font-size:11px;color:#333;margin-top:4px;max-width:220px;word-wrap:break-word">' + esc(p.descripcion.substring(0, 120)) + (p.descripcion.length > 120 ? '...' : '') + '</div>' : '') +
         '<div style="font-size:10px;color:#999;margin-top:4px">Lat: ' + p.lat.toFixed(5) + ' · Lng: ' + p.lng.toFixed(5) + '</div></div>';
-      window.L.circleMarker([p.lat, p.lng], { radius: 8, fillColor: nivel.color, color: p.color, weight: 2.5, opacity: 1, fillOpacity: 0.95, fecha: p.fecha, hora: p.hora, confirmada: p.confirmada }).addTo(layerGroup.current).bindPopup(popup);
+      window.L.circleMarker([p.lat, p.lng], { radius: num ? 13 : 8, fillColor: nivel.color, color: p.color, weight: 2.5, opacity: 1, fillOpacity: 0.95, fecha: p.fecha, hora: p.hora, confirmada: p.confirmada, num: num }).addTo(layerGroup.current).bindPopup(popup);
+      if (num) {
+        window.L.marker([p.lat, p.lng], { interactive: false, keyboard: false, icon: window.L.divIcon({ className: '', iconSize: [26, 26], iconAnchor: [13, 13],
+          html: '<div style="width:26px;height:26px;line-height:26px;text-align:center;font:800 13px Segoe UI,sans-serif;color:#111;text-shadow:0 0 3px #fff,0 0 3px #fff">' + num + '</div>' }) }).addTo(layerGroup.current);
+      }
     });
     // Todas las zonas de atención se marcan siempre (círculo punteado + etiqueta); la elegida se resalta
     (zonas || []).forEach(function(z) {
@@ -450,6 +471,7 @@ export default function MapaCalor({ user, onIniciarProyecto, onImportar, seccion
           </span>
         ); })}
         <span style={{ color: '#8b1e1e', fontWeight: 600 }}>Resplandor: solo en zonas de atención prioritaria</span>
+        <span style={{ color: '#001a4d', fontWeight: 600 }}>El número en cada punto es el orden cronológico (1 = el más antiguo del periodo mostrado)</span>
       </div>
 
       <div style={{ marginTop: 10 }}>
