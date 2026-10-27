@@ -558,7 +558,7 @@ export default function App() {
           </div>
       )}
       {MENU_LATERAL && (
-        <style>{`.ml-wrap{display:flex;align-items:flex-start}.ml-main{flex:1;min-width:0}@media (max-width:899px){.ml-wrap{display:block}}`}</style>
+        <style>{`.ml-wrap{display:flex;flex-wrap:wrap;align-items:flex-start}.ml-main{flex:1;min-width:0}@media (max-width:899px){.ml-wrap{display:block}}`}</style>
       )}
       <div className={MENU_LATERAL ? "ml-wrap" : undefined}>
       {MENU_LATERAL && <MenuLateral grupos={gruposMenu} tabApp={tabApp} setTabApp={setTabApp} />}
