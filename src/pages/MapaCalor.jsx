@@ -488,8 +488,15 @@ export default function MapaCalor({ user, onIniciarProyecto, onImportar, seccion
   const maxSem = Math.max.apply(null, semHist.map(function(x) { return x[1]; }).concat([0]));
   const nPicos = semHist.filter(function(x) { return x[1] === maxSem && maxSem > 0; }).length;
   const picosMeta = semMeta.filter(function(m) { return m.n === maxSem && maxSem > 0; });
-  const semPicos = semHist.map(function(x) { return semHist.length > 1 && maxSem > 0 && x[1] === maxSem; });
-  const semSub = semHist.map(function(x, i) { return i === semHist.length - 1 && ultimaSemanaParcial ? 'incompleta' : null; });
+  // Repunte: semana con al menos 50% más casos que el promedio de las semanas completas (y mínimo 3 casos). Solo con 4 o más semanas
+  const semCompletas = semMeta.filter(function(m, i) { return !(i === semMeta.length - 1 && ultimaSemanaParcial); });
+  const promSem = semCompletas.length ? semCompletas.reduce(function(a, m) { return a + m.n; }, 0) / semCompletas.length : 0;
+  const hayRepuntes = semMeta.length >= 4;
+  const repuntes = hayRepuntes ? semMeta.filter(function(m) { return m.n >= promSem * 1.5 && m.n >= 3; }) : [];
+  const semPicos = hayRepuntes
+    ? semMeta.map(function(m) { return repuntes.indexOf(m) >= 0; })
+    : semHist.map(function(x) { return semHist.length > 1 && maxSem > 0 && x[1] === maxSem; });
+  const semSub = semMeta.map(function(m, i) { return hayRepuntes && repuntes.indexOf(m) >= 0 ? '▲ repunte' : (i === semMeta.length - 1 && ultimaSemanaParcial ? 'incompleta' : null); });
   // Meses que caen dentro del periodo elegido (se resaltan en las columnas por mes)
   const mesesResaltados = hayFechas ? mesesHist.map(function(m) { return m.clave >= (fechaDesde || '0000-00').slice(0, 7) && m.clave <= (fechaHasta || '9999-99').slice(0, 7); }) : null;
 
@@ -839,7 +846,14 @@ export default function MapaCalor({ user, onIniciarProyecto, onImportar, seccion
                             : <span>Hay <strong>{picosMeta.length}</strong> semanas empatadas con más casos (<strong>{maxSem}</strong>): {picosMeta.map(function(m) { return rangoLargo(m.ini, m.fin); }).join('; ')}.</span>}
                         </div>
                       )}
-                      {ultimaSemanaParcial && <div style={{ fontSize: 15, color: C.gray, marginTop: 4 }}>La última columna es una semana incompleta.</div>}
+                      {hayRepuntes && (
+                        <div style={{ fontSize: 18, color: C.darkBlue, marginTop: 8, lineHeight: 1.5 }}>
+                          {repuntes.length === 0
+                            ? <span>No hubo repuntes: ninguna semana superó en 50% el promedio de <strong>{promSem.toFixed(1)}</strong> casos por semana.</span>
+                            : <span>{repuntes.length === 1 ? 'Hubo 1 repunte' : 'Hubo ' + repuntes.length + ' repuntes'} (semana con al menos 50% más casos que el promedio de <strong>{promSem.toFixed(1)}</strong> por semana): {repuntes.map(function(m) { return rangoLargo(m.ini, m.fin) + ' (' + m.n + ')'; }).join('; ')}.</span>}
+                        </div>
+                      )}
+                      {ultimaSemanaParcial && <div style={{ fontSize: 15, color: C.gray, marginTop: 4 }}>La última columna es una semana incompleta y no entra en el promedio.</div>}
                     </>
                   ) : (
                     <div style={{ fontSize: 17, color: C.gray, padding: '16px 0' }}>No hay casos en el periodo elegido.</div>
@@ -849,7 +863,7 @@ export default function MapaCalor({ user, onIniciarProyecto, onImportar, seccion
                   {mesesHist.length > 0 && (
                     <div>
                       <div style={{ fontSize: 20, fontWeight: 700, color: C.darkBlue, marginBottom: 10 }}>Casos por mes</div>
-                      <ColumnasSimples items={mesesHist.map(function(m) { return [m.nombre, m.n]; })} subtitulos={mesesHist.map(function(m) { return m.parcial ? 'hasta el ' + Number(histFin.slice(8, 10)) : null; })} resaltadas={mesesResaltados} />
+                      <ColumnasSimples items={mesesHist.map(function(m) { return [m.nombre, m.n]; })} subtitulos={mesesHist.map(function(m, i) { var partes = []; if (i > 0) { var ant = mesesHist[i - 1]; var pc = Math.round(((m.n / m.dias) / (ant.n / ant.dias) - 1) * 100); partes.push((pc >= 0 ? '▲ ' : '▼ ') + Math.abs(pc) + '%'); } if (m.parcial) partes.push('hasta el ' + Number(histFin.slice(8, 10))); return partes.length ? partes.join(' · ') : null; })} resaltadas={mesesResaltados} />
                     </div>
                   )}
                   <RankingBarras titulo="Colonias con más casos" icono={<MapPin size={20} color={C.gold} />} items={topSectores.slice(0, 8)} />
