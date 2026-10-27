@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import {
   FileText, Phone, Siren, MapPin, Search, Users, FolderOpen, Scale, Car, Package,
   Network, Target, LayoutDashboard, History, Archive, Settings, Lock, Menu, X,
-  ChevronDown, ChevronRight, ListChecks, PanelLeftClose, PanelLeftOpen,
+  ChevronDown, ChevronRight, ListChecks,
 } from "lucide-react";
 
 // Íconos por pestaña (siempre acompañados de su texto)
@@ -34,21 +34,12 @@ function usePantallaChica() {
 // grupos: [{ titulo, items: [{ id, label }] }]  (ya filtrados por rol desde App.jsx)
 export default function MenuLateral({ grupos, tabApp, setTabApp }) {
   const chica = usePantallaChica();
-  const [abierto, setAbierto] = useState(false);          // cajón abierto (pantalla chica u oculto)
-  // Preferencia de la persona: menú fijo (true) u oculto (false). Se recuerda en este equipo.
-  const [fijo, setFijo] = useState(() => {
-    try { return localStorage.getItem("menuLateralFijo") !== "0"; } catch { return true; }
-  });
-  const cambiarFijo = (v) => {
-    setFijo(v); setAbierto(false);
-    try { localStorage.setItem("menuLateralFijo", v ? "1" : "0"); } catch {}
-  };
+  const [abierto, setAbierto] = useState(false);          // cajón en pantalla chica
   const [cerrados, setCerrados] = useState({});           // grupos plegados
 
   const actual = grupos.flatMap((g) => g.items).find((i) => i.id === tabApp);
 
-  const cajon = chica || !fijo;   // pantalla chica, o menú oculto por elección
-  const elegir = (id) => { setTabApp(id); if (cajon) setAbierto(false); };
+  const elegir = (id) => { setTabApp(id); if (chica) setAbierto(false); };
 
   const panel = (
     <nav aria-label="Menú principal" style={{ padding: "14px 10px 24px" }}>
@@ -91,13 +82,11 @@ export default function MenuLateral({ grupos, tabApp, setTabApp }) {
     </nav>
   );
 
-  const estiloBotonPanel = { display: "flex", alignItems: "center", gap: 10, width: "calc(100% - 20px)", margin: "10px 10px 0", background: "transparent", border: "1.5px solid rgba(255,255,255,0.45)", borderRadius: 7, color: "#fff", padding: "9px 12px", fontSize: 16, fontWeight: 700, cursor: "pointer", minHeight: 46 };
-
-  // ── Menú como cajón: pantalla chica, o menú oculto por elección ──
-  if (cajon) {
+  // ── Pantalla chica: barra con botón "Menú" y cajón ──
+  if (chica) {
     return (
-      <div style={{ flexBasis: "100%", width: "100%" }}>
-        <button onClick={() => setAbierto(true)} aria-label="Abrir menú"
+      <>
+        <button onClick={() => setAbierto(true)}
           style={{ width: "100%", display: "flex", alignItems: "center", gap: 12, background: "#eef1f6", border: "none", borderBottom: "1px solid #d9dee5", padding: "12px 16px", color: NAVY, fontSize: 17, fontWeight: 800, cursor: "pointer", minHeight: 52 }}>
           <Menu size={22} /> <span>Menú</span>
           <span style={{ marginLeft: "auto", color: "#4a5268", fontWeight: 600, fontSize: 16 }}>{actual?.label}</span>
@@ -112,25 +101,17 @@ export default function MenuLateral({ grupos, tabApp, setTabApp }) {
                 </button>
               </div>
               {panel}
-              {!chica && (
-                <button onClick={() => cambiarFijo(true)} style={{ ...estiloBotonPanel, margin: "0 10px 20px" }}>
-                  <PanelLeftOpen size={22} /> <span>Fijar el menú</span>
-                </button>
-              )}
             </div>
             <div onClick={() => setAbierto(false)} style={{ flex: 1, background: "rgba(0,0,0,0.45)" }} />
           </div>
         )}
-      </div>
+      </>
     );
   }
 
   // ── Pantalla grande: panel fijo a la izquierda ──
   return (
     <aside style={{ width: 270, flexShrink: 0, background: PANEL, borderRight: `3px solid ${GOLD}`, position: "sticky", top: 0, alignSelf: "flex-start", height: "100vh", overflowY: "auto" }}>
-      <button onClick={() => cambiarFijo(false)} style={estiloBotonPanel} aria-label="Ocultar el menú para tener más espacio">
-        <PanelLeftClose size={22} /> <span>Ocultar menú</span>
-      </button>
       {panel}
     </aside>
   );
