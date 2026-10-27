@@ -11,6 +11,9 @@ import { RefreshCw, MapPin, Filter, X, Clock, BarChart3, ChevronDown, ChevronUp,
 import ImportarIncidenciaRegional from './ImportarIncidenciaRegional';
 import ZonasAtencion from './ZonasAtencion';
 import ReglaMapa, { tiempoEntre, textoDistancia } from './ReglaMapa';
+import RadioMapa from './RadioMapa';
+import ReproducirMes from './ReproducirMes';
+import SelectorPeriodo, { textoPeriodo as textoPeriodoFiltro } from './SelectorPeriodo';
 import { clasificarDelito, MEDIOS_ORDEN, COLOR_MEDIO } from './clasificarDelito';
 
 const C = {
@@ -297,6 +300,7 @@ export default function MapaCalor({ user, onIniciarProyecto, onImportar, seccion
   const [fechaHasta, setFechaHasta] = useState('');
   const [filtroDelito, setFiltroDelito] = useState('');
   const [filtroMunicipio, setFiltroMunicipio] = useState('');
+  const [reproDia, setReproDia] = useState(null); // reproducción del periodo: muestra los casos hasta este día (null = todos)
   const [filtrosAbiertos, setFiltrosAbiertos] = useState(false); // los filtros se muestran como una línea resumen y se abren si se piden
   const [capasAbiertas, setCapasAbiertas] = useState(false); // las capas del mapa se muestran solo si se piden
 
@@ -520,7 +524,10 @@ export default function MapaCalor({ user, onIniciarProyecto, onImportar, seccion
         gradient: GRADIENTE_CALOR,
       }).addTo(mapInstance.current);
     }
-    var cercanos = contarCercanos(puntosFiltrados, distanciaKm * 1000);
+    // Con la reproducción activa solo se dibujan los casos hasta ese día (la numeración y los colores se calculan con lo visible)
+    var vis = [], visPos = {};
+    puntosFiltrados.forEach(function(p, i) { if (!reproDia || !p.fecha || String(p.fecha).slice(0, 10) <= reproDia) { visPos[i] = vis.length; vis.push(p); } });
+    var cercVis = contarCercanos(vis, distanciaKm * 1000);
     // Numeración consecutiva de los homicidios: 1 = el más antiguo del periodo mostrado (por fecha y hora de conocimiento)
     var numeroDe = {}, anteriorDe = {}, homicidios = [];
     puntosFiltrados.forEach(function(p, i) { if (p.fuente === 'incidencia_regional') homicidios.push(i); });
@@ -528,7 +535,8 @@ export default function MapaCalor({ user, onIniciarProyecto, onImportar, seccion
     homicidios.sort(function(a, b) { var ka = llaveOrden(puntosFiltrados[a]), kb = llaveOrden(puntosFiltrados[b]); return ka < kb ? -1 : ka > kb ? 1 : a - b; });
     homicidios.forEach(function(i, k) { numeroDe[i] = k + 1; if (k > 0) anteriorDe[i] = homicidios[k - 1]; });
     puntosFiltrados.forEach(function(p, idx) {
-      var nCercanos = cercanos[idx];
+      if (visPos[idx] === undefined) return;
+      var nCercanos = cercVis[visPos[idx]];
       var nivel = NIVELES_CALOR[Math.min(nCercanos, 4) - 1];
       var num = numeroDe[idx];
       var ant = anteriorDe[idx] !== undefined ? puntosFiltrados[anteriorDe[idx]] : null;
@@ -549,7 +557,7 @@ export default function MapaCalor({ user, onIniciarProyecto, onImportar, seccion
         enlaceAnterior +
         (p.descripcion ? '<div style="font-size:11px;color:#333;margin-top:4px;max-width:220px;word-wrap:break-word">' + esc(p.descripcion.substring(0, 120)) + (p.descripcion.length > 120 ? '...' : '') + '</div>' : '') +
         '<div style="font-size:10px;color:#999;margin-top:4px">Lat: ' + p.lat.toFixed(5) + ' · Lng: ' + p.lng.toFixed(5) + '</div></div>';
-      window.L.circleMarker([p.lat, p.lng], { radius: num ? 13 : 8, fillColor: nivel.color, color: p.color, weight: 2.5, opacity: 1, fillOpacity: 0.95, fecha: p.fecha, hora: p.hora, confirmada: p.confirmada, num: num }).addTo(layerGroup.current).bindPopup(popup);
+      window.L.circleMarker([p.lat, p.lng], { radius: num ? 13 : 8, fillColor: nivel.color, color: p.color, weight: 2.5, opacity: 1, fillOpacity: 0.95, fecha: p.fecha, hora: p.hora, confirmada: p.confirmada, num: num, sector: p.sector, delito: p.delito }).addTo(layerGroup.current).bindPopup(popup);
       if (num) {
         window.L.marker([p.lat, p.lng], { interactive: false, keyboard: false, icon: window.L.divIcon({ className: '', iconSize: [26, 26], iconAnchor: [13, 13],
           html: '<div style="width:26px;height:26px;line-height:26px;text-align:center;font:800 13px Segoe UI,sans-serif;color:#111;text-shadow:0 0 3px #fff,0 0 3px #fff">' + num + '</div>' }) }).addTo(layerGroup.current);
@@ -565,14 +573,14 @@ export default function MapaCalor({ user, onIniciarProyecto, onImportar, seccion
     });
     if (focoSel) {
       mapInstance.current.fitBounds(window.L.latLngBounds(focoSel.miembros.map(function(m) { return [m.lat, m.lng]; })), { padding: [70, 70], maxZoom: 15 });
-    } else if (puntosFiltrados.length > 0) {
+    } else if (!reproDia && puntosFiltrados.length > 0) {
       var bounds = window.L.latLngBounds(puntosFiltrados.map(function(p) { return [p.lat, p.lng]; }));
       mapInstance.current.fitBounds(bounds, { padding: [40, 40], maxZoom: 12 });
     }
-  }, [leafletReady, puntosFiltrados]);
+  }, [leafletReady, puntosFiltrados, reproDia]);
 
   // Si cambian los filtros o las capas, la zona elegida ya no corresponde: se quita
-  useEffect(function() { setFocoSel(null); }, [fechaDesde, fechaHasta, filtroDelito, filtroMunicipio, filtros]);
+  useEffect(function() { setFocoSel(null); setReproDia(null); }, [fechaDesde, fechaHasta, filtroDelito, filtroMunicipio, filtros]);
 
   // Al abrir la pestaña Importar, los mapas pequeños del importador (estuvieron ocultos) recalculan su tamaño
   useEffect(function() {
@@ -592,7 +600,11 @@ export default function MapaCalor({ user, onIniciarProyecto, onImportar, seccion
 
   var limpiarFiltros = function() { setFechaDesde(''); setFechaHasta(''); setFiltroDelito(''); setFiltroMunicipio(''); setFiltros(filtrosIniciales()); };
   var hayFiltrosActivos = fechaDesde || fechaHasta || filtroDelito || filtroMunicipio;
-  var textoPeriodo = fechaDesde && fechaHasta ? 'Del ' + fechaLarga(fechaDesde) + ' al ' + fechaLarga(fechaHasta) : fechaDesde ? 'Desde el ' + fechaLarga(fechaDesde) : fechaHasta ? 'Hasta el ' + fechaLarga(fechaHasta) : 'Todo el periodo';
+  var puntosMapa = reproDia ? puntosFiltrados.filter(function(p) { return !p.fecha || String(p.fecha).slice(0, 10) <= reproDia; }) : puntosFiltrados;
+  var cuentaMes = {};
+  puntos.concat(sinUbicar).forEach(function(p) { if (p.fecha) { var k = String(p.fecha).slice(0, 7); cuentaMes[k] = (cuentaMes[k] || 0) + 1; } });
+  var mesesChips = Object.keys(cuentaMes).sort().map(function(k) { return { clave: k, n: cuentaMes[k] }; });
+  var textoPeriodo = textoPeriodoFiltro(fechaDesde, fechaHasta);
   var textoDelito = filtroDelito ? filtroDelito.charAt(0) + filtroDelito.slice(1).toLowerCase() : 'Todos los delitos';
 
   return (
@@ -614,7 +626,7 @@ export default function MapaCalor({ user, onIniciarProyecto, onImportar, seccion
       {seccion === 'mapa' && (
         <div style={{ marginBottom: 14 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
-            <div style={{ fontSize: 18, color: C.darkBlue }}><strong style={{ fontSize: 28 }}>{puntosFiltrados.length}</strong> puntos en el mapa</div>
+            <div style={{ fontSize: 18, color: C.darkBlue }}><strong style={{ fontSize: 28 }}>{puntosMapa.length}</strong> puntos en el mapa</div>
             <button onClick={function() { setCapasAbiertas(!capasAbiertas); }} aria-expanded={capasAbiertas}
               style={{ background: 'none', border: '1.5px solid #c7cfe0', borderRadius: 7, padding: '6px 14px', color: C.gray, fontSize: 16, fontWeight: 600, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6, minHeight: 40 }}>
               Capas del mapa {capasAbiertas ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
@@ -657,13 +669,8 @@ export default function MapaCalor({ user, onIniciarProyecto, onImportar, seccion
         </div>
         {filtrosAbiertos && (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 10, marginTop: 14 }}>
-          <div>
-            <label style={{ fontSize: 15, fontWeight: 600, color: C.gray, display: 'block', marginBottom: 2 }}>Fecha desde</label>
-            <input type="date" style={inputStyle} value={fechaDesde} onChange={function(e) { setFechaDesde(e.target.value); }} />
-          </div>
-          <div>
-            <label style={{ fontSize: 15, fontWeight: 600, color: C.gray, display: 'block', marginBottom: 2 }}>Fecha hasta</label>
-            <input type="date" style={inputStyle} value={fechaHasta} onChange={function(e) { setFechaHasta(e.target.value); }} />
+          <div style={{ gridColumn: '1 / -1' }}>
+            <SelectorPeriodo desde={fechaDesde} hasta={fechaHasta} meses={mesesChips} onCambiar={function(d, h) { setFechaDesde(d); setFechaHasta(h); }} />
           </div>
           <div>
             <label style={{ fontSize: 15, fontWeight: 600, color: C.gray, display: 'block', marginBottom: 2 }}>Delito</label>
@@ -717,13 +724,20 @@ export default function MapaCalor({ user, onIniciarProyecto, onImportar, seccion
       )}
       {avisoPendientes}
 
-      <div style={{ marginTop: 10 }}>
+      <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
         <ReglaMapa obtenerMapa={function() { return mapInstance.current; }} />
+        <RadioMapa obtenerMapa={function() { return mapInstance.current; }} />
+      </div>
+      <div style={{ marginTop: 12 }}>
+        <ReproducirMes
+          fechas={puntosFiltrados.map(function(p) { return p.fecha; })}
+          dia={reproDia} onDia={setReproDia}
+          visibles={puntosMapa.length} total={puntosFiltrados.length} />
       </div>
 
       <div style={{ marginTop: 16 }}>
         <ZonasAtencion
-          puntos={puntosFiltrados.filter(function(p) { return p.fuente === 'incidencia_regional'; })}
+          puntos={puntosMapa.filter(function(p) { return p.fuente === 'incidencia_regional'; })}
           seleccionada={focoSel && focoSel.clave}
           onSeleccionar={setFocoSel}
           onIniciarProyecto={onIniciarProyecto}

@@ -98,9 +98,17 @@ export default function ReglaMapa({ obtenerMapa }) {
   // Al cerrar la pantalla, limpiar
   useEffect(() => () => desmontarDelMapa(), []);
 
+  // Solo una herramienta de clic a la vez: si se activa otra (la consulta por radio), la regla se apaga
+  useEffect(() => {
+    const f = (e) => { if (e.detail !== 'regla' && ref.current.mapa) terminar(); };
+    window.addEventListener('herramienta-mapa', f);
+    return () => window.removeEventListener('herramienta-mapa', f);
+  }, []);
+
   const iniciar = () => {
     const mapa = obtenerMapa(); const L = window.L;
     if (!mapa || !L) return;
+    window.dispatchEvent(new CustomEvent('herramienta-mapa', { detail: 'regla' }));
     const r = ref.current;
     r.mapa = mapa; r.capa = L.layerGroup().addTo(mapa); r.A = null; r.B = null;
     r.dbl = mapa.doubleClickZoom.enabled();
@@ -157,7 +165,7 @@ export default function ReglaMapa({ obtenerMapa }) {
   const nom = (letra, num) => 'Carpeta ' + letra + (num ? ' · No. ' + num : '');
 
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+    <div style={{ display: 'contents' }}>
       <style>{css}</style>
       {!activa ? (
         <button onClick={iniciar} style={{ ...btn, background: C.white, border: '2px solid ' + C.navy, color: C.navy }}>
