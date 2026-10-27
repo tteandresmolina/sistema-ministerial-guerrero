@@ -11,6 +11,7 @@ import { RefreshCw, MapPin, Filter, X, Clock, BarChart3, ChevronDown, ChevronUp,
 import ImportarIncidenciaRegional from './ImportarIncidenciaRegional';
 import ZonasAtencion from './ZonasAtencion';
 import ReglaMapa, { tiempoEntre, textoDistancia } from './ReglaMapa';
+import { clasificarDelito, MEDIOS_ORDEN, COLOR_MEDIO } from './clasificarDelito';
 
 const C = {
   darkBlue: '#001a4d', gold: '#b69054', lightGold: '#f5ede0',
@@ -95,7 +96,7 @@ function municipioDeSector(sector, region) {
 // Color suave tipo semáforo según el peso de la barra frente a la mayor
 function colorSuave(valor, max) {
   var r = max > 0 ? valor / max : 0;
-  return r >= 0.67 ? '#f2b8b0' : r >= 0.34 ? '#f8dc9b' : '#bfe0b8';
+  return r >= 0.67 ? '#b98386' : r >= 0.34 ? '#d2b27a' : '#dfd2b5';
 }
 
 // Ranking en barras: la etiqueta completa va arriba de la barra para que siempre se lea
@@ -167,6 +168,63 @@ function loadCSS(href) {
   document.head.appendChild(l);
 }
 
+function TarjetaDato({ etiqueta, valor, detalle }) {
+  return (
+    <div style={{ background: C.lightGold, border: '1px solid #b6905440', borderRadius: 10, padding: '12px 16px' }}>
+      <div style={{ fontSize: 14, fontWeight: 700, color: C.gray }}>{etiqueta}</div>
+      <div style={{ fontSize: 26, fontWeight: 800, color: C.darkBlue, lineHeight: 1.2, wordBreak: 'break-word' }}>{valor}</div>
+      {detalle && <div style={{ fontSize: 14, color: '#374151', marginTop: 2 }}>{detalle}</div>}
+    </div>
+  );
+}
+
+// Una sola barra dividida por medio: se lee en segundos
+function BarraMedios({ porMedio, total }) {
+  var orden = MEDIOS_ORDEN.filter(function(m) { return porMedio[m]; });
+  return (
+    <div>
+      <div style={{ display: 'flex', height: 44, borderRadius: 8, overflow: 'hidden' }}>
+        {orden.map(function(m) { return (
+          <div key={m} title={m + ': ' + porMedio[m]} style={{ width: (porMedio[m] / total * 100) + '%', minWidth: 36, background: COLOR_MEDIO[m].bg, color: COLOR_MEDIO[m].tx, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 800 }}>{porMedio[m]}</div>
+        ); })}
+      </div>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px 22px', marginTop: 10, fontSize: 15, color: '#1f2937' }}>
+        {orden.map(function(m) { return (
+          <span key={m} style={{ display: 'inline-flex', alignItems: 'center', gap: 7 }}>
+            <span style={{ width: 15, height: 15, borderRadius: 3, background: COLOR_MEDIO[m].bg, display: 'inline-block', border: '1px solid #00000020' }} />
+            {m} · <strong>{porMedio[m]}</strong> ({Math.round(porMedio[m] / total * 100)}%)
+          </span>
+        ); })}
+      </div>
+    </div>
+  );
+}
+
+function ColumnasSimples({ items }) {
+  var max = Math.max.apply(null, items.map(function(i) { return i[1]; }).concat([1]));
+  return (
+    <div>
+      <div style={{ display: 'flex', alignItems: 'flex-end', gap: 12, height: 160, borderBottom: '1px solid #d9dee5', padding: '0 4px' }}>
+        {items.map(function(it) { return (
+          <div key={it[0]} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-end', height: '100%' }}>
+            <span style={{ fontSize: 17, fontWeight: 800, color: '#374151', marginBottom: 3 }}>{it[1]}</span>
+            <div style={{ width: '100%', maxWidth: 64, height: (it[1] / max * 78) + '%', minHeight: 4, background: '#b98386', borderRadius: '4px 4px 0 0' }} />
+          </div>
+        ); })}
+      </div>
+      <div style={{ display: 'flex', gap: 12, padding: '6px 4px 0' }}>
+        {items.map(function(it) { return <span key={it[0]} style={{ flex: 1, textAlign: 'center', fontSize: 14, color: C.gray }}>{it[0]}</span>; })}
+      </div>
+    </div>
+  );
+}
+
+function fechaLarga(iso) {
+  var p = String(iso).slice(0, 10).split('-');
+  var m = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+  return Number(p[2]) + ' de ' + (m[Number(p[1]) - 1] || p[1]);
+}
+
 function nombreMes(k) {
   var m = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
   var p = String(k).split('-');
@@ -185,6 +243,7 @@ export default function MapaCalor({ user, onIniciarProyecto, onImportar, seccion
   const layerGroup = useRef(null);
   const heatLayer = useRef(null);
   const [puntos, setPuntos] = useState([]);
+  const [pendientes, setPendientes] = useState([]); // muertes no constitutivas de delito: aún no cuentan como homicidio doloso
   const [sinUbicar, setSinUbicar] = useState([]); // casos regionales sin coordenadas: no van al mapa, sí al panel de análisis
   const [loading, setLoading] = useState(true);
   const [leafletReady, setLeafletReady] = useState(false);
@@ -214,6 +273,7 @@ export default function MapaCalor({ user, onIniciarProyecto, onImportar, seccion
     const delitos = new Set();
     const municipios = new Set();
     let listaSinUbicar = [];
+    let listaPendientes = [];
 
     for (const f of FUENTES) {
       const campos = f.lat + ', ' + f.lng + ', ' + f.fecha + ', ' + f.delito + ', ' + f.muni + ', ' + f.desc + (f.region ? ', ' + f.region : '');
@@ -221,7 +281,7 @@ export default function MapaCalor({ user, onIniciarProyecto, onImportar, seccion
       // Si la columna opcional de hora todavía no existe en la base, se reintenta sin ella: el mapa nunca debe quedar vacío
       if (resp.error && (f.hora || f.conf || f.arma)) resp = await supabase.from(f.key).select(campos).not(f.lat, 'is', null).not(f.lng, 'is', null);
       const data = resp.data;
-      const coords = (data || []).map(function(r) {
+      const coordsTodas = (data || []).map(function(r) {
         return {
           lat: parseFloat(r[f.lat]), lng: parseFloat(r[f.lng]), fuente: f.key,
           fecha: r[f.fecha] || '', delito: r[f.delito] || '', municipio: f.key === 'incidencia_regional' ? municipioDeSector(r[f.muni], r[f.region]) : (r[f.muni] || ''), sector: f.key === 'incidencia_regional' ? (r[f.muni] || '') : '', region: f.region ? (r[f.region] || '') : '', hora: f.hora ? String(r[f.hora] || '').slice(0, 5) : '', confirmada: f.conf ? r[f.conf] : null, arma: f.arma ? String(r[f.arma] || '').trim().toUpperCase() : '',
@@ -229,6 +289,10 @@ export default function MapaCalor({ user, onIniciarProyecto, onImportar, seccion
         };
       }).filter(function(p) { return !isNaN(p.lat) && !isNaN(p.lng) && p.lat !== 0 && p.lng !== 0; });
 
+      // Muerte no constitutiva de delito: se aparta (no cuenta como homicidio doloso hasta que el MP la reclasifique)
+      const esPend = function(c) { return f.key === 'incidencia_regional' && clasificarDelito(c.delito).pendiente; };
+      const coords = coordsTodas.filter(function(c) { return !esPend(c); });
+      listaPendientes.push.apply(listaPendientes, coordsTodas.filter(esPend));
       coords.forEach(function(c) {
         if (c.delito) delitos.add(c.delito.toUpperCase());
         if (c.municipio) municipios.add(c.municipio);
@@ -247,6 +311,8 @@ export default function MapaCalor({ user, onIniciarProyecto, onImportar, seccion
             descripcion: r[f.desc] || '', label: f.label, color: f.color,
           };
         });
+        listaPendientes.push.apply(listaPendientes, listaSinUbicar.filter(function(c) { return clasificarDelito(c.delito).pendiente; }));
+        listaSinUbicar = listaSinUbicar.filter(function(c) { return !clasificarDelito(c.delito).pendiente; });
         listaSinUbicar.forEach(function(c) {
           if (c.delito) delitos.add(c.delito.toUpperCase());
           if (c.municipio) municipios.add(c.municipio);
@@ -258,6 +324,7 @@ export default function MapaCalor({ user, onIniciarProyecto, onImportar, seccion
 
     setPuntos(todos);
     setSinUbicar(listaSinUbicar);
+    setPendientes(listaPendientes);
     setStats({ total: todos.length, por_fuente: porFuente });
     setDelitosUnicos(Array.from(delitos).sort());
     setMunicipiosUnicos(Array.from(municipios).sort());
@@ -283,6 +350,12 @@ export default function MapaCalor({ user, onIniciarProyecto, onImportar, seccion
   // El panel cuenta todos los casos, con o sin ubicación; el mapa solo dibuja los ubicados
   const sinUbicarFiltrados = sinUbicar.filter(function(p) { return filtros[p.fuente] && pasaFiltros(p); });
   const puntosAnalisis = puntosFiltrados.concat(sinUbicarFiltrados);
+  const pendientesFiltrados = pendientes.filter(function(p) { return filtros[p.fuente] && pasaFiltros(p); });
+  const avisoPendientes = pendientesFiltrados.length > 0 ? (
+    <div style={{ marginTop: 8, fontSize: 15, color: '#3f4a63', background: '#eef1f6', border: '1px solid #c9d1e0', borderRadius: 8, padding: '8px 12px' }}>
+      <strong>{pendientesFiltrados.length} caso{pendientesFiltrados.length > 1 ? 's' : ''} en espera de necropsia</strong> (muerte no constitutiva de delito): no se cuenta{pendientesFiltrados.length > 1 ? 'n' : ''} como homicidio doloso hasta que el Ministerio Público los reclasifique.
+    </div>
+  ) : null;
   puntosAnalisis.forEach(function(p) {
     if (p.arma) analysisPorArma[p.arma] = (analysisPorArma[p.arma] || 0) + 1;
     var mk = p.fecha ? String(p.fecha).slice(0, 7) : '';
@@ -298,6 +371,42 @@ export default function MapaCalor({ user, onIniciarProyecto, onImportar, seccion
   const topSectores = Object.entries(analysisPorSector).sort(function(a, b) { return b[1] - a[1]; }).slice(0, 10);
   const topArmas = Object.entries(analysisPorArma).sort(function(a, b) { return b[1] - a[1]; }).slice(0, 10);
   const casosPorMes = Object.keys(analysisPorMes).sort().map(function(k) { return [nombreMes(k), analysisPorMes[k]]; });
+
+  // Cómo ocurrieron los homicidios (la tipificación del MP se agrupa en categorías de análisis; el texto original no se toca)
+  const homicidios = puntosAnalisis.filter(function(p) { return p.fuente === 'incidencia_regional'; });
+  const porMedio = {}, variantesMedio = {};
+  let nFosa = 0;
+  homicidios.forEach(function(p) {
+    var c = clasificarDelito(p.delito);
+    porMedio[c.medio] = (porMedio[c.medio] || 0) + 1;
+    var t = String(p.delito || '').trim() || '(sin tipificación)';
+    variantesMedio[c.medio] = variantesMedio[c.medio] || {};
+    variantesMedio[c.medio][t] = (variantesMedio[c.medio][t] || 0) + 1;
+    if (c.hallazgo) nFosa++;
+  });
+  const medioTop = Object.entries(porMedio).filter(function(e) { return e[0] !== 'Por determinar'; }).sort(function(a, b) { return b[1] - a[1]; })[0] || null;
+
+  // Periodo, ritmo y serie en el tiempo
+  const fechasAn = puntosAnalisis.map(function(p) { return p.fecha ? String(p.fecha).slice(0, 10) : ''; }).filter(Boolean).sort();
+  const iniPeriodo = fechaDesde || fechasAn[0] || '';
+  const finPeriodo = fechaHasta || fechasAn[fechasAn.length - 1] || '';
+  const DIA = 86400000;
+  const diasPeriodo = iniPeriodo && finPeriodo ? Math.round((Date.parse(finPeriodo) - Date.parse(iniPeriodo)) / DIA) + 1 : 0;
+  const ritmo = puntosAnalisis.length >= 2 && diasPeriodo > 0 ? diasPeriodo / puntosAnalisis.length : null;
+  const variosMeses = casosPorMes.length > 1;
+  let serie = [];
+  if (variosMeses) {
+    var anios = {}; Object.keys(analysisPorMes).forEach(function(k) { anios[k.slice(0, 4)] = 1; });
+    serie = casosPorMes.map(function(m) { return [Object.keys(anios).length > 1 ? m[0] : m[0].split(' ')[0], m[1]]; });
+  } else if (iniPeriodo && diasPeriodo > 0) {
+    var nBloques = Math.ceil(diasPeriodo / 7);
+    var cuentas = []; for (var b = 0; b < nBloques; b++) cuentas.push(0);
+    fechasAn.forEach(function(d) { var i = Math.floor((Date.parse(d) - Date.parse(iniPeriodo)) / (7 * DIA)); if (i >= 0 && i < nBloques) cuentas[i]++; });
+    serie = cuentas.map(function(n, i) {
+      var a = new Date(Date.parse(iniPeriodo) + 7 * i * DIA), z = new Date(Math.min(Date.parse(iniPeriodo) + (7 * i + 6) * DIA, Date.parse(finPeriodo)));
+      return [a.getUTCDate() + ' al ' + z.getUTCDate(), n];
+    });
+  }
 
   useEffect(function() {
     if (!leafletReady || !mapRef.current || !window.L) return;
@@ -517,6 +626,7 @@ export default function MapaCalor({ user, onIniciarProyecto, onImportar, seccion
           <strong>{sinUbicarFiltrados.length} caso{sinUbicarFiltrados.length > 1 ? 's' : ''} sin ubicación</strong> no aparece{sinUbicarFiltrados.length > 1 ? 'n' : ''} en el mapa, pero sí cuenta{sinUbicarFiltrados.length > 1 ? 'n' : ''} en el panel de análisis. Para ubicarlos, usa la pestaña Importar.
         </div>
       )}
+      {avisoPendientes}
 
       <div style={{ marginTop: 10 }}>
         <ReglaMapa obtenerMapa={function() { return mapInstance.current; }} />
@@ -537,36 +647,75 @@ export default function MapaCalor({ user, onIniciarProyecto, onImportar, seccion
 
       <div style={{ display: seccion === 'panel' ? 'block' : 'none' }}>
         <div style={{ background: C.white, borderRadius: 10, border: '1px solid #b6905440', padding: 20 }}>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 24 }}>
-              <RankingBarras titulo="Incidencia por Municipio (Top 10)" icono={<MapPin size={14} color={C.gold} />} items={topMunicipios} />
-              <RankingBarras titulo="Incidencia por Colonia (Top 10)" icono={<MapPin size={14} color={C.gold} />} items={topSectores} />
-            </div>
-            <div style={{ marginTop: 22 }}>
-              <RankingBarras titulo="Incidencia por Tipo de Delito (Top 10)" icono={<BarChart3 size={14} color={C.red} />} items={topDelitos} />
-            </div>
-            <div style={{ marginTop: 22, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 24 }}>
-              <div>
-                <RankingBarras titulo="Casos por mes" icono={<Clock size={14} color={C.gold} />} items={casosPorMes} numerar={false} />
-                {casosPorMes.length > 1 && <div style={{ fontSize: 13, color: C.gray, marginTop: 4 }}>El mes más reciente puede estar incompleto.</div>}
-              </div>
-              <RankingBarras titulo="Arma o calibre (Top 10)" icono={<BarChart3 size={14} color={C.red} />} items={topArmas} />
-            </div>
-
-            {puntosAnalisis.length > 0 && (
-              <div style={{ marginTop: 16, padding: 14, backgroundColor: C.lightGold, borderRadius: 8, border: '1px solid #b6905440' }}>
-                <div style={{ fontSize: 14, fontWeight: 700, color: C.gold, textTransform: 'uppercase', marginBottom: 6 }}>Resumen de Inteligencia</div>
-                <div style={{ fontSize: 15, color: C.darkBlue, lineHeight: 1.7 }}>
+          {puntosAnalisis.length === 0 ? (
+            <div style={{ fontSize: 15, color: C.gray, textAlign: 'center', padding: 20 }}>Sin datos con estos filtros.</div>
+          ) : (
+            <>
+              <div style={{ padding: 14, backgroundColor: C.lightGold, borderRadius: 8, border: '1px solid #b6905440' }}>
+                <div style={{ fontSize: 14, fontWeight: 700, color: C.gold, textTransform: 'uppercase', marginBottom: 6 }}>Lo más importante</div>
+                <div style={{ fontSize: 16, color: C.darkBlue, lineHeight: 1.7 }}>
                   Se analizaron <strong>{puntosAnalisis.length}</strong> incidentes
-                  {fechaDesde && fechaHasta ? ' entre ' + fechaDesde + ' y ' + fechaHasta : fechaDesde ? ' desde ' + fechaDesde : fechaHasta ? ' hasta ' + fechaHasta : ''}
+                  {fechaDesde && fechaHasta ? ' entre ' + fechaLarga(fechaDesde) + ' y ' + fechaLarga(fechaHasta) : fechaDesde ? ' desde el ' + fechaLarga(fechaDesde) : fechaHasta ? ' hasta el ' + fechaLarga(fechaHasta) : ''}
                   {filtroMunicipio ? ' en ' + filtroMunicipio : ''}
                   {filtroDelito ? ' del tipo "' + filtroDelito + '"' : ''}.
-                  {topMunicipios.length > 0 && <span> El municipio con mayor incidencia es <strong>{topMunicipios[0][0]}</strong> con {topMunicipios[0][1]} evento{topMunicipios[0][1] > 1 ? 's' : ''}.</span>}
-                  {topSectores.length > 0 && <span> La colonia con mayor incidencia es <strong>{topSectores[0][0]}</strong> con {topSectores[0][1]} evento{topSectores[0][1] > 1 ? 's' : ''}.</span>}
-                  {topDelitos.length > 0 && <span> El delito más frecuente es <strong>{topDelitos[0][0]}</strong> con {topDelitos[0][1]} registro{topDelitos[0][1] > 1 ? 's' : ''}.</span>}
-                  {sinUbicarFiltrados.length > 0 && <span> De ellos, <strong>{sinUbicarFiltrados.length}</strong> todavía no tienen ubicación en el mapa.</span>}
+                  {topSectores.length > 0 && <span> La colonia con más casos es <strong>{topSectores[0][0]}</strong> con {topSectores[0][1]}.</span>}
+                  {medioTop && <span> Predomina el homicidio por <strong>{medioTop[0].toLowerCase()}</strong> ({medioTop[1]} de {homicidios.length}).</span>}
+                  {sinUbicarFiltrados.length > 0 && <span> {sinUbicarFiltrados.length} todavía no tienen ubicación en el mapa.</span>}
                 </div>
               </div>
-            )}
+
+              {avisoPendientes}
+              <div style={{ marginTop: 16, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 10 }}>
+                <TarjetaDato etiqueta="Casos en el periodo" valor={puntosAnalisis.length} detalle={iniPeriodo && finPeriodo ? 'Del ' + fechaLarga(iniPeriodo) + ' al ' + fechaLarga(finPeriodo) : null} />
+                <TarjetaDato etiqueta="Ritmo" valor={ritmo ? (ritmo < 1 ? 'Más de uno por día' : 'Uno cada ' + ritmo.toFixed(1) + ' días') : '—'} detalle={diasPeriodo > 0 ? diasPeriodo + ' días analizados' : null} />
+                <TarjetaDato etiqueta="Colonia con más casos" valor={topSectores[0] ? topSectores[0][0] : (topMunicipios[0] ? topMunicipios[0][0] : '—')} detalle={topSectores[0] ? topSectores[0][1] + ' de ' + puntosAnalisis.length : null} />
+                {homicidios.length > 0 && <TarjetaDato etiqueta="Cómo ocurrieron" valor={medioTop ? medioTop[0] : 'Por determinar'} detalle={medioTop ? medioTop[1] + ' de ' + homicidios.length + ' (' + Math.round(medioTop[1] / homicidios.length * 100) + '%)' : null} />}
+              </div>
+
+              {homicidios.length > 0 && (
+                <div style={{ marginTop: 24 }}>
+                  <div style={{ fontSize: 16, fontWeight: 700, color: C.darkBlue, marginBottom: 10 }}>Cómo ocurrieron los homicidios</div>
+                  <BarraMedios porMedio={porMedio} total={homicidios.length} />
+                  {porMedio['Por determinar'] > 0 && <div style={{ fontSize: 14, color: C.gray, marginTop: 8 }}>"Por determinar": la tipificación del MP todavía no menciona el medio (por ejemplo, cuando falta el dictamen del perito).</div>}
+                  {nFosa > 0 && <div style={{ fontSize: 14, color: C.gray, marginTop: 4 }}>{nFosa} caso{nFosa > 1 ? 's' : ''} correspondiente{nFosa > 1 ? 's' : ''} a hallazgo en fosa.</div>}
+                  <details style={{ marginTop: 10 }}>
+                    <summary style={{ cursor: 'pointer', fontSize: 15, fontWeight: 600, color: C.darkBlue }}>Ver cómo lo escribió el Ministerio Público</summary>
+                    <div style={{ marginTop: 8, fontSize: 14, color: '#374151', lineHeight: 1.6 }}>
+                      {MEDIOS_ORDEN.filter(function(m) { return variantesMedio[m]; }).map(function(m) { return (
+                        <div key={m} style={{ marginBottom: 8 }}>
+                          <strong style={{ color: C.darkBlue }}>{m}</strong>
+                          {Object.entries(variantesMedio[m]).sort(function(a, b) { return b[1] - a[1]; }).map(function(e) { return <div key={e[0]} style={{ paddingLeft: 12 }}>{e[1]} · {e[0]}</div>; })}
+                        </div>
+                      ); })}
+                    </div>
+                  </details>
+                </div>
+              )}
+
+              <div style={{ marginTop: 24, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 24 }}>
+                {serie.length > 0 && (
+                  <div>
+                    <div style={{ fontSize: 16, fontWeight: 700, color: C.darkBlue, marginBottom: 10 }}>{variosMeses ? 'Casos por mes' : 'Casos por semana'}</div>
+                    <ColumnasSimples items={serie} />
+                    {variosMeses && <div style={{ fontSize: 13, color: C.gray, marginTop: 6 }}>El mes más reciente puede estar incompleto.</div>}
+                  </div>
+                )}
+                <RankingBarras titulo="Colonias con más casos" icono={<MapPin size={14} color={C.gold} />} items={topSectores.slice(0, 8)} />
+              </div>
+
+              <div style={{ marginTop: 24, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 24 }}>
+                {topMunicipios.length > 1 && <RankingBarras titulo="Municipios" icono={<MapPin size={14} color={C.gold} />} items={topMunicipios} />}
+                {topArmas.length > 0 && <RankingBarras titulo="Arma o calibre" icono={<BarChart3 size={14} color={C.gold} />} items={topArmas} />}
+              </div>
+
+              <details style={{ marginTop: 20 }}>
+                <summary style={{ cursor: 'pointer', fontSize: 15, fontWeight: 600, color: C.darkBlue }}>Ver la tipificación original completa (Top 10)</summary>
+                <div style={{ marginTop: 10 }}>
+                  <RankingBarras titulo="Tal como la escribió el MP" icono={<BarChart3 size={14} color={C.gold} />} items={topDelitos} />
+                </div>
+              </details>
+            </>
+          )}
         </div>
       </div>
 

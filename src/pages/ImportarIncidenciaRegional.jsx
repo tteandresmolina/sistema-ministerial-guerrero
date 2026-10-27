@@ -14,6 +14,7 @@ import { useState, useEffect, useRef } from 'react';
 import * as XLSX from 'xlsx';
 import { supabase } from '../supabaseClient';
 import { Upload, MapPin, CheckCircle2, AlertTriangle, X } from 'lucide-react';
+import { clasificarDelito, MEDIOS_ORDEN, COLOR_MEDIO } from './clasificarDelito';
 
 const C = {
   navy: '#001a4d', gold: '#b69054', guinda: '#8b1e1e', white: '#ffffff',
@@ -397,6 +398,7 @@ export default function ImportarIncidenciaRegional({ perfil, onImportado, leafle
   const [fase, setFase] = useState('inicio'); // 'inicio' | 'revision'
   const [region, setRegion] = useState(REGIONES_LISTAS[0]);
   const [resumen, setResumen] = useState(null);
+  const [reclasif, setReclasif] = useState([]); // carpetas ya registradas que llegan con otra tipificación (el MP reclasificó)
   const [filas, setFilas] = useState([]);
   const [sel, setSel] = useState(null);
   const [ubicando, setUbicando] = useState(false);
@@ -466,13 +468,18 @@ export default function ImportarIncidenciaRegional({ perfil, onImportado, leafle
       if (!parsed) { setMsg({ tipo: 'error', texto: 'No encontré la tabla de casos (busco una fila con el encabezado "CARPETA DE INVESTIGACIÓN").' }); return; }
 
       const existentes = new Set();
+      const mapaExist = {};
       const cis = parsed.filas.map((f) => f.ci);
       for (let i = 0; i < cis.length; i += 100) {
-        const { data, error } = await supabase.from('incidencia_regional').select('carpeta_investigacion').in('carpeta_investigacion', cis.slice(i, i + 100));
+        const { data, error } = await supabase.from('incidencia_regional').select('carpeta_investigacion, delito, observaciones').in('carpeta_investigacion', cis.slice(i, i + 100));
         if (error) throw error;
-        (data || []).forEach((r) => existentes.add(r.carpeta_investigacion));
+        (data || []).forEach((r) => { existentes.add(r.carpeta_investigacion); mapaExist[r.carpeta_investigacion] = { delito: r.delito || '', obs: r.observaciones || '' }; });
       }
       const nuevas = parsed.filas.filter((f) => !existentes.has(f.ci));
+      // El MP reclasifica delitos (p. ej. de "muerte no constitutiva de delito" a homicidio doloso cuando llega la necropsia)
+      setReclasif(parsed.filas
+        .filter((f) => existentes.has(f.ci) && f.delito && normalizar(mapaExist[f.ci].delito) !== normalizar(f.delito))
+        .map((f) => ({ ci: f.ci, antes: mapaExist[f.ci].delito, despues: f.delito, obs: mapaExist[f.ci].obs })));
       setFilas(nuevas);
       setSel(null);
       setProgreso(0);
@@ -510,6 +517,26 @@ export default function ImportarIncidenciaRegional({ perfil, onImportado, leafle
   const incompletas = filas.filter((f) => !f.sector || !f.fecha).length;
   const sinUbicar = filas.filter((f) => f.lat == null).length;
 
+  const aplicarReclasif = async () => {
+    const hoy = new Date().toLocaleDateString('es-MX');
+    let n = 0;
+    for (const r of reclasif) {
+      const nota = 'Reclasificado el ' + hoy + ': antes "' + (r.antes || 'sin tipificación') + '"';
+      const { error } = await supabase.from('incidencia_regional').update({ delito: r.despues, observaciones: r.obs ? r.obs + ' | ' + nota : nota }).eq('carpeta_investigacion', r.ci);
+      if (!error) n++;
+    }
+    return n;
+  };
+
+  const actualizarTipificaciones = async () => {
+    setGuardando(true); setMsg(null);
+    const n = await aplicarReclasif();
+    setReclasif([]); setGuardando(false);
+    setMsg({ tipo: 'ok', texto: `Listo: se actualizó la tipificación de ${n} carpeta${n === 1 ? '' : 's'}.` });
+    if (filas.length === 0) { setFase('inicio'); setResumen(null); }
+    if (onImportado) onImportado();
+  };
+
   const guardar = async () => {
     if (incompletas > 0) { setMsg({ tipo: 'error', texto: `Hay ${incompletas} caso(s) sin sector o sin fecha válida. Selecciónalos en la lista y complétalos.` }); return; }
     setGuardando(true); setMsg(null);
@@ -537,13 +564,15 @@ export default function ImportarIncidenciaRegional({ perfil, onImportado, leafle
       }
       guardados += lote.length;
     }
+    const actualizadas = reclasif.length > 0 ? await aplicarReclasif() : 0;
+    setReclasif([]);
     setGuardando(false);
-    setMsg({ tipo: 'ok', texto: `Listo: se importaron ${guardados} casos nuevos.` + (sinHora ? ' La hora no se guardó: falta agregar su columna en la base de datos.' : '') });
+    setMsg({ tipo: 'ok', texto: `Listo: se importaron ${guardados} casos nuevos.` + (actualizadas > 0 ? ` Se actualizó la tipificación de ${actualizadas} carpeta${actualizadas === 1 ? '' : 's'}.` : '') + (sinHora ? ' La hora no se guardó: falta agregar su columna en la base de datos.' : '') });
     setFase('inicio'); setFilas([]); setResumen(null); setSel(null);
     if (onImportado) onImportado();
   };
 
-  const cancelar = () => { cancelado.current = true; setUbicando(false); setFase('inicio'); setFilas([]); setResumen(null); setSel(null); setMsg(null); };
+  const cancelar = () => { cancelado.current = true; setUbicando(false); setFase('inicio'); setFilas([]); setResumen(null); setReclasif([]); setSel(null); setMsg(null); };
 
   const caja = { background: C.white, borderRadius: 10, padding: 14, marginBottom: 14, boxShadow: '0 1px 4px rgba(0,0,0,0.08)' };
   const fSel = sel != null ? filas[sel] : null;
@@ -613,6 +642,48 @@ export default function ImportarIncidenciaRegional({ perfil, onImportado, leafle
             {resumen.conCoords > 0 && <TarjetaCifra n={resumen.conCoords} t="Con coordenadas" c={C.navy} />}
             {resumen.repetidos > 0 && <TarjetaCifra n={resumen.repetidos} t="C.I. repetidas (se usó la primera)" c={C.ambar} />}
           </div>
+
+          {reclasif.length > 0 && (
+            <div style={{ background: '#fff8e1', border: '1px solid #f0d58a', borderRadius: 10, padding: '12px 16px', marginBottom: 12 }}>
+              <div style={{ fontSize: 15, fontWeight: 700, color: '#7a4b00', marginBottom: 6 }}>{reclasif.length} carpeta{reclasif.length > 1 ? 's' : ''} ya registrada{reclasif.length > 1 ? 's' : ''} llegó{reclasif.length > 1 ? 'n' : ''} con otra tipificación</div>
+              <div style={{ fontSize: 14, color: '#374151', lineHeight: 1.6 }}>
+                {reclasif.slice(0, 8).map((r) => <div key={r.ci}>{r.ci}: "{r.antes || 'sin tipificación'}" → "{r.despues}"</div>)}
+                {reclasif.length > 8 && <div>… y {reclasif.length - 8} más.</div>}
+              </div>
+              <div style={{ fontSize: 13, color: C.gray, margin: '6px 0 8px' }}>Se actualizarán al guardar, y la tipificación anterior queda anotada en las observaciones del caso.</div>
+              <button onClick={actualizarTipificaciones} disabled={guardando} style={{ ...btnSecundario, opacity: guardando ? 0.6 : 1 }}>Actualizar tipificación ahora</button>
+            </div>
+          )}
+
+          {filas.length > 0 && (() => {
+            const cuenta = {}, sinMedio = {};
+            let fosas = 0, pendNecropsia = 0;
+            filas.forEach((f) => {
+              const c = clasificarDelito(f.delito);
+              if (c.pendiente) pendNecropsia++;
+              cuenta[c.medio] = (cuenta[c.medio] || 0) + 1;
+              if (c.medio === 'Por determinar') { const t = String(f.delito || '').trim() || '(sin tipificación)'; sinMedio[t] = (sinMedio[t] || 0) + 1; }
+              if (c.hallazgo) fosas++;
+            });
+            return (
+              <div style={{ background: '#faf6ee', border: '1px solid #b6905440', borderRadius: 10, padding: '12px 16px', marginBottom: 12 }}>
+                <div style={{ fontSize: 15, fontWeight: 700, color: C.navy, marginBottom: 8 }}>Cómo quedan agrupadas las tipificaciones del MP</div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                  {MEDIOS_ORDEN.filter((m) => cuenta[m]).map((m) => (
+                    <span key={m} style={{ background: COLOR_MEDIO[m].bg, color: COLOR_MEDIO[m].tx, borderRadius: 14, padding: '4px 12px', fontSize: 15, fontWeight: 700 }}>{m} · {cuenta[m]}</span>
+                  ))}
+                </div>
+                {Object.keys(sinMedio).length > 0 && (
+                  <div style={{ fontSize: 14, color: '#374151', marginTop: 8, lineHeight: 1.5 }}>
+                    <strong>Por determinar:</strong> la tipificación no menciona el medio, algo normal si falta el dictamen del perito: {Object.entries(sinMedio).map(([t, n]) => t + (n > 1 ? ' (' + n + ')' : '')).join(' · ')}.
+                  </div>
+                )}
+                {pendNecropsia > 0 && <div style={{ fontSize: 14, color: '#374151', marginTop: 4 }}><strong>{pendNecropsia} caso{pendNecropsia > 1 ? 's' : ''} como muerte no constitutiva de delito:</strong> se guarda{pendNecropsia > 1 ? 'n' : ''}, pero no cuenta{pendNecropsia > 1 ? 'n' : ''} como homicidio doloso hasta que el MP los reclasifique.</div>}
+                {fosas > 0 && <div style={{ fontSize: 14, color: '#374151', marginTop: 4 }}>{fosas} caso{fosas > 1 ? 's' : ''} marcado{fosas > 1 ? 's' : ''} como hallazgo en fosa.</div>}
+                <div style={{ fontSize: 13, color: C.gray, marginTop: 6 }}>El texto original del MP se guarda sin cambios; esta agrupación solo se usa para el análisis.</div>
+              </div>
+            );
+          })()}
 
           {filas.length === 0 ? (
             <div style={{ color: C.gray, fontSize: 15, padding: '10px 0' }}>No hay casos nuevos que importar. Todo lo que trae el archivo ya estaba registrado.</div>
