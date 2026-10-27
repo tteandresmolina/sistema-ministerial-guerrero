@@ -521,7 +521,7 @@ export default function App() {
               <button onClick={() => setTabApp("subcoord_admin")} style={{ background: "none", border: "none", borderBottom: tabApp === "subcoord_admin" ? "2px solid #001a4d" : "2px solid transparent", padding: "10px 18px", fontWeight: tabApp === "subcoord_admin" ? 700 : 500, color: tabApp === "subcoord_admin" ? "#001a4d" : "#888", cursor: "pointer", fontSize: 15 }}>Subcoord. Admtivo.</button>
             )}
           </div>
-      <div style={{ padding: 20, maxWidth: tabApp === "dashboard" ? 1000 : 800, margin: "0 auto" }}>
+      <div style={{ padding: 20, maxWidth: tabApp === "dashboard" ? 1000 : tabApp === "sara" ? 1200 : 800, margin: "0 auto" }}>
         {tabApp === "busqueda" && <BusquedaOperativa perfil={perfil} onAbrirDetenido={abrirDesdeListaBusqueda} />}
         {tabApp === "dashboard" && puedeVerDashboard && <DashboardMandos perfil={perfil} />}
         {tabApp === "historico" && <DashboardHistorico />}
