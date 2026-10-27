@@ -7,9 +7,10 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../supabaseClient';
-import { RefreshCw, MapPin, Filter, X, Clock, BarChart3, ChevronDown, ChevronUp } from 'lucide-react';
+import { RefreshCw, MapPin, Filter, X, Clock, BarChart3, ChevronDown, ChevronUp, Upload } from 'lucide-react';
 import ImportarIncidenciaRegional from './ImportarIncidenciaRegional';
 import ZonasAtencion from './ZonasAtencion';
+import ReglaMapa from './ReglaMapa';
 
 const C = {
   darkBlue: '#001a4d', gold: '#b69054', lightGold: '#f5ede0',
@@ -22,7 +23,7 @@ const FUENTES = [
   { key: 'escenas_crimen', label: 'Procesamiento del Lugar', color: '#fd7e14', lat: 'coordenadas_lat', lng: 'coordenadas_lng', fecha: 'fecha_procesamiento', delito: 'tipo_escena', muni: 'municipio', desc: 'descripcion_escena' },
   { key: 'detenidos', label: 'Detenidos', color: '#001a4d', lat: 'latitud', lng: 'longitud', fecha: 'fecha_deteccion', delito: 'delito', muni: 'region', desc: 'lugar_deteccion' },
   { key: 'oficios_investigacion', label: 'Oficios de Investigación', color: '#b69054', lat: 'coordenadas_lat', lng: 'coordenadas_lng', fecha: 'fecha_emision', delito: 'delito', muni: 'municipio', desc: 'lugar_hechos' },
-  { key: 'incidencia_regional', label: 'Homicidios dolosos', color: '#8b1e1e', lat: 'coordenadas_lat', lng: 'coordenadas_lng', fecha: 'fecha', delito: 'delito', muni: 'zona', desc: 'lugar_hechos', region: 'region' },
+  { key: 'incidencia_regional', label: 'Homicidios dolosos', color: '#8b1e1e', lat: 'coordenadas_lat', lng: 'coordenadas_lng', fecha: 'fecha', delito: 'delito', muni: 'zona', desc: 'lugar_hechos', region: 'region', hora: 'hora_conocimiento', conf: 'ubicacion_confirmada' },
 ];
 
 // Las fuentes se muestran en dos grupos: lo que se captura en el sistema (por C.I.) y la estadística regional que llega en Excel
@@ -166,7 +167,7 @@ function loadCSS(href) {
   document.head.appendChild(l);
 }
 
-export default function MapaCalor({ user, onIniciarProyecto, seccion = 'mapa' }) {
+export default function MapaCalor({ user, onIniciarProyecto, onImportar, seccion = 'mapa' }) {
   const mapRef = useRef(null);
   const [zonas, setZonas] = useState([]); // zonas de atención calculadas por el panel (se marcan siempre en el mapa)
   const [distanciaKm, setDistanciaKm] = useState(2); // distancia compartida: zonas, color de los puntos y resplandor
@@ -207,11 +208,14 @@ export default function MapaCalor({ user, onIniciarProyecto, seccion = 'mapa' })
 
     for (const f of FUENTES) {
       const campos = f.lat + ', ' + f.lng + ', ' + f.fecha + ', ' + f.delito + ', ' + f.muni + ', ' + f.desc + (f.region ? ', ' + f.region : '');
-      const { data } = await supabase.from(f.key).select(campos).not(f.lat, 'is', null).not(f.lng, 'is', null);
+      let resp = await supabase.from(f.key).select(campos + (f.hora ? ', ' + f.hora : '') + (f.conf ? ', ' + f.conf : '')).not(f.lat, 'is', null).not(f.lng, 'is', null);
+      // Si la columna opcional de hora todavía no existe en la base, se reintenta sin ella: el mapa nunca debe quedar vacío
+      if (resp.error && (f.hora || f.conf)) resp = await supabase.from(f.key).select(campos).not(f.lat, 'is', null).not(f.lng, 'is', null);
+      const data = resp.data;
       const coords = (data || []).map(function(r) {
         return {
           lat: parseFloat(r[f.lat]), lng: parseFloat(r[f.lng]), fuente: f.key,
-          fecha: r[f.fecha] || '', delito: r[f.delito] || '', municipio: f.key === 'incidencia_regional' ? municipioDeSector(r[f.muni], r[f.region]) : (r[f.muni] || ''), sector: f.key === 'incidencia_regional' ? (r[f.muni] || '') : '', region: f.region ? (r[f.region] || '') : '',
+          fecha: r[f.fecha] || '', delito: r[f.delito] || '', municipio: f.key === 'incidencia_regional' ? municipioDeSector(r[f.muni], r[f.region]) : (r[f.muni] || ''), sector: f.key === 'incidencia_regional' ? (r[f.muni] || '') : '', region: f.region ? (r[f.region] || '') : '', hora: f.hora ? String(r[f.hora] || '').slice(0, 5) : '', confirmada: f.conf ? r[f.conf] : null,
           descripcion: r[f.desc] || '', label: f.label, color: f.color,
         };
       }).filter(function(p) { return !isNaN(p.lat) && !isNaN(p.lng) && p.lat !== 0 && p.lng !== 0; });
@@ -281,7 +285,10 @@ export default function MapaCalor({ user, onIniciarProyecto, seccion = 'mapa' })
     mapInstance.current.invalidateSize(false);
     layerGroup.current.clearLayers();
     if (heatLayer.current) { mapInstance.current.removeLayer(heatLayer.current); heatLayer.current = null; }
-    var heatData = puntosFiltrados.map(function(p) { return [p.lat, p.lng, 1]; });
+    // El resplandor aparece SOLO donde hay una zona de atención prioritaria (4 o más homicidios en un mes dentro de la
+    // distancia elegida). Los demás puntos conservan su color de semáforo, sin resplandor.
+    var heatData = [];
+    (zonas || []).forEach(function(z) { (z.miembros || []).forEach(function(m) { heatData.push([m.lat, m.lng, 1]); }); });
     if (heatData.length > 0 && window.L.heatLayer) {
       heatLayer.current = window.L.heatLayer(heatData, {
         radius: radioCalorPx(mapInstance.current, distanciaKm), blur: radioCalorPx(mapInstance.current, distanciaKm) * 0.6,
@@ -297,11 +304,11 @@ export default function MapaCalor({ user, onIniciarProyecto, seccion = 'mapa' })
         '<div style="font-weight:700;font-size:13px;color:' + p.color + ';margin-bottom:4px">' + esc(p.label) + '</div>' +
         (p.delito ? '<div style="font-size:12px;color:#b71c1c;font-weight:600">' + esc(p.delito) + '</div>' : '') +
         (p.municipio ? '<div style="font-size:11px;color:#666;margin-top:2px">📍 ' + esc(p.municipio) + '</div>' : '') +
-        (p.fecha ? '<div style="font-size:11px;color:#666">📅 ' + esc(p.fecha) + '</div>' : '') +
-        '<div style="font-size:12px;font-weight:700;color:#374151;margin-top:3px">Casos a menos de ' + distanciaKm + ' km: ' + nCercanos + ' (' + nivel.label + ')</div>' +
+        (p.fecha ? '<div style="font-size:11px;color:#666">📅 ' + esc(p.fecha) + (p.hora ? ' · ' + esc(p.hora) + ' h' : '') + '</div>' : '') +
+        '<div style="font-size:12px;font-weight:700;color:#374151;margin-top:3px">Casos en un radio de ' + distanciaKm + ' km: ' + nCercanos + ' (' + nivel.label + ')</div>' +
         (p.descripcion ? '<div style="font-size:11px;color:#333;margin-top:4px;max-width:220px;word-wrap:break-word">' + esc(p.descripcion.substring(0, 120)) + (p.descripcion.length > 120 ? '...' : '') + '</div>' : '') +
         '<div style="font-size:10px;color:#999;margin-top:4px">Lat: ' + p.lat.toFixed(5) + ' · Lng: ' + p.lng.toFixed(5) + '</div></div>';
-      window.L.circleMarker([p.lat, p.lng], { radius: 8, fillColor: nivel.color, color: p.color, weight: 2.5, opacity: 1, fillOpacity: 0.95 }).addTo(layerGroup.current).bindPopup(popup);
+      window.L.circleMarker([p.lat, p.lng], { radius: 8, fillColor: nivel.color, color: p.color, weight: 2.5, opacity: 1, fillOpacity: 0.95, fecha: p.fecha, hora: p.hora, confirmada: p.confirmada }).addTo(layerGroup.current).bindPopup(popup);
     });
     // Todas las zonas de atención se marcan siempre (círculo punteado + etiqueta); la elegida se resalta
     (zonas || []).forEach(function(z) {
@@ -322,6 +329,13 @@ export default function MapaCalor({ user, onIniciarProyecto, seccion = 'mapa' })
   // Si cambian los filtros o las capas, la zona elegida ya no corresponde: se quita
   useEffect(function() { setFocoSel(null); }, [fechaDesde, fechaHasta, filtroDelito, filtroMunicipio, filtros]);
 
+  // Al abrir la pestaña Importar, los mapas pequeños del importador (estuvieron ocultos) recalculan su tamaño
+  useEffect(function() {
+    if (seccion !== 'importar') return;
+    var t = setTimeout(function() { window.dispatchEvent(new Event('resize')); }, 80);
+    return function() { clearTimeout(t); };
+  }, [seccion]);
+
   // Al volver a la pestaña del mapa, Leaflet recalcula su tamaño
   useEffect(function() {
     if (seccion !== 'mapa') return;
@@ -336,6 +350,7 @@ export default function MapaCalor({ user, onIniciarProyecto, seccion = 'mapa' })
 
   return (
     <div style={{ marginBottom: 20 }}>
+      <div style={{ display: seccion === 'importar' ? 'none' : 'block' }}>
       <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', marginBottom: 12 }}>
         <div style={{ display: 'flex', gap: 8 }}>
           {hayFiltrosActivos && (
@@ -368,9 +383,11 @@ export default function MapaCalor({ user, onIniciarProyecto, seccion = 'mapa' })
                   );
                 })}
               </div>
-              {g.importador && user && user.rol === 'mando' && (
+              {g.importador && user && user.rol === 'mando' && onImportar && (
                 <div style={{ marginTop: 12 }}>
-                  <ImportarIncidenciaRegional perfil={user} onImportado={cargarDatos} leafletListo={leafletReady} />
+                  <button onClick={onImportar} style={{ background: '#ffffff', border: '2px solid #001a4d', color: '#001a4d', borderRadius: 8, padding: '9px 16px', fontSize: 14, fontWeight: 700, cursor: 'pointer', minHeight: 40, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                    <Upload size={15} /> Importar Excel
+                  </button>
                 </div>
               )}
             </div>
@@ -407,6 +424,7 @@ export default function MapaCalor({ user, onIniciarProyecto, seccion = 'mapa' })
           </div>
         </div>
       </div>
+      </div>
 
       <div style={{ display: seccion === 'mapa' ? 'block' : 'none' }}>
       {loading ? (
@@ -424,13 +442,18 @@ export default function MapaCalor({ user, onIniciarProyecto, seccion = 'mapa' })
       )}
 
       <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 18, fontSize: 14, color: C.gray, flexWrap: 'wrap' }} title="Cada punto toma su color según cuántos casos hay a menos de esa distancia">
-        <span style={{ fontWeight: 600 }}>Concentración (casos a menos de {distanciaKm} km):</span>
+        <span style={{ fontWeight: 600 }}>Concentración (casos en un radio de {distanciaKm} km):</span>
         {NIVELES_CALOR.map(function(n) { return (
           <span key={n.label} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             <span style={{ width: 14, height: 14, borderRadius: 3, background: n.color, display: 'inline-block' }} />
             <span><strong style={{ color: '#374151' }}>{n.label}</strong> · {n.casos}</span>
           </span>
         ); })}
+        <span style={{ color: '#8b1e1e', fontWeight: 600 }}>Resplandor: solo en zonas de atención prioritaria</span>
+      </div>
+
+      <div style={{ marginTop: 10 }}>
+        <ReglaMapa obtenerMapa={function() { return mapInstance.current; }} />
       </div>
 
       <div style={{ marginTop: 16 }}>
@@ -471,6 +494,10 @@ export default function MapaCalor({ user, onIniciarProyecto, seccion = 'mapa' })
               </div>
             )}
         </div>
+      </div>
+
+      <div style={{ display: seccion === 'importar' ? 'block' : 'none' }}>
+        {user && user.rol === 'mando' && <ImportarIncidenciaRegional enPestana perfil={user} onImportado={cargarDatos} leafletListo={leafletReady} />}
       </div>
 
       {stats.total === 0 && !loading && (
