@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import {
   FileText, Phone, Siren, MapPin, Search, Users, FolderOpen, Scale, Car, Package,
   Network, Target, LayoutDashboard, History, Archive, Settings, Lock, Menu, X,
-  ChevronDown, ChevronRight, ListChecks,
+  ChevronDown, ChevronRight, ListChecks, PanelLeftClose, PanelLeftOpen,
 } from "lucide-react";
 
 // Íconos por pestaña (siempre acompañados de su texto)
@@ -14,8 +14,12 @@ const ICONOS = {
   historico: Archive, subcoord_admin: Settings,
 };
 
-const NAVY = "#001a4d";
-const GOLD = "#b69054";
+// Colores del panel: un tono más suave que el encabezado (#001a4d) para no competir con él.
+// Contrastes sobre el fondo: blanco 12:1, dorado claro 6.6:1 (cumple AA/AAA para lectura).
+const PANEL = "#1a3566";
+const GOLD = "#b69054";        // filete e institucional
+const GOLD_CLARO = "#d9bd85";  // texto/íconos dorados legibles sobre el panel
+const NAVY = "#001a4d";        // solo para el botón de menú en pantalla chica
 
 function usePantallaChica() {
   const [chica, setChica] = useState(typeof window !== "undefined" && window.innerWidth < 900);
@@ -30,12 +34,21 @@ function usePantallaChica() {
 // grupos: [{ titulo, items: [{ id, label }] }]  (ya filtrados por rol desde App.jsx)
 export default function MenuLateral({ grupos, tabApp, setTabApp }) {
   const chica = usePantallaChica();
-  const [abierto, setAbierto] = useState(false);          // cajón en pantalla chica
+  const [abierto, setAbierto] = useState(false);          // cajón abierto (pantalla chica u oculto)
+  // Preferencia de la persona: menú fijo (true) u oculto (false). Se recuerda en este equipo.
+  const [fijo, setFijo] = useState(() => {
+    try { return localStorage.getItem("menuLateralFijo") !== "0"; } catch { return true; }
+  });
+  const cambiarFijo = (v) => {
+    setFijo(v); setAbierto(false);
+    try { localStorage.setItem("menuLateralFijo", v ? "1" : "0"); } catch {}
+  };
   const [cerrados, setCerrados] = useState({});           // grupos plegados
 
   const actual = grupos.flatMap((g) => g.items).find((i) => i.id === tabApp);
 
-  const elegir = (id) => { setTabApp(id); if (chica) setAbierto(false); };
+  const cajon = chica || !fijo;   // pantalla chica, o menú oculto por elección
+  const elegir = (id) => { setTabApp(id); if (cajon) setAbierto(false); };
 
   const panel = (
     <nav aria-label="Menú principal" style={{ padding: "14px 10px 24px" }}>
@@ -47,7 +60,7 @@ export default function MenuLateral({ grupos, tabApp, setTabApp }) {
             <button
               onClick={() => setCerrados((c) => ({ ...c, [g.titulo]: !c[g.titulo] }))}
               aria-expanded={!plegado}
-              style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", background: "none", border: "none", borderBottom: `1px solid ${GOLD}88`, padding: "8px 8px", color: GOLD, fontSize: 15, fontWeight: 800, cursor: "pointer", textAlign: "left", minHeight: 40 }}>
+              style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", background: "none", border: "none", borderBottom: `1px solid ${GOLD_CLARO}66`, padding: "8px 8px", color: GOLD_CLARO, fontSize: 16, fontWeight: 800, cursor: "pointer", textAlign: "left", minHeight: 40 }}>
               <span>{g.titulo}</span>
               <Chev size={18} />
             </button>
@@ -60,12 +73,12 @@ export default function MenuLateral({ grupos, tabApp, setTabApp }) {
                     <button key={it.id} onClick={() => elegir(it.id)} aria-current={activo ? "page" : undefined}
                       style={{
                         display: "flex", alignItems: "center", gap: 12, width: "100%", textAlign: "left",
-                        background: activo ? "rgba(182,144,84,0.22)" : "transparent",
-                        border: "none", borderLeft: `4px solid ${activo ? GOLD : "transparent"}`,
-                        borderRadius: 6, padding: "10px 12px", minHeight: 46,
-                        color: "#ffffff", fontSize: 16, fontWeight: activo ? 800 : 500, cursor: "pointer",
+                        background: activo ? "rgba(217,189,133,0.20)" : "transparent",
+                        border: "none", borderLeft: `5px solid ${activo ? GOLD_CLARO : "transparent"}`,
+                        borderRadius: 6, padding: "10px 12px", minHeight: 48,
+                        color: "#ffffff", fontSize: 17, fontWeight: activo ? 800 : 600, cursor: "pointer",
                       }}>
-                      <Icono size={20} style={{ color: activo ? GOLD : "#dce6f5", flexShrink: 0 }} />
+                      <Icono size={22} style={{ color: activo ? GOLD_CLARO : "#dce6f5", flexShrink: 0 }} />
                       <span>{it.label}</span>
                     </button>
                   );
@@ -78,36 +91,46 @@ export default function MenuLateral({ grupos, tabApp, setTabApp }) {
     </nav>
   );
 
-  // ── Pantalla chica: barra con botón "Menú" y cajón ──
-  if (chica) {
+  const estiloBotonPanel = { display: "flex", alignItems: "center", gap: 10, width: "calc(100% - 20px)", margin: "10px 10px 0", background: "transparent", border: "1.5px solid rgba(255,255,255,0.45)", borderRadius: 7, color: "#fff", padding: "9px 12px", fontSize: 16, fontWeight: 700, cursor: "pointer", minHeight: 46 };
+
+  // ── Menú como cajón: pantalla chica, o menú oculto por elección ──
+  if (cajon) {
     return (
-      <>
-        <button onClick={() => setAbierto(true)}
+      <div style={{ flexBasis: "100%", width: "100%" }}>
+        <button onClick={() => setAbierto(true)} aria-label="Abrir menú"
           style={{ width: "100%", display: "flex", alignItems: "center", gap: 12, background: "#eef1f6", border: "none", borderBottom: "1px solid #d9dee5", padding: "12px 16px", color: NAVY, fontSize: 17, fontWeight: 800, cursor: "pointer", minHeight: 52 }}>
           <Menu size={22} /> <span>Menú</span>
-          <span style={{ marginLeft: "auto", color: "#6b7280", fontWeight: 600, fontSize: 15 }}>{actual?.label}</span>
+          <span style={{ marginLeft: "auto", color: "#4a5268", fontWeight: 600, fontSize: 16 }}>{actual?.label}</span>
         </button>
         {abierto && (
           <div style={{ position: "fixed", inset: 0, zIndex: 50, display: "flex" }}>
-            <div style={{ width: "82%", maxWidth: 320, background: NAVY, overflowY: "auto" }}>
+            <div style={{ width: "82%", maxWidth: 320, background: PANEL, overflowY: "auto" }}>
               <div style={{ display: "flex", justifyContent: "flex-end", padding: "10px 10px 0" }}>
                 <button onClick={() => setAbierto(false)} aria-label="Cerrar menú"
-                  style={{ background: "none", border: "1.5px solid rgba(255,255,255,0.5)", borderRadius: 7, color: "#fff", padding: "8px 12px", display: "flex", alignItems: "center", gap: 6, fontSize: 15, fontWeight: 700, cursor: "pointer" }}>
+                  style={{ background: "none", border: "1.5px solid rgba(255,255,255,0.5)", borderRadius: 7, color: "#fff", padding: "8px 12px", display: "flex", alignItems: "center", gap: 6, fontSize: 16, fontWeight: 700, cursor: "pointer" }}>
                   <X size={18} /> Cerrar
                 </button>
               </div>
               {panel}
+              {!chica && (
+                <button onClick={() => cambiarFijo(true)} style={{ ...estiloBotonPanel, margin: "0 10px 20px" }}>
+                  <PanelLeftOpen size={22} /> <span>Fijar el menú</span>
+                </button>
+              )}
             </div>
             <div onClick={() => setAbierto(false)} style={{ flex: 1, background: "rgba(0,0,0,0.45)" }} />
           </div>
         )}
-      </>
+      </div>
     );
   }
 
   // ── Pantalla grande: panel fijo a la izquierda ──
   return (
-    <aside style={{ width: 270, flexShrink: 0, background: NAVY, borderRight: `3px solid ${GOLD}`, position: "sticky", top: 0, alignSelf: "flex-start", height: "100vh", overflowY: "auto" }}>
+    <aside style={{ width: 270, flexShrink: 0, background: PANEL, borderRight: `3px solid ${GOLD}`, position: "sticky", top: 0, alignSelf: "flex-start", height: "100vh", overflowY: "auto" }}>
+      <button onClick={() => cambiarFijo(false)} style={estiloBotonPanel} aria-label="Ocultar el menú para tener más espacio">
+        <PanelLeftClose size={22} /> <span>Ocultar menú</span>
+      </button>
       {panel}
     </aside>
   );
