@@ -114,12 +114,12 @@ export default function ReglaMapa({ obtenerMapa }) {
       let mejor = null, md = PEGAR_PX + 1;
       casos().forEach((l) => { const d = mapa.latLngToContainerPoint(l.getLatLng()).distanceTo(p); if (d < md) { md = d; mejor = l; } });
       return mejor
-        ? { lat: mejor.getLatLng().lat, lng: mejor.getLatLng().lng, fecha: mejor.options.fecha || '', hora: mejor.options.hora || '', confirmada: mejor.options.confirmada }
+        ? { lat: mejor.getLatLng().lat, lng: mejor.getLatLng().lng, fecha: mejor.options.fecha || '', hora: mejor.options.hora || '', confirmada: mejor.options.confirmada, num: mejor.options.num }
         : { lat: latlng.lat, lng: latlng.lng };
     };
     const punto = (p, letra) => {
       L.circleMarker([p.lat, p.lng], { radius: 7, color: C.navy, weight: 2.5, fillColor: C.gold, fillOpacity: 1, interactive: false, regla: true }).addTo(r.capa);
-      L.marker([p.lat, p.lng], { interactive: false, keyboard: false, regla: true, icon: L.divIcon({ className: '', iconSize: [0, 0], html: '<div style="transform:translate(-50%,-170%);background:#001a4d;color:#fff;font:800 12px Segoe UI,sans-serif;padding:1px 8px;border-radius:10px">' + letra + '</div>' }) }).addTo(r.capa);
+      L.marker([p.lat, p.lng], { interactive: false, keyboard: false, regla: true, icon: L.divIcon({ className: '', iconSize: [0, 0], html: '<div style="transform:translate(-50%,-150%);background:#001a4d;color:#fff;font:800 15px Segoe UI,sans-serif;padding:2px 10px;border-radius:12px;white-space:nowrap;box-shadow:0 1px 4px rgba(0,0,0,.35)">' + letra + (p.num ? ' · No. ' + p.num : '') + '</div>' }) }).addTo(r.capa);
     };
 
     r.manejador = (e) => {
@@ -132,40 +132,63 @@ export default function ReglaMapa({ obtenerMapa }) {
       const m = distanciaMetros(r.A, r.B);
       L.polyline([[r.A.lat, r.A.lng], [r.B.lat, r.B.lng]], { color: C.navy, weight: 3, dashArray: '8 6', interactive: false, regla: true }).addTo(r.capa);
       const medio = [(r.A.lat + r.B.lat) / 2, (r.A.lng + r.B.lng) / 2];
-      L.marker(medio, { interactive: false, keyboard: false, regla: true, icon: L.divIcon({ className: '', iconSize: [0, 0], html: '<div style="transform:translate(-50%,-50%);background:#fff;border:2px solid #001a4d;color:#001a4d;font:800 13px Segoe UI,sans-serif;padding:2px 10px;border-radius:10px;white-space:nowrap;box-shadow:0 1px 4px rgba(0,0,0,.3)">' + textoDistancia(m) + '</div>' }) }).addTo(r.capa);
-      setMedida({ m, t: tiempoEntre(r.A, r.B), aprox: r.A.confirmada === false || r.B.confirmada === false }); setPaso('listo');
+      L.marker(medio, { interactive: false, keyboard: false, regla: true, icon: L.divIcon({ className: '', iconSize: [0, 0], html: '<div style="transform:translate(-50%,-50%);background:#fff;border:2px solid #001a4d;color:#001a4d;font:800 16px Segoe UI,sans-serif;padding:3px 12px;border-radius:12px;white-space:nowrap;box-shadow:0 1px 4px rgba(0,0,0,.3)">' + textoDistancia(m) + '</div>' }) }).addTo(r.capa);
+      setMedida({ m, t: tiempoEntre(r.A, r.B), aprox: r.A.confirmada === false || r.B.confirmada === false, aNum: r.A.num, bNum: r.B.num }); setPaso('listo');
     };
     mapa.on('click', r.manejador);
     setActiva(true); setPaso('A'); setMedida(null);
   };
 
-  const btn = { borderRadius: 8, padding: '9px 16px', fontSize: 14, fontWeight: 700, cursor: 'pointer', minHeight: 40, display: 'inline-flex', alignItems: 'center', gap: 6 };
+  const btn = { borderRadius: 8, padding: '10px 18px', fontSize: 16, fontWeight: 700, cursor: 'pointer', minHeight: 44, display: 'inline-flex', alignItems: 'center', gap: 8 };
+
+  // Cada dato del resultado: etiqueta arriba, cifra grande, detalle abajo
+  const Dato = ({ etiqueta, valor, detalle }) => (
+    <div style={{ minWidth: 150 }}>
+      <div style={{ fontSize: 15, fontWeight: 700, color: C.gray, letterSpacing: 0.3 }}>{etiqueta}</div>
+      <div style={{ fontSize: 32, fontWeight: 800, color: C.navy, lineHeight: 1.15 }}>{valor}</div>
+      {detalle && <div style={{ fontSize: 15, color: '#374151', marginTop: 2 }}>{detalle}</div>}
+    </div>
+  );
+  const nom = (letra, num) => letra + (num ? ' · No. ' + num : '');
 
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
       <style>{css}</style>
       {!activa ? (
         <button onClick={iniciar} style={{ ...btn, background: C.white, border: '2px solid ' + C.navy, color: C.navy }}>
-          <Ruler size={16} /> Medir distancia
+          <Ruler size={20} /> Medir distancia
         </button>
       ) : (
         <>
           <button onClick={terminar} style={{ ...btn, background: C.navy, border: '2px solid ' + C.navy, color: C.white }}>
-            <Ruler size={16} /> Terminar de medir
+            <Ruler size={20} /> Terminar de medir
           </button>
-          <span style={{ fontSize: 15, color: '#374151' }}>
-            {paso === 'A' && 'Haz clic en el punto A'}
-            {paso === 'B' && 'Haz clic en el punto B'}
-            {paso === 'listo' && medida && <><strong style={{ color: C.navy, fontSize: 17 }}>A → B en línea recta: {textoDistancia(medida.m)}</strong> <span style={{ color: C.gray }}>({Math.round(medida.m).toLocaleString('es-MX')} m)</span>{medida.aprox && <strong style={{ color: C.guinda }} title="Alguno de los dos casos tiene su ubicación sin confirmar: puede estar a decenas o cientos de metros del lugar real."> ≈ aproximada</strong>}</>}
-          </span>
-          {paso === 'listo' && medida && medida.t && (
-            <span style={{ fontSize: 15, color: '#374151' }} title="Se calcula con la hora de conocimiento de cada caso; no es la hora exacta de los hechos.">
-              · Tiempo entre avisos: <strong style={{ color: C.navy }}>{medida.t.texto}</strong>{medida.t.soloFechas ? ' (solo fechas)' : ''}{medida.t.orden ? ' · ' + medida.t.orden : ''}
-              <span style={{ color: C.gray, fontSize: 13 }}> · A: {medida.t.a} · B: {medida.t.b}</span>
-            </span>
-          )}
+          {paso === 'A' && <span style={{ fontSize: 18, color: '#374151' }}>Haz clic en el punto <strong>A</strong> (puedes elegir un caso)</span>}
+          {paso === 'B' && <span style={{ fontSize: 18, color: '#374151' }}>Ahora haz clic en el punto <strong>B</strong></span>}
           {(paso === 'B' || paso === 'listo') && (
             <button onClick={limpiar} style={{ ...btn, background: 'transparent', border: '1.5px solid #c7cfe0', color: C.gray }}>Nueva medición</button>
+          )}
+          {paso === 'listo' && medida && (
+            <div style={{ flexBasis: '100%', width: '100%', background: C.white, border: '1px solid #b6905466', borderLeft: '6px solid ' + C.navy, borderRadius: 10, padding: '14px 20px', display: 'flex', flexWrap: 'wrap', gap: '14px 40px', alignItems: 'flex-start' }}>
+              <Dato etiqueta="Distancia en línea recta" valor={textoDistancia(medida.m)} detalle={Math.round(medida.m).toLocaleString('es-MX') + ' metros'} />
+              {medida.t && (
+                <Dato etiqueta="Tiempo entre avisos" valor={medida.t.texto}
+                  detalle={(medida.t.orden || '') + (medida.t.soloFechas ? (medida.t.orden ? ' · ' : '') + 'solo fechas (falta la hora en uno de los casos)' : '')} />
+              )}
+              <div style={{ minWidth: 200 }}>
+                <div style={{ fontSize: 15, fontWeight: 700, color: C.gray, letterSpacing: 0.3 }}>Casos medidos</div>
+                <div style={{ fontSize: 18, fontWeight: 700, color: C.navy, marginTop: 4 }}>{nom('A', medida.aNum)}{medida.t ? <span style={{ fontWeight: 500, color: '#374151' }}> · {medida.t.a}</span> : null}</div>
+                <div style={{ fontSize: 18, fontWeight: 700, color: C.navy, marginTop: 2 }}>{nom('B', medida.bNum)}{medida.t ? <span style={{ fontWeight: 500, color: '#374151' }}> · {medida.t.b}</span> : null}</div>
+              </div>
+              {medida.aprox && (
+                <div style={{ flexBasis: '100%', fontSize: 16, color: C.guinda, fontWeight: 700 }}>
+                  ≈ Medida aproximada: la ubicación de alguno de los casos no está confirmada y puede estar a decenas o cientos de metros del lugar real.
+                </div>
+              )}
+              <div style={{ flexBasis: '100%', fontSize: 14, color: C.gray }}>
+                El tiempo se calcula con la hora en que se tuvo conocimiento del hecho, no con la hora exacta en que ocurrió.
+              </div>
+            </div>
           )}
         </>
       )}
