@@ -139,7 +139,7 @@ export default function ZonasAtencion({ puntos, seleccionada, onSeleccionar, onI
   // Avisa al mapa qué zonas hay para que las marque siempre (solo cuando cambian)
   const firma = km + '|' + focos.map((f) => f.clave + ':' + f.n).join(',');
   useEffect(() => {
-    if (onZonas) onZonas(focos.map((f, i) => ({ clave: f.clave, numero: i + 1, n: f.n, centro: f.centro, radioM: f.radioM })));
+    if (onZonas) onZonas(focos.map((f, i) => ({ clave: f.clave, numero: i + 1, n: f.n, centro: f.centro, radioM: f.radioM, miembros: f.miembros.map((m) => ({ lat: m.lat, lng: m.lng })) })));
   }, [firma]);
 
   const cambiarDistancia = (k) => { setKm(k); if (onSeleccionar) onSeleccionar(null); };
