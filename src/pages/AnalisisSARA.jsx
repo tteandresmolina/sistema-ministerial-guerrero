@@ -721,7 +721,7 @@ const [tab, setTab] = useState(MOSTRAR_MAPA_CALOR ? 'mapa' : 'plan');
           return (
             <button key={t.key} role="tab" aria-selected={activa} onClick={() => abrirTab(t.key)}
               style={{ padding: '10px 20px', borderRadius: 8, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, minHeight: 44, border: activa ? '2px solid #b69054' : '1px solid #e8ecf1', background: activa ? '#f5ede0' : '#ffffff', color: activa ? '#001a4d' : '#666666', fontSize: 16, fontWeight: 700 }}>
-              <Icono size={16} /> {t.label}
+              <Icono size={18} /> {t.label}
             </button>
           );
         })}

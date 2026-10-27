@@ -104,18 +104,18 @@ function RankingBarras({ titulo, icono, items, numerar }) {
   var max = items.length > 0 ? Math.max.apply(null, items.map(function(i) { return i[1]; })) : 1;
   return (
     <div>
-      <div style={{ fontSize: 15, fontWeight: 700, color: C.darkBlue, marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 }}>{icono} {titulo}</div>
+      <div style={{ fontSize: 19, fontWeight: 700, color: C.darkBlue, marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>{icono} {titulo}</div>
       {items.length === 0 ? (
-        <div style={{ fontSize: 14, color: C.gray, textAlign: 'center', padding: 20 }}>Sin datos</div>
+        <div style={{ fontSize: 16, color: C.gray, textAlign: 'center', padding: 20 }}>Sin datos</div>
       ) : (
         items.map(function(item, i) { return (
-          <div key={item[0]} style={{ marginBottom: 10 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, fontSize: 14, fontWeight: 600, color: '#1f2937', lineHeight: 1.3 }}>
+          <div key={item[0]} style={{ marginBottom: 14 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, fontSize: 17, fontWeight: 600, color: '#1f2937', lineHeight: 1.3 }}>
               <span>{numerar !== false && <span style={{ color: C.gray, fontWeight: 700 }}>#{i + 1} </span>}{item[0]}</span>
-              <span style={{ fontWeight: 800, fontSize: 15 }}>{item[1]}</span>
+              <span style={{ fontWeight: 800, fontSize: 19 }}>{item[1]}</span>
             </div>
-            <div style={{ height: 10, background: C.bg, borderRadius: 5, overflow: 'hidden', marginTop: 4 }}>
-              <div style={{ width: (item[1] / max * 100) + '%', height: '100%', background: colorSuave(item[1], max), borderRadius: 5 }} />
+            <div style={{ height: 14, background: C.bg, borderRadius: 7, overflow: 'hidden', marginTop: 5 }}>
+              <div style={{ width: (item[1] / max * 100) + '%', height: '100%', background: colorSuave(item[1], max), borderRadius: 7 }} />
             </div>
           </div>
         ); })
@@ -136,7 +136,7 @@ function esc(t) {
   return String(t == null ? '' : t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
-const inputStyle = { padding: '13px 14px', border: '2px solid #e8ecf1', borderRadius: 7, fontSize: 15, outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box', minHeight: 44 };
+const inputStyle = { padding: '13px 14px', border: '2px solid #e8ecf1', borderRadius: 7, fontSize: 16, outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box', minHeight: 44 };
 const selectStyle = { ...inputStyle, backgroundColor: '#ffffff', cursor: 'pointer' };
 
 function loadScript(src) {
@@ -170,10 +170,10 @@ function loadCSS(href) {
 
 function TarjetaDato({ etiqueta, valor, detalle }) {
   return (
-    <div style={{ background: C.lightGold, border: '1px solid #b6905440', borderRadius: 10, padding: '12px 16px' }}>
-      <div style={{ fontSize: 14, fontWeight: 700, color: C.gray }}>{etiqueta}</div>
-      <div style={{ fontSize: 26, fontWeight: 800, color: C.darkBlue, lineHeight: 1.2, wordBreak: 'break-word' }}>{valor}</div>
-      {detalle && <div style={{ fontSize: 14, color: '#374151', marginTop: 2 }}>{detalle}</div>}
+    <div style={{ background: C.lightGold, border: '1px solid #b6905440', borderRadius: 12, padding: '14px 18px' }}>
+      <div style={{ fontSize: 16, fontWeight: 700, color: C.gray }}>{etiqueta}</div>
+      <div style={{ fontSize: 34, fontWeight: 800, color: C.darkBlue, lineHeight: 1.15, wordBreak: 'break-word' }}>{valor}</div>
+      {detalle && <div style={{ fontSize: 16, color: '#374151', marginTop: 3 }}>{detalle}</div>}
     </div>
   );
 }
@@ -183,15 +183,15 @@ function BarraMedios({ porMedio, total }) {
   var orden = MEDIOS_ORDEN.filter(function(m) { return porMedio[m]; });
   return (
     <div>
-      <div style={{ display: 'flex', height: 44, borderRadius: 8, overflow: 'hidden' }}>
+      <div style={{ display: 'flex', height: 56, borderRadius: 10, overflow: 'hidden' }}>
         {orden.map(function(m) { return (
-          <div key={m} title={m + ': ' + porMedio[m]} style={{ width: (porMedio[m] / total * 100) + '%', minWidth: 36, background: COLOR_MEDIO[m].bg, color: COLOR_MEDIO[m].tx, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 800 }}>{porMedio[m]}</div>
+          <div key={m} title={m + ': ' + porMedio[m]} style={{ width: (porMedio[m] / total * 100) + '%', minWidth: 44, background: COLOR_MEDIO[m].bg, color: COLOR_MEDIO[m].tx, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, fontWeight: 800 }}>{porMedio[m]}</div>
         ); })}
       </div>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px 22px', marginTop: 10, fontSize: 15, color: '#1f2937' }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px 26px', marginTop: 12, fontSize: 17, color: '#1f2937' }}>
         {orden.map(function(m) { return (
-          <span key={m} style={{ display: 'inline-flex', alignItems: 'center', gap: 7 }}>
-            <span style={{ width: 15, height: 15, borderRadius: 3, background: COLOR_MEDIO[m].bg, display: 'inline-block', border: '1px solid #00000020' }} />
+          <span key={m} style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ width: 18, height: 18, borderRadius: 4, background: COLOR_MEDIO[m].bg, display: 'inline-block', border: '1px solid #00000020' }} />
             {m} · <strong>{porMedio[m]}</strong> ({Math.round(porMedio[m] / total * 100)}%)
           </span>
         ); })}
@@ -200,21 +200,60 @@ function BarraMedios({ porMedio, total }) {
   );
 }
 
-function ColumnasSimples({ items }) {
+function ColumnasSimples({ items, subtitulos }) {
   var max = Math.max.apply(null, items.map(function(i) { return i[1]; }).concat([1]));
   return (
     <div>
-      <div style={{ display: 'flex', alignItems: 'flex-end', gap: 12, height: 160, borderBottom: '1px solid #d9dee5', padding: '0 4px' }}>
+      <div style={{ display: 'flex', alignItems: 'flex-end', gap: 14, height: 190, borderBottom: '1px solid #d9dee5', padding: '0 4px' }}>
         {items.map(function(it) { return (
           <div key={it[0]} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-end', height: '100%' }}>
-            <span style={{ fontSize: 17, fontWeight: 800, color: '#374151', marginBottom: 3 }}>{it[1]}</span>
-            <div style={{ width: '100%', maxWidth: 64, height: (it[1] / max * 78) + '%', minHeight: 4, background: '#b98386', borderRadius: '4px 4px 0 0' }} />
+            <span style={{ fontSize: 22, fontWeight: 800, color: '#374151', marginBottom: 4 }}>{it[1]}</span>
+            <div style={{ width: '100%', maxWidth: 80, height: (it[1] / max * 74) + '%', minHeight: 5, background: '#b98386', borderRadius: '5px 5px 0 0' }} />
           </div>
         ); })}
       </div>
-      <div style={{ display: 'flex', gap: 12, padding: '6px 4px 0' }}>
-        {items.map(function(it) { return <span key={it[0]} style={{ flex: 1, textAlign: 'center', fontSize: 14, color: C.gray }}>{it[0]}</span>; })}
+      <div style={{ display: 'flex', gap: 14, padding: '8px 4px 0' }}>
+        {items.map(function(it, i) { return (
+          <div key={it[0]} style={{ flex: 1, textAlign: 'center' }}>
+            <div style={{ fontSize: 17, fontWeight: 600, color: '#374151' }}>{it[0]}</div>
+            {subtitulos && subtitulos[i] && <div style={{ fontSize: 15, color: C.gray }}>{subtitulos[i]}</div>}
+          </div>
+        ); })}
       </div>
+    </div>
+  );
+}
+
+// Línea de casos por semana en todo el historial (el pico se resalta con un aro dorado)
+function LineaHistorica({ items }) {
+  var W = 720, H = 250, pl = 30, pr = 24, pt = 34, pb = 46;
+  var max = Math.max.apply(null, items.map(function(i) { return i[1]; }).concat([1]));
+  var paso = items.length > 1 ? (W - pl - pr) / (items.length - 1) : 0;
+  var pts = items.map(function(it, i) { return { x: items.length > 1 ? pl + i * paso : W / 2, y: pt + (H - pt - pb) * (1 - it[1] / max), n: it[1], l: it[0] }; });
+  var cadaX = items.length > 14 ? 2 : 1;
+  return (
+    <svg viewBox={'0 0 ' + W + ' ' + H} style={{ width: '100%', display: 'block' }} role="img" aria-label="Casos por semana en todo el historial">
+      <line x1={pl} y1={H - pb} x2={W - pr} y2={H - pb} stroke="#d9dee5" strokeWidth="1.5" />
+      <polyline points={pts.map(function(p) { return p.x + ',' + p.y; }).join(' ')} fill="none" stroke="#9a5a5e" strokeWidth="3.5" strokeLinejoin="round" strokeLinecap="round" />
+      {pts.map(function(p, i) { return (
+        <g key={i}>
+          {p.n === max && items.length > 1 && <circle cx={p.x} cy={p.y} r="12" fill="none" stroke="#b6905a" strokeWidth="3" />}
+          <circle cx={p.x} cy={p.y} r="6" fill="#9a5a5e" />
+          <text x={p.x} y={p.y - 16} textAnchor="middle" fontSize="19" fontWeight="800" fill="#374151">{p.n}</text>
+          {i % cadaX === 0 && <text x={p.x} y={H - pb + 26} textAnchor="middle" fontSize="16" fill="#555">{p.l}</text>}
+        </g>
+      ); })}
+    </svg>
+  );
+}
+
+// Meses con datos: una casilla por mes hasta 12
+function MedidorMeses({ n, meta }) {
+  var casillas = [];
+  for (var i = 0; i < meta; i++) casillas.push(i);
+  return (
+    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+      {casillas.map(function(i) { return <div key={i} style={{ width: 34, height: 26, borderRadius: 5, background: i < n ? '#b98386' : '#ece6d8', border: '1px solid #00000015' }} />; })}
     </div>
   );
 }
@@ -223,6 +262,11 @@ function fechaLarga(iso) {
   var p = String(iso).slice(0, 10).split('-');
   var m = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
   return Number(p[2]) + ' de ' + (m[Number(p[1]) - 1] || p[1]);
+}
+
+// Para filtrar: en homicidios se usa la categoría (arma de fuego, torniquete...), no cada forma distinta de escribirla
+function etiquetaDelito(p) {
+  return p.fuente === 'incidencia_regional' ? clasificarDelito(p.delito).medio.toUpperCase() : String(p.delito || '').toUpperCase();
 }
 
 function nombreMes(k) {
@@ -253,6 +297,8 @@ export default function MapaCalor({ user, onIniciarProyecto, onImportar, seccion
   const [fechaHasta, setFechaHasta] = useState('');
   const [filtroDelito, setFiltroDelito] = useState('');
   const [filtroMunicipio, setFiltroMunicipio] = useState('');
+  const [filtrosAbiertos, setFiltrosAbiertos] = useState(false); // los filtros se muestran como una línea resumen y se abren si se piden
+  const [capasAbiertas, setCapasAbiertas] = useState(false); // las capas del mapa se muestran solo si se piden
 
   const [stats, setStats] = useState({ total: 0, por_fuente: {} });
   const [delitosUnicos, setDelitosUnicos] = useState([]);
@@ -294,7 +340,7 @@ export default function MapaCalor({ user, onIniciarProyecto, onImportar, seccion
       const coords = coordsTodas.filter(function(c) { return !esPend(c); });
       listaPendientes.push.apply(listaPendientes, coordsTodas.filter(esPend));
       coords.forEach(function(c) {
-        if (c.delito) delitos.add(c.delito.toUpperCase());
+        if (c.delito) delitos.add(etiquetaDelito(c));
         if (c.municipio) municipios.add(c.municipio);
       });
       if (f.key === 'incidencia_regional') {
@@ -314,7 +360,7 @@ export default function MapaCalor({ user, onIniciarProyecto, onImportar, seccion
         listaPendientes.push.apply(listaPendientes, listaSinUbicar.filter(function(c) { return clasificarDelito(c.delito).pendiente; }));
         listaSinUbicar = listaSinUbicar.filter(function(c) { return !clasificarDelito(c.delito).pendiente; });
         listaSinUbicar.forEach(function(c) {
-          if (c.delito) delitos.add(c.delito.toUpperCase());
+          if (c.delito) delitos.add(etiquetaDelito(c));
           if (c.municipio) municipios.add(c.municipio);
         });
       }
@@ -333,12 +379,15 @@ export default function MapaCalor({ user, onIniciarProyecto, onImportar, seccion
 
   useEffect(function() { cargarDatos(); }, []);
 
+  const pasaDemas = function(p) {
+    if (filtroDelito && etiquetaDelito(p) !== filtroDelito) return false;
+    if (filtroMunicipio && p.municipio !== filtroMunicipio) return false;
+    return true;
+  };
   const pasaFiltros = function(p) {
     if (fechaDesde && p.fecha && p.fecha < fechaDesde) return false;
     if (fechaHasta && p.fecha && p.fecha > fechaHasta) return false;
-    if (filtroDelito && p.delito.toUpperCase() !== filtroDelito) return false;
-    if (filtroMunicipio && p.municipio !== filtroMunicipio) return false;
-    return true;
+    return pasaDemas(p);
   };
   const puntosFiltrados = puntos.filter(function(p) { return filtros[p.fuente] && pasaFiltros(p); });
 
@@ -385,6 +434,33 @@ export default function MapaCalor({ user, onIniciarProyecto, onImportar, seccion
     if (c.hallazgo) nFosa++;
   });
   const medioTop = Object.entries(porMedio).filter(function(e) { return e[0] !== 'Por determinar'; }).sort(function(a, b) { return b[1] - a[1]; })[0] || null;
+
+  // Historial completo: no depende de las fechas del filtro (sí de las capas, el delito y el municipio)
+  const histFechas = puntos.concat(sinUbicar).filter(function(p) { return filtros[p.fuente] && pasaDemas(p) && p.fecha; }).map(function(p) { return String(p.fecha).slice(0, 10); }).sort();
+  const histFin = histFechas[histFechas.length - 1] || '';
+  const histIni = histFechas[0] ? histFechas[0].slice(0, 8) + '01' : '';
+  const DIAH = 86400000;
+  const porMesHist = {};
+  histFechas.forEach(function(d) { var k = d.slice(0, 7); porMesHist[k] = (porMesHist[k] || 0) + 1; });
+  const mesesHist = Object.keys(porMesHist).sort().map(function(k, i, arr) {
+    var diasMes = new Date(Date.UTC(Number(k.slice(0, 4)), Number(k.slice(5, 7)), 0)).getUTCDate();
+    var ultimo = i === arr.length - 1;
+    var dias = ultimo ? Math.min(diasMes, Number(histFin.slice(8, 10))) : diasMes;
+    return { nombre: nombreMes(k).split(' ')[0], n: porMesHist[k], dias: dias, parcial: ultimo && dias < diasMes };
+  });
+  const cambioRitmo = mesesHist.length >= 2 ? (function() {
+    var a = mesesHist[mesesHist.length - 2], b = mesesHist[mesesHist.length - 1];
+    return { pct: Math.round(((b.n / b.dias) / (a.n / a.dias) - 1) * 100), contra: a.nombre, actual: b };
+  })() : null;
+  let semHist = [], ultimaSemanaParcial = false;
+  if (histIni) {
+    var nSem = Math.floor((Date.parse(histFin) - Date.parse(histIni)) / (7 * DIAH)) + 1;
+    var cs = []; for (var q = 0; q < nSem; q++) cs.push(0);
+    histFechas.forEach(function(d) { var i = Math.floor((Date.parse(d) - Date.parse(histIni)) / (7 * DIAH)); if (i >= 0 && i < nSem) cs[i]++; });
+    var abr = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+    semHist = cs.map(function(n, i) { var f = new Date(Date.parse(histIni) + 7 * i * DIAH); return [f.getUTCDate() + ' ' + abr[f.getUTCMonth()], n]; }).slice(-26);
+    ultimaSemanaParcial = (Math.floor((Date.parse(histFin) - Date.parse(histIni)) / DIAH) % 7) < 6;
+  }
 
   // Periodo, ritmo y serie en el tiempo
   const fechasAn = puntosAnalisis.map(function(p) { return p.fecha ? String(p.fecha).slice(0, 10) : ''; }).filter(Boolean).sort();
@@ -516,6 +592,8 @@ export default function MapaCalor({ user, onIniciarProyecto, onImportar, seccion
 
   var limpiarFiltros = function() { setFechaDesde(''); setFechaHasta(''); setFiltroDelito(''); setFiltroMunicipio(''); setFiltros(filtrosIniciales()); };
   var hayFiltrosActivos = fechaDesde || fechaHasta || filtroDelito || filtroMunicipio;
+  var textoPeriodo = fechaDesde && fechaHasta ? 'Del ' + fechaLarga(fechaDesde) + ' al ' + fechaLarga(fechaHasta) : fechaDesde ? 'Desde el ' + fechaLarga(fechaDesde) : fechaHasta ? 'Hasta el ' + fechaLarga(fechaHasta) : 'Todo el periodo';
+  var textoDelito = filtroDelito ? filtroDelito.charAt(0) + filtroDelito.slice(1).toLowerCase() : 'Todos los delitos';
 
   return (
     <div style={{ marginBottom: 20 }}>
@@ -523,75 +601,86 @@ export default function MapaCalor({ user, onIniciarProyecto, onImportar, seccion
       <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', marginBottom: 12 }}>
         <div style={{ display: 'flex', gap: 8 }}>
           {hayFiltrosActivos && (
-            <button onClick={limpiarFiltros} style={{ background: '#ffebee', border: '1px solid #dc354530', borderRadius: 7, padding: '6px 12px', color: C.red, fontSize: 13, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
+            <button onClick={limpiarFiltros} style={{ background: '#ffebee', border: '1px solid #dc354530', borderRadius: 7, padding: '6px 12px', color: C.red, fontSize: 15, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
               <X size={12} /> Limpiar filtros
             </button>
           )}
-          <button onClick={cargarDatos} style={{ background: 'none', border: '1.5px solid #001a4d', borderRadius: 7, padding: '6px 14px', display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', color: C.darkBlue, fontSize: 14, fontWeight: 600 }}>
+          <button onClick={cargarDatos} style={{ background: 'none', border: '1.5px solid #001a4d', borderRadius: 7, padding: '6px 14px', display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', color: C.darkBlue, fontSize: 16, fontWeight: 600 }}>
             <RefreshCw size={13} /> Actualizar
           </button>
         </div>
       </div>
 
-      <div style={{ marginBottom: 14 }}>
-        <div style={{ fontSize: 15, color: C.darkBlue, marginBottom: 8 }}><strong style={{ fontSize: 24 }}>{puntosFiltrados.length}</strong> puntos en el mapa</div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 12 }}>
-          {GRUPOS_FUENTES.map(function(g) { return (
-            <div key={g.titulo} style={{ background: C.white, borderRadius: 10, padding: 14, boxShadow: '0 1px 4px rgba(0,0,0,0.08)' }}>
-              <div style={{ fontSize: 15, fontWeight: 800, color: C.darkBlue }}>{g.titulo}</div>
-              <div style={{ fontSize: 13, color: C.gray, margin: '2px 0 10px' }}>{g.detalle}</div>
+      {seccion === 'mapa' && (
+        <div style={{ marginBottom: 14 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
+            <div style={{ fontSize: 18, color: C.darkBlue }}><strong style={{ fontSize: 28 }}>{puntosFiltrados.length}</strong> puntos en el mapa</div>
+            <button onClick={function() { setCapasAbiertas(!capasAbiertas); }} aria-expanded={capasAbiertas}
+              style={{ background: 'none', border: '1.5px solid #c7cfe0', borderRadius: 7, padding: '6px 14px', color: C.gray, fontSize: 16, fontWeight: 600, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6, minHeight: 40 }}>
+              Capas del mapa {capasAbiertas ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+            </button>
+          </div>
+          {capasAbiertas && (
+            <div style={{ marginTop: 10, background: C.white, borderRadius: 10, padding: 14, boxShadow: '0 1px 4px rgba(0,0,0,0.08)' }}>
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                {FUENTES.filter(function(f) { return g.keys.indexOf(f.key) >= 0; }).map(function(f) {
+                {FUENTES.filter(function(f) { return puntos.some(function(p) { return p.fuente === f.key; }); }).map(function(f) {
                   var n = puntos.filter(function(p) { return p.fuente === f.key && pasaFiltros(p); }).length;
                   var on = filtros[f.key];
                   return (
                     <button key={f.key} onClick={function() { setFiltros(function(p) { var x = {}; Object.assign(x, p); x[f.key] = !p[f.key]; return x; }); }}
-                      style={{ padding: '8px 14px', borderRadius: 8, fontSize: 14, fontWeight: 700, cursor: 'pointer', minHeight: 40, border: '1.5px solid ' + (on ? f.color : C.lightGray), background: on ? f.color + '15' : C.white, color: on ? f.color : C.gray }}>
+                      style={{ padding: '8px 14px', borderRadius: 8, fontSize: 16, fontWeight: 700, cursor: 'pointer', minHeight: 40, border: '1.5px solid ' + (on ? f.color : C.lightGray), background: on ? f.color + '15' : C.white, color: on ? f.color : C.gray }}>
                       {on ? '✓ ' : ''}{f.label} · {n}
                     </button>
                   );
                 })}
               </div>
-              {g.importador && user && user.rol === 'mando' && onImportar && (
-                <div style={{ marginTop: 12 }}>
-                  <button onClick={onImportar} style={{ background: '#ffffff', border: '2px solid #001a4d', color: '#001a4d', borderRadius: 8, padding: '9px 16px', fontSize: 14, fontWeight: 700, cursor: 'pointer', minHeight: 40, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-                    <Upload size={15} /> Importar Excel
-                  </button>
+              {FUENTES.some(function(f) { return !puntos.some(function(p) { return p.fuente === f.key; }); }) && (
+                <div style={{ fontSize: 15, color: C.gray, marginTop: 10 }}>
+                  Sin datos todavía: {FUENTES.filter(function(f) { return !puntos.some(function(p) { return p.fuente === f.key; }); }).map(function(f) { return f.label; }).join(', ')}.
                 </div>
               )}
             </div>
-          ); })}
+          )}
         </div>
-      </div>
+      )}
 
-      <div style={{ background: C.white, borderRadius: 10, padding: 14, marginBottom: 14, boxShadow: '0 1px 4px rgba(0,0,0,0.08)' }}>
-        <div style={{ fontSize: 14, fontWeight: 700, color: C.gold, marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6, textTransform: 'uppercase' }}>
-          <Filter size={14} /> Filtros de Análisis
+      <div style={{ background: hayFiltrosActivos ? C.lightGold : C.white, border: hayFiltrosActivos ? '1px solid #b6905440' : '1px solid transparent', borderRadius: 10, padding: 14, marginBottom: 14, boxShadow: '0 1px 4px rgba(0,0,0,0.08)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+          <div style={{ fontSize: 17, color: C.darkBlue, lineHeight: 1.5 }}>
+            <Filter size={17} color={C.gold} style={{ verticalAlign: -3, marginRight: 8 }} />
+            <strong>Filtros:</strong> {textoPeriodo} · {textoDelito} · {filtroMunicipio || 'Todos los municipios'}
+          </div>
+          <button onClick={function() { setFiltrosAbiertos(!filtrosAbiertos); }} aria-expanded={filtrosAbiertos}
+            style={{ background: 'none', border: '1.5px solid #c7cfe0', borderRadius: 7, padding: '6px 14px', color: C.darkBlue, fontSize: 16, fontWeight: 600, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6, minHeight: 40 }}>
+            {filtrosAbiertos ? 'Ocultar filtros' : 'Cambiar filtros'} {filtrosAbiertos ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+          </button>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 10 }}>
+        {filtrosAbiertos && (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 10, marginTop: 14 }}>
           <div>
-            <label style={{ fontSize: 12, fontWeight: 600, color: C.gray, display: 'block', marginBottom: 2 }}>Fecha desde</label>
+            <label style={{ fontSize: 15, fontWeight: 600, color: C.gray, display: 'block', marginBottom: 2 }}>Fecha desde</label>
             <input type="date" style={inputStyle} value={fechaDesde} onChange={function(e) { setFechaDesde(e.target.value); }} />
           </div>
           <div>
-            <label style={{ fontSize: 12, fontWeight: 600, color: C.gray, display: 'block', marginBottom: 2 }}>Fecha hasta</label>
+            <label style={{ fontSize: 15, fontWeight: 600, color: C.gray, display: 'block', marginBottom: 2 }}>Fecha hasta</label>
             <input type="date" style={inputStyle} value={fechaHasta} onChange={function(e) { setFechaHasta(e.target.value); }} />
           </div>
           <div>
-            <label style={{ fontSize: 12, fontWeight: 600, color: C.gray, display: 'block', marginBottom: 2 }}>Delito</label>
+            <label style={{ fontSize: 15, fontWeight: 600, color: C.gray, display: 'block', marginBottom: 2 }}>Delito</label>
             <select style={{ ...selectStyle, width: '100%' }} value={filtroDelito} onChange={function(e) { setFiltroDelito(e.target.value); }}>
               <option value="">— Todos —</option>
               {delitosUnicos.map(function(d) { return <option key={d} value={d}>{d}</option>; })}
             </select>
           </div>
           <div>
-            <label style={{ fontSize: 12, fontWeight: 600, color: C.gray, display: 'block', marginBottom: 2 }}>Municipio</label>
+            <label style={{ fontSize: 15, fontWeight: 600, color: C.gray, display: 'block', marginBottom: 2 }}>Municipio</label>
             <select style={{ ...selectStyle, width: '100%' }} value={filtroMunicipio} onChange={function(e) { setFiltroMunicipio(e.target.value); }}>
               <option value="">— Todos —</option>
               {municipiosUnicos.map(function(m) { return <option key={m} value={m}>{m}</option>; })}
             </select>
           </div>
         </div>
+        )}
       </div>
       </div>
 
@@ -646,14 +735,14 @@ export default function MapaCalor({ user, onIniciarProyecto, onImportar, seccion
       </div>
 
       <div style={{ display: seccion === 'panel' ? 'block' : 'none' }}>
-        <div style={{ background: C.white, borderRadius: 10, border: '1px solid #b6905440', padding: 20 }}>
+        <div style={{ background: C.white, borderRadius: 10, border: '1px solid #b6905440', padding: 22 }}>
           {puntosAnalisis.length === 0 ? (
-            <div style={{ fontSize: 15, color: C.gray, textAlign: 'center', padding: 20 }}>Sin datos con estos filtros.</div>
+            <div style={{ fontSize: 17, color: C.gray, textAlign: 'center', padding: 20 }}>Sin datos con estos filtros.</div>
           ) : (
             <>
-              <div style={{ padding: 14, backgroundColor: C.lightGold, borderRadius: 8, border: '1px solid #b6905440' }}>
-                <div style={{ fontSize: 14, fontWeight: 700, color: C.gold, textTransform: 'uppercase', marginBottom: 6 }}>Lo más importante</div>
-                <div style={{ fontSize: 16, color: C.darkBlue, lineHeight: 1.7 }}>
+              <div style={{ padding: 16, backgroundColor: C.lightGold, borderRadius: 10, border: '1px solid #b6905440' }}>
+                <div style={{ fontSize: 15, fontWeight: 700, color: C.gold, textTransform: 'uppercase', marginBottom: 6 }}>Lo más importante</div>
+                <div style={{ fontSize: 19, color: C.darkBlue, lineHeight: 1.65 }}>
                   Se analizaron <strong>{puntosAnalisis.length}</strong> incidentes
                   {fechaDesde && fechaHasta ? ' entre ' + fechaLarga(fechaDesde) + ' y ' + fechaLarga(fechaHasta) : fechaDesde ? ' desde el ' + fechaLarga(fechaDesde) : fechaHasta ? ' hasta el ' + fechaLarga(fechaHasta) : ''}
                   {filtroMunicipio ? ' en ' + filtroMunicipio : ''}
@@ -665,26 +754,27 @@ export default function MapaCalor({ user, onIniciarProyecto, onImportar, seccion
               </div>
 
               {avisoPendientes}
-              <div style={{ marginTop: 16, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 10 }}>
+              <div style={{ marginTop: 18, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: 12 }}>
                 <TarjetaDato etiqueta="Casos en el periodo" valor={puntosAnalisis.length} detalle={iniPeriodo && finPeriodo ? 'Del ' + fechaLarga(iniPeriodo) + ' al ' + fechaLarga(finPeriodo) : null} />
                 <TarjetaDato etiqueta="Ritmo" valor={ritmo ? (ritmo < 1 ? 'Más de uno por día' : 'Uno cada ' + ritmo.toFixed(1) + ' días') : '—'} detalle={diasPeriodo > 0 ? diasPeriodo + ' días analizados' : null} />
                 <TarjetaDato etiqueta="Colonia con más casos" valor={topSectores[0] ? topSectores[0][0] : (topMunicipios[0] ? topMunicipios[0][0] : '—')} detalle={topSectores[0] ? topSectores[0][1] + ' de ' + puntosAnalisis.length : null} />
                 {homicidios.length > 0 && <TarjetaDato etiqueta="Cómo ocurrieron" valor={medioTop ? medioTop[0] : 'Por determinar'} detalle={medioTop ? medioTop[1] + ' de ' + homicidios.length + ' (' + Math.round(medioTop[1] / homicidios.length * 100) + '%)' : null} />}
+                {cambioRitmo && <TarjetaDato etiqueta={'Frente a ' + cambioRitmo.contra.toLowerCase()} valor={(cambioRitmo.pct >= 0 ? '▲ ' : '▼ ') + Math.abs(cambioRitmo.pct) + '%'} detalle={'casos por día en ' + cambioRitmo.actual.nombre.toLowerCase() + (cambioRitmo.actual.parcial ? ' (hasta el ' + Number(histFin.slice(8, 10)) + ')' : '')} />}
               </div>
 
               {homicidios.length > 0 && (
-                <div style={{ marginTop: 24 }}>
-                  <div style={{ fontSize: 16, fontWeight: 700, color: C.darkBlue, marginBottom: 10 }}>Cómo ocurrieron los homicidios</div>
+                <div style={{ marginTop: 28 }}>
+                  <div style={{ fontSize: 20, fontWeight: 700, color: C.darkBlue, marginBottom: 12 }}>Cómo ocurrieron los homicidios</div>
                   <BarraMedios porMedio={porMedio} total={homicidios.length} />
-                  {porMedio['Por determinar'] > 0 && <div style={{ fontSize: 14, color: C.gray, marginTop: 8 }}>"Por determinar": la tipificación del MP todavía no menciona el medio (por ejemplo, cuando falta el dictamen del perito).</div>}
-                  {nFosa > 0 && <div style={{ fontSize: 14, color: C.gray, marginTop: 4 }}>{nFosa} caso{nFosa > 1 ? 's' : ''} correspondiente{nFosa > 1 ? 's' : ''} a hallazgo en fosa.</div>}
-                  <details style={{ marginTop: 10 }}>
-                    <summary style={{ cursor: 'pointer', fontSize: 15, fontWeight: 600, color: C.darkBlue }}>Ver cómo lo escribió el Ministerio Público</summary>
-                    <div style={{ marginTop: 8, fontSize: 14, color: '#374151', lineHeight: 1.6 }}>
+                  {porMedio['Por determinar'] > 0 && <div style={{ fontSize: 16, color: C.gray, marginTop: 10 }}>"Por determinar": la tipificación del MP todavía no menciona el medio (por ejemplo, cuando falta el dictamen del perito).</div>}
+                  {nFosa > 0 && <div style={{ fontSize: 16, color: C.gray, marginTop: 4 }}>{nFosa} caso{nFosa > 1 ? 's' : ''} correspondiente{nFosa > 1 ? 's' : ''} a hallazgo en fosa.</div>}
+                  <details style={{ marginTop: 12 }}>
+                    <summary style={{ cursor: 'pointer', fontSize: 17, fontWeight: 600, color: C.darkBlue }}>Ver cómo lo escribió el Ministerio Público</summary>
+                    <div style={{ marginTop: 10, fontSize: 16, color: '#374151', lineHeight: 1.6 }}>
                       {MEDIOS_ORDEN.filter(function(m) { return variantesMedio[m]; }).map(function(m) { return (
-                        <div key={m} style={{ marginBottom: 8 }}>
+                        <div key={m} style={{ marginBottom: 10 }}>
                           <strong style={{ color: C.darkBlue }}>{m}</strong>
-                          {Object.entries(variantesMedio[m]).sort(function(a, b) { return b[1] - a[1]; }).map(function(e) { return <div key={e[0]} style={{ paddingLeft: 12 }}>{e[1]} · {e[0]}</div>; })}
+                          {Object.entries(variantesMedio[m]).sort(function(a, b) { return b[1] - a[1]; }).map(function(e) { return <div key={e[0]} style={{ paddingLeft: 14 }}>{e[1]} · {e[0]}</div>; })}
                         </div>
                       ); })}
                     </div>
@@ -692,26 +782,43 @@ export default function MapaCalor({ user, onIniciarProyecto, onImportar, seccion
                 </div>
               )}
 
-              <div style={{ marginTop: 24, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 24 }}>
-                {serie.length > 0 && (
+              <div style={{ marginTop: 32, paddingTop: 22, borderTop: '2px solid #b6905440' }}>
+                <div style={{ fontSize: 22, fontWeight: 800, color: C.darkBlue, marginBottom: 4 }}>Cómo ha cambiado</div>
+                <div style={{ fontSize: 16, color: C.gray, marginBottom: 14 }}>Todo el historial cargado. No cambia con las fechas del filtro, sí con el delito y el municipio.</div>
+                {semHist.length > 0 && (
                   <div>
-                    <div style={{ fontSize: 16, fontWeight: 700, color: C.darkBlue, marginBottom: 10 }}>{variosMeses ? 'Casos por mes' : 'Casos por semana'}</div>
-                    <ColumnasSimples items={serie} />
-                    {variosMeses && <div style={{ fontSize: 13, color: C.gray, marginTop: 6 }}>El mes más reciente puede estar incompleto.</div>}
+                    <div style={{ fontSize: 20, fontWeight: 700, color: C.darkBlue, marginBottom: 6 }}>Casos por semana</div>
+                    <LineaHistorica items={semHist} />
+                    <div style={{ fontSize: 15, color: C.gray, marginTop: 4 }}>El aro dorado marca la semana con más casos.{ultimaSemanaParcial ? ' La última semana puede estar incompleta.' : ''}</div>
                   </div>
                 )}
-                <RankingBarras titulo="Colonias con más casos" icono={<MapPin size={14} color={C.gold} />} items={topSectores.slice(0, 8)} />
+                <div style={{ marginTop: 26, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 28 }}>
+                  {mesesHist.length > 0 && (
+                    <div>
+                      <div style={{ fontSize: 20, fontWeight: 700, color: C.darkBlue, marginBottom: 10 }}>Casos por mes</div>
+                      <ColumnasSimples items={mesesHist.map(function(m) { return [m.nombre, m.n]; })} subtitulos={mesesHist.map(function(m) { return m.parcial ? 'hasta el ' + Number(histFin.slice(8, 10)) : null; })} />
+                    </div>
+                  )}
+                  <RankingBarras titulo="Colonias con más casos" icono={<MapPin size={20} color={C.gold} />} items={topSectores.slice(0, 8)} />
+                </div>
               </div>
 
-              <div style={{ marginTop: 24, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 24 }}>
-                {topMunicipios.length > 1 && <RankingBarras titulo="Municipios" icono={<MapPin size={14} color={C.gold} />} items={topMunicipios} />}
-                {topArmas.length > 0 && <RankingBarras titulo="Arma o calibre" icono={<BarChart3 size={14} color={C.gold} />} items={topArmas} />}
+              <div style={{ marginTop: 30, padding: 18, background: '#f6f3ec', border: '1px solid #b6905440', borderRadius: 12 }}>
+                <div style={{ fontSize: 20, fontWeight: 700, color: C.darkBlue, marginBottom: 8 }}>Proyección</div>
+                <MedidorMeses n={mesesHist.length} meta={12} />
+                <div style={{ fontSize: 18, color: C.darkBlue, marginTop: 10 }}>Meses con datos: <strong>{mesesHist.length} de 12</strong></div>
+                <div style={{ fontSize: 16, color: '#374151', marginTop: 4, lineHeight: 1.5 }}>La proyección se activa con 12 meses de historia. Con menos, sería una suposición y no un dato en el que un mando pueda apoyarse.</div>
               </div>
 
-              <details style={{ marginTop: 20 }}>
-                <summary style={{ cursor: 'pointer', fontSize: 15, fontWeight: 600, color: C.darkBlue }}>Ver la tipificación original completa (Top 10)</summary>
-                <div style={{ marginTop: 10 }}>
-                  <RankingBarras titulo="Tal como la escribió el MP" icono={<BarChart3 size={14} color={C.gold} />} items={topDelitos} />
+              <div style={{ marginTop: 28, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 28 }}>
+                {topMunicipios.length > 1 && <RankingBarras titulo="Municipios" icono={<MapPin size={20} color={C.gold} />} items={topMunicipios} />}
+                {topArmas.length > 0 && <RankingBarras titulo="Arma o calibre" icono={<BarChart3 size={20} color={C.gold} />} items={topArmas} />}
+              </div>
+
+              <details style={{ marginTop: 24 }}>
+                <summary style={{ cursor: 'pointer', fontSize: 17, fontWeight: 600, color: C.darkBlue }}>Ver la tipificación original completa (Top 10)</summary>
+                <div style={{ marginTop: 12 }}>
+                  <RankingBarras titulo="Tal como la escribió el MP" icono={<BarChart3 size={20} color={C.gold} />} items={topDelitos} />
                 </div>
               </details>
             </>
