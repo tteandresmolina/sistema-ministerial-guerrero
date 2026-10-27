@@ -91,7 +91,7 @@ function parsearLibro(wb) {
     const idx = {
       zona: col('COORDINACION'), fecha: col('FECHA'), delito: col('DELITO'), ci: col('CARPETA DE INVESTIGACION'),
       lugar: col('LUGAR DE LOS HECHOS'), cartulina: col('CARTULINA'), calibre: col('CALIBRE'),
-      vehiculo: col('VEHICULO'), droga: col('DROGA'), lat: col('LATITUD'), lng: col('LONGITUD'),
+      vehiculo: col('VEHICULO'), droga: col('DROGA'), lat: col('LATITUD'), lng: col('LONGITUD'), hora: col('HORA'),
     };
     const datos = filas.slice(h + 1);
 
@@ -134,6 +134,7 @@ function parsearLibro(wb) {
         esHospital: HOSPITAL_RE.test(lugar),
         cartulina: siNo(r[idx.cartulina]), vehiculo: siNo(r[idx.vehiculo]), droga: siNo(r[idx.droga]),
         arma: armaTxt(r[idx.calibre]),
+        hora: idx.hora >= 0 ? normalizarHora(r[idx.hora]) : null,
         lat: conCoords ? la : null, lng: conCoords ? lo : null,
         precision: conCoords ? 'manual' : null, confirmada: conCoords, deArchivo: conCoords,
       });
@@ -187,6 +188,30 @@ const campo = { padding: '10px 12px', border: '2px solid ' + C.border, borderRad
 // Revisar y corregir la ubicación de casos YA guardados (poner los que faltan,
 // confirmar los automáticos, mover los que quedaron mal).
 // ============================================================================
+// Tarjeta de cifra: número grande y etiqueta debajo (más fácil de leer que una fila de etiquetas)
+function TarjetaCifra({ n, t, c }) {
+  return (
+    <div style={{ background: C.bg, border: '1.5px solid ' + C.border, borderRadius: 10, padding: '10px 14px', textAlign: 'center' }}>
+      <div style={{ fontSize: 26, fontWeight: 800, color: c, lineHeight: 1.1 }}>{n}</div>
+      <div style={{ fontSize: 13, fontWeight: 600, color: C.gray, marginTop: 2 }}>{t}</div>
+    </div>
+  );
+}
+// Hora de conocimiento del hecho (columna opcional). Acepta "20:20", "20;15 horas", "8:05 hrs" o la fracción de día que guarda Excel.
+export function normalizarHora(v) {
+  const p2 = (n) => String(n).padStart(2, '0');
+  if (v == null || v === '') return null;
+  if (typeof v === 'number') { if (v >= 0 && v < 1) { const min = Math.round(v * 1440) % 1440; return p2(Math.floor(min / 60)) + ':' + p2(min % 60); } return null; }
+  if (v instanceof Date) return p2(v.getHours()) + ':' + p2(v.getMinutes());
+  const m = String(v).match(/(\d{1,2})\s*[:;.hH]\s*(\d{2})/);
+  if (!m) return null;
+  const h = +m[1], mi = +m[2];
+  return h > 23 || mi > 59 ? null : p2(h) + ':' + p2(mi);
+}
+
+const tituloPaso = { fontSize: 16, fontWeight: 800, color: C.navy, margin: '0 0 8px' };
+const rejilla = { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: 16, alignItems: 'start' };
+
 function RevisarGuardadas({ leafletListo, onCambio }) {
   const [filas, setFilas] = useState([]);
   const [cargando, setCargando] = useState(true);
@@ -306,22 +331,21 @@ function RevisarGuardadas({ leafletListo, onCambio }) {
 
   return (
     <div>
-      <p style={{ color: C.gray, fontSize: 15, margin: '0 0 10px 0', lineHeight: 1.5 }}>
-        Aquí corriges casos ya guardados: ubicas los que faltan, confirmas los que SARA ubicó sola y mueves los que quedaron mal.
-        Selecciona un caso, coloca el punto con un clic en el mapa (o arrastra el marcador) y guarda.
-      </p>
+      <p style={{ color: C.gray, fontSize: 15, margin: '0 0 12px 0' }}>Elige un caso y haz clic en el mapa para colocar o mover su punto.</p>
       {msg && (
         <div style={{ background: msg.tipo === 'ok' ? '#e1f5ee' : '#fcebeb', border: '1px solid ' + (msg.tipo === 'ok' ? '#22c55e55' : '#ef444455'), color: msg.tipo === 'ok' ? '#0f6e56' : '#791f1f', borderRadius: 8, padding: 12, fontSize: 15, marginBottom: 12 }}>{msg.texto}</div>
       )}
-      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 12, fontSize: 14 }}>
-        <span style={{ background: C.bg, border: '1.5px solid ' + C.border, borderRadius: 8, padding: '8px 12px', fontWeight: 700, color: C.rojo }}>{nSin} · Sin ubicar</span>
-        <span style={{ background: C.bg, border: '1.5px solid ' + C.border, borderRadius: 8, padding: '8px 12px', fontWeight: 700, color: C.ambar }}>{nAuto} · Sin confirmar</span>
-        <span style={{ background: C.bg, border: '1.5px solid ' + C.border, borderRadius: 8, padding: '8px 12px', fontWeight: 700, color: C.navy }}>{filas.length - nSin - nAuto} · Confirmadas</span>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 10, marginBottom: 12 }}>
+        <TarjetaCifra n={nSin} t="Sin ubicar" c={C.rojo} />
+        <TarjetaCifra n={nAuto} t="Sin confirmar" c={C.ambar} />
+        <TarjetaCifra n={filas.length - nSin - nAuto} t="Confirmadas" c={C.navy} />
+      </div>
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 12 }}>
         <button onClick={() => setFiltro('pendientes')} style={chipFiltro(filtro === 'pendientes')}>Pendientes</button>
         <button onClick={() => setFiltro('todos')} style={chipFiltro(filtro === 'todos')}>Todos</button>
       </div>
 
-      <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', alignItems: 'flex-start' }}>
+      <div style={rejilla}>
         <div style={{ flex: '1 1 340px', maxHeight: 460, overflowY: 'auto', border: '1.5px solid ' + C.border, borderRadius: 8 }}>
           {cargando ? (
             <div style={{ padding: 16, color: C.gray }}>Cargando…</div>
@@ -367,7 +391,7 @@ function RevisarGuardadas({ leafletListo, onCambio }) {
   );
 }
 
-export default function ImportarIncidenciaRegional({ perfil, onImportado, leafletListo }) {
+export default function ImportarIncidenciaRegional({ perfil, onImportado, leafletListo, enPestana = false }) {
   const [abierto, setAbierto] = useState(false);
   const [modo, setModo] = useState('importar'); // 'importar' | 'revisar'
   const [fase, setFase] = useState('inicio'); // 'inicio' | 'revision'
@@ -494,13 +518,18 @@ export default function ImportarIncidenciaRegional({ perfil, onImportado, leafle
       delito: f.delito || null, lugar_hechos: f.lugar, observaciones: f.obs || null,
       coordenadas_lat: f.lat, coordenadas_lng: f.lng, ubicacion_confirmada: f.confirmada,
       lugar_es_hospital: f.esHospital, cartulina: f.cartulina, vehiculo_asegurado: f.vehiculo,
-      droga_asegurada: f.droga, arma_calibre: f.arma, mes_reporte: f.fecha.slice(0, 7),
+      droga_asegurada: f.droga, arma_calibre: f.arma, mes_reporte: f.fecha.slice(0, 7), hora_conocimiento: f.hora || null,
       registrado_por_id: perfil ? perfil.id : null,
     }));
-    let guardados = 0;
+    let guardados = 0, sinHora = false;
     for (let i = 0; i < payload.length; i += 50) {
       const lote = payload.slice(i, i + 50);
-      const { error } = await supabase.from('incidencia_regional').insert(lote);
+      let { error } = await supabase.from('incidencia_regional').insert(lote);
+      // Si la columna de hora todavía no existe en la base, se guarda igual (sin hora) y se avisa
+      if (error && /hora_conocimiento/i.test(error.message || '')) {
+        sinHora = true;
+        ({ error } = await supabase.from('incidencia_regional').insert(lote.map(({ hora_conocimiento, ...resto }) => resto)));
+      }
       if (error) {
         setGuardando(false);
         setMsg({ tipo: 'error', texto: `Error al guardar: ${error.message}. Se guardaron ${guardados} casos; si vuelves a subir el archivo, esos no se duplican.` });
@@ -509,7 +538,7 @@ export default function ImportarIncidenciaRegional({ perfil, onImportado, leafle
       guardados += lote.length;
     }
     setGuardando(false);
-    setMsg({ tipo: 'ok', texto: `Listo: se importaron ${guardados} casos nuevos.` });
+    setMsg({ tipo: 'ok', texto: `Listo: se importaron ${guardados} casos nuevos.` + (sinHora ? ' La hora no se guardó: falta agregar su columna en la base de datos.' : '') });
     setFase('inicio'); setFilas([]); setResumen(null); setSel(null);
     if (onImportado) onImportado();
   };
@@ -519,7 +548,7 @@ export default function ImportarIncidenciaRegional({ perfil, onImportado, leafle
   const caja = { background: C.white, borderRadius: 10, padding: 14, marginBottom: 14, boxShadow: '0 1px 4px rgba(0,0,0,0.08)' };
   const fSel = sel != null ? filas[sel] : null;
 
-  if (!abierto) {
+  if (!enPestana && !abierto) {
     return (
       <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 10 }}>
         <button onClick={() => setAbierto(true)} style={btnSecundario}><Upload size={16} /> Importar Excel</button>
@@ -529,16 +558,27 @@ export default function ImportarIncidenciaRegional({ perfil, onImportado, leafle
 
   return (
     <div style={caja}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-        <div style={{ fontSize: 15, fontWeight: 800, color: C.gold, textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: 8 }}>
-          <Upload size={16} /> Importar homicidios dolosos
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <select aria-label="Región" value={region} onChange={(e) => setRegion(e.target.value)} style={{ ...campo, width: 'auto', padding: '6px 10px', fontSize: 14, minHeight: 38 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 14 }}>
+        {enPestana ? (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <span style={{ fontSize: 15, fontWeight: 700, color: C.navy }}>Región:</span>
+            <select aria-label="Región" value={region} onChange={(e) => setRegion(e.target.value)} style={{ ...campo, width: 'auto', padding: '6px 10px', fontSize: 14, minHeight: 38 }}>
             {REGIONES.map((r) => <option key={r} value={r} disabled={!REGIONES_LISTAS.includes(r)}>{r}{REGIONES_LISTAS.includes(r) ? '' : ' (próximamente)'}</option>)}
           </select>
-          <X size={20} style={{ cursor: 'pointer', color: C.gray }} onClick={() => { cancelar(); setAbierto(false); }} />
-        </div>
+          </div>
+        ) : (
+          <>
+            <div style={{ fontSize: 15, fontWeight: 800, color: C.gold, textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: 8 }}>
+              <Upload size={16} /> Importar homicidios dolosos
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <select aria-label="Región" value={region} onChange={(e) => setRegion(e.target.value)} style={{ ...campo, width: 'auto', padding: '6px 10px', fontSize: 14, minHeight: 38 }}>
+            {REGIONES.map((r) => <option key={r} value={r} disabled={!REGIONES_LISTAS.includes(r)}>{r}{REGIONES_LISTAS.includes(r) ? '' : ' (próximamente)'}</option>)}
+          </select>
+              <X size={20} style={{ cursor: 'pointer', color: C.gray }} onClick={() => { cancelar(); setAbierto(false); }} />
+            </div>
+          </>
+        )}
       </div>
 
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 12 }}>
@@ -556,6 +596,7 @@ export default function ImportarIncidenciaRegional({ perfil, onImportado, leafle
 
       {modo === 'importar' && fase === 'inicio' && (
         <div>
+          <div style={tituloPaso}>1 · Sube el Excel</div>
           <p style={{ color: C.gray, fontSize: 15, margin: '0 0 12px 0' }}>Se agregan solo los casos nuevos. Sin C.I. se omiten.</p>
           <input type="file" accept=".xlsx,.xls" onChange={cargarArchivo} style={{ ...campo, width: '100%' }} />
         </div>
@@ -563,17 +604,14 @@ export default function ImportarIncidenciaRegional({ perfil, onImportado, leafle
 
       {modo === 'importar' && fase === 'revision' && resumen && (
         <div>
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 12, fontSize: 14 }}>
-            {[
-              ['Casos en el archivo', resumen.leidos, C.navy],
-              ['Omitidos sin C.I.', resumen.omitidos, C.guinda],
-              ['Ya registrados', resumen.existentes, C.gray],
-              ['Nuevos a revisar', resumen.nuevas, C.verde],
-              ...(resumen.conCoords > 0 ? [['Con coordenadas del archivo', resumen.conCoords, C.navy]] : []),
-            ].map(([t, n, c]) => (
-              <span key={t} style={{ background: C.bg, border: '1.5px solid ' + C.border, borderRadius: 8, padding: '8px 12px', fontWeight: 700, color: c }}>{n} · {t}</span>
-            ))}
-            {resumen.repetidos > 0 && <span style={{ background: '#fdf6ea', border: '1.5px solid ' + C.gold, borderRadius: 8, padding: '8px 12px', fontWeight: 700, color: '#7a5c2e' }}>{resumen.repetidos} · C.I. repetidas en el archivo (se usó la primera)</span>}
+          <div style={tituloPaso}>2 · Revisa y guarda</div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 10, marginBottom: 12 }}>
+            <TarjetaCifra n={resumen.leidos} t="Casos en el archivo" c={C.navy} />
+            <TarjetaCifra n={resumen.omitidos} t="Omitidos sin C.I." c={C.guinda} />
+            <TarjetaCifra n={resumen.existentes} t="Ya registrados" c={C.gray} />
+            <TarjetaCifra n={resumen.nuevas} t="Nuevos a guardar" c={C.verde} />
+            {resumen.conCoords > 0 && <TarjetaCifra n={resumen.conCoords} t="Con coordenadas" c={C.navy} />}
+            {resumen.repetidos > 0 && <TarjetaCifra n={resumen.repetidos} t="C.I. repetidas (se usó la primera)" c={C.ambar} />}
           </div>
 
           {filas.length === 0 ? (
@@ -589,13 +627,12 @@ export default function ImportarIncidenciaRegional({ perfil, onImportado, leafle
                 </button>
                 <button onClick={cancelar} style={{ ...btn, background: 'transparent', color: C.gray, border: '1px solid ' + C.border }}>Cancelar</button>
               </div>
-              <div style={{ color: C.gray, fontSize: 13, marginBottom: 12 }}>
-                La ubicación automática consulta el servicio público de OpenStreetMap enviando solo el texto de la dirección y el municipio
-                (nunca la carpeta, nombres ni otros datos). Toma cerca de 1 segundo por caso. También puedes ubicar a mano: selecciona un caso y haz clic en el mapa.
-                {sinUbicar > 0 && <strong style={{ color: C.rojo }}> {sinUbicar} caso(s) sin ubicar no aparecerán en el mapa.</strong>}
+              <div style={{ color: C.gray, fontSize: 14, marginBottom: 12 }}>
+                Ubicar automáticamente envía a OpenStreetMap solo la dirección y el municipio (≈1 s por caso). También puedes elegir un caso y hacer clic en el mapa.
+                {sinUbicar > 0 && <strong style={{ color: C.rojo }}> {sinUbicar} sin ubicar no aparecerán en el mapa.</strong>}
               </div>
 
-              <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', alignItems: 'flex-start' }}>
+              <div style={rejilla}>
                 <div style={{ flex: '1 1 340px', maxHeight: 440, overflowY: 'auto', border: '1.5px solid ' + C.border, borderRadius: 8 }}>
                   {filas.map((f, i) => {
                     const et = etiquetaPrecision(f);
