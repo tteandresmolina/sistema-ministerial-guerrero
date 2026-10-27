@@ -6,7 +6,7 @@ import React, { useState } from 'react';
 import {
   Search, BarChart3, Zap, CheckCircle, Plus, ChevronLeft, RefreshCw,
   Target, FileText, MapPin, Clock, Users, AlertTriangle, ArrowRight,
-  Filter, Eye, Briefcase, Flag, ChevronDown, ClipboardList, CheckSquare, Triangle, Trash2
+  Filter, Eye, Briefcase, Flag, ChevronDown, ClipboardList, CheckSquare, Triangle, Trash2, Upload
 } from 'lucide-react';
 import { useAnalisisSARA } from '../hooks/useAnalisisSARA';
 import MapaCalor from './MapaCalor';
@@ -27,7 +27,9 @@ const TABS = [
   { key: 'plan', label: 'Plan de acción', icon: ClipboardList },
   { key: 'cheers', label: 'Checklist CHEERS', icon: CheckSquare },
   { key: 'triangulo', label: 'Triángulo del problema', icon: Triangle },
-].filter((t) => MOSTRAR_MAPA_CALOR || (t.key !== 'mapa' && t.key !== 'panel'));
+]
+  .concat([{ key: 'importar', label: 'Importar', icon: Upload }])
+  .filter((t) => MOSTRAR_MAPA_CALOR || (t.key !== 'mapa' && t.key !== 'panel' && t.key !== 'importar'));
 
 const cardStyle = {
   background: COLORS.white, borderRadius: 10, padding: 18,
@@ -714,7 +716,7 @@ const [tab, setTab] = useState(MOSTRAR_MAPA_CALOR ? 'mapa' : 'plan');
 
       {/* Botones de sección con el mismo estilo que Detenidos y Víctimas y Testigos */}
       <div role="tablist" style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 18 }}>
-        {TABS.map((t) => {
+        {TABS.filter((t) => t.key !== 'importar' || user?.rol === 'mando').map((t) => {
           const Icono = t.icon; const activa = tab === t.key;
           return (
             <button key={t.key} role="tab" aria-selected={activa} onClick={() => abrirTab(t.key)}
@@ -727,12 +729,14 @@ const [tab, setTab] = useState(MOSTRAR_MAPA_CALOR ? 'mapa' : 'plan');
 
       {/* Mapa y panel comparten datos y filtros: se mantienen montados y solo cambia lo que se ve */}
       {MOSTRAR_MAPA_CALOR && visitadas.mapa && (
-        <div style={{ display: tab === 'mapa' || tab === 'panel' ? 'block' : 'none' }}>
-          {tab === 'panel'
-            ? <NotaUso objetivo="Comparar qué municipios, colonias y delitos tienen más incidencia." uso="Usa los mismos filtros del mapa; las gráficas cambian al instante." />
-            : <NotaUso objetivo="Ver dónde se concentran los homicidios y qué zonas requieren atención prioritaria." uso="Elige fechas o delito en los filtros y presiona una zona para verla en el mapa." />}
+        <div style={{ display: tab === 'mapa' || tab === 'panel' || tab === 'importar' ? 'block' : 'none' }}>
+          {tab === 'importar'
+            ? <NotaUso objetivo="Cargar al mapa los homicidios dolosos que manda el regional en Excel." uso="Elige la región, sube el archivo, revisa y guarda. Si falta un punto, corrígelo en Revisar ubicaciones." />
+            : tab === 'panel'
+              ? <NotaUso objetivo="Comparar qué municipios, colonias y delitos tienen más incidencia." uso="Usa los mismos filtros del mapa; las gráficas cambian al instante." />
+              : <NotaUso objetivo="Ver dónde se concentran los homicidios y qué zonas requieren atención prioritaria." uso="Elige fechas o delito en los filtros y presiona una zona para verla en el mapa." />}
           <ErrorPestana>
-            <MapaCalor user={user} seccion={tab === 'panel' ? 'panel' : tab === 'mapa' ? 'mapa' : 'oculto'} onIniciarProyecto={handleIniciarDesdeCheers} />
+            <MapaCalor user={user} seccion={tab === 'panel' ? 'panel' : tab === 'mapa' ? 'mapa' : tab === 'importar' ? 'importar' : 'oculto'} onIniciarProyecto={handleIniciarDesdeCheers} onImportar={() => abrirTab('importar')} />
           </ErrorPestana>
         </div>
       )}
