@@ -20,6 +20,7 @@ import SubcoordAdmin from './pages/SubcoordAdmin';
 import BodegaIndicios from './pages/BodegaIndicios';
 import RegistroEstatalRedCriminal from './pages/RegistroEstatalRedCriminal';
 import MenuLateral from './pages/MenuLateral';
+import CambiarContrasena from './pages/CambiarContrasena';
 import ModuloDetenidos, { BusquedaOperativa, calcularSemaforo, SEMAFORO, REGIONES, Input, Select, TextArea } from './pages/Detenidos';
 
 // ─── CONSTANTES ───────────────────────────────────────────────────────────────
@@ -453,6 +454,7 @@ export default function App() {
   const cerrarSesion = async () => { await supabase.auth.signOut(); };
   const [tabApp, setTabApp] = useState("detenidos");
   const [detenidoParaAbrir, setDetenidoParaAbrir] = useState(null);
+  const [mostrarCambioPass, setMostrarCambioPass] = useState(false);
 
   if (cargandoSesion) return <div style={{ minHeight: "100vh", background: "#f4f6f9", display: "flex", alignItems: "center", justifyContent: "center", color: "#6b7280" }}>Cargando…</div>;
   if (modoRecuperacion) return <NuevaContrasena onListo={() => setModoRecuperacion(false)} />;
@@ -515,7 +517,9 @@ export default function App() {
               </span>
             </div>
           )}
+          <button onClick={() => setMostrarCambioPass(true)} style={{ background: "transparent", border: "1.5px solid rgba(255,255,255,0.5)", borderRadius: 7, padding: "10px 18px", color: "#ffffff", fontSize: 16, fontWeight: 700, cursor: "pointer", minHeight: 44 }}>MI CONTRASEÑA</button>
           <button onClick={cerrarSesion} style={{ background: "transparent", border: "1.5px solid rgba(255,255,255,0.5)", borderRadius: 7, padding: "10px 18px", color: "#ffffff", fontSize: 16, fontWeight: 700, cursor: "pointer", minHeight: 44 }}>SALIR</button>
+          {mostrarCambioPass && <CambiarContrasena onCerrar={() => setMostrarCambioPass(false)} />}
         </div>
       </div>
 
