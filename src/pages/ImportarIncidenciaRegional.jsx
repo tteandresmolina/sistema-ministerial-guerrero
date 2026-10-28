@@ -15,6 +15,7 @@ import * as XLSX from 'xlsx';
 import { supabase } from '../supabaseClient';
 import { Upload, MapPin, CheckCircle2, AlertTriangle, X } from 'lucide-react';
 import { clasificarDelito, MEDIOS_ORDEN, COLOR_MEDIO } from './clasificarDelito';
+import PegarTarjeta, { AvisoCierreMes, DescargaMes } from './PegarTarjeta';
 
 const C = {
   navy: '#001a4d', gold: '#b69054', guinda: '#8b1e1e', white: '#ffffff',
@@ -394,7 +395,7 @@ function RevisarGuardadas({ leafletListo, onCambio }) {
 
 export default function ImportarIncidenciaRegional({ perfil, onImportado, leafletListo, enPestana = false }) {
   const [abierto, setAbierto] = useState(false);
-  const [modo, setModo] = useState('importar'); // 'importar' | 'revisar'
+  const [modo, setModo] = useState('importar'); // 'importar' | 'tarjeta' | 'revisar'
   const [fase, setFase] = useState('inicio'); // 'inicio' | 'revision'
   const [region, setRegion] = useState(REGIONES_LISTAS[0]);
   const [resumen, setResumen] = useState(null);
@@ -610,12 +611,20 @@ export default function ImportarIncidenciaRegional({ perfil, onImportado, leafle
         )}
       </div>
 
+      <AvisoCierreMes region={region} />
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 12 }}>
-        <button onClick={() => setModo('importar')} style={{ ...btn, padding: '8px 16px', minHeight: 40, fontSize: 14, background: modo === 'importar' ? C.navy : 'transparent', color: modo === 'importar' ? '#fff' : C.navy, border: '2px solid ' + C.navy }}>Importar</button>
-        <button onClick={() => setModo('revisar')} style={{ ...btn, padding: '8px 16px', minHeight: 40, fontSize: 14, background: modo === 'revisar' ? C.navy : 'transparent', color: modo === 'revisar' ? '#fff' : C.navy, border: '2px solid ' + C.navy }}>Revisar ubicaciones</button>
+        <button onClick={() => setModo('importar')} style={{ ...btn, padding: '8px 16px', minHeight: 44, fontSize: 16, background: modo === 'importar' ? C.navy : 'transparent', color: modo === 'importar' ? '#fff' : C.navy, border: '2px solid ' + C.navy }}>Importar Excel (histórico)</button>
+        <button onClick={() => setModo('tarjeta')} style={{ ...btn, padding: '8px 16px', minHeight: 44, fontSize: 16, background: modo === 'tarjeta' ? C.navy : 'transparent', color: modo === 'tarjeta' ? '#fff' : C.navy, border: '2px solid ' + C.navy }}>Pegar tarjeta (tiempo real)</button>
+        <button onClick={() => setModo('revisar')} style={{ ...btn, padding: '8px 16px', minHeight: 44, fontSize: 16, background: modo === 'revisar' ? C.navy : 'transparent', color: modo === 'revisar' ? '#fff' : C.navy, border: '2px solid ' + C.navy }}>Revisar ubicaciones</button>
       </div>
 
       {modo === 'revisar' && <RevisarGuardadas leafletListo={leafletListo} onCambio={onImportado} />}
+      {modo === 'tarjeta' && (
+        <>
+          <PegarTarjeta perfil={perfil} onGuardado={onImportado} />
+          <DescargaMes region={region} />
+        </>
+      )}
 
       {modo === 'importar' && msg && (
         <div style={{ background: msg.tipo === 'ok' ? '#e1f5ee' : '#fcebeb', border: '1px solid ' + (msg.tipo === 'ok' ? '#22c55e55' : '#ef444455'), color: msg.tipo === 'ok' ? '#0f6e56' : '#791f1f', borderRadius: 8, padding: 12, fontSize: 15, marginBottom: 12 }}>

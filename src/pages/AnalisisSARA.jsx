@@ -731,7 +731,7 @@ const [tab, setTab] = useState(MOSTRAR_MAPA_CALOR ? 'mapa' : 'plan');
       {MOSTRAR_MAPA_CALOR && visitadas.mapa && (
         <div style={{ display: tab === 'mapa' || tab === 'panel' || tab === 'importar' ? 'block' : 'none' }}>
           {tab === 'importar'
-            ? <NotaUso objetivo="Cargar al mapa los homicidios dolosos que manda el regional en Excel." uso="Elige la región, sube el archivo, revisa y guarda. Si falta un punto, corrígelo en Revisar ubicaciones." />
+            ? <NotaUso objetivo="Alimentar el mapa con los homicidios dolosos: el Excel del regional (histórico) o la tarjeta informativa (tiempo real)." uso="Importar Excel: sube el mes completo. Pegar tarjeta: pega el texto, revisa y guarda. Si falta un punto, corrígelo en Revisar ubicaciones." />
             : tab === 'panel'
               ? <NotaUso objetivo="Comparar qué municipios, colonias y delitos tienen más incidencia." uso="Usa los mismos filtros del mapa; las gráficas cambian al instante." />
               : <NotaUso objetivo="Ver dónde se concentran los homicidios y qué zonas requieren atención prioritaria." uso="Elige fechas o delito en los filtros y presiona una zona para verla en el mapa." />}
