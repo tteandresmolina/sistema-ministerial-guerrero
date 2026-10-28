@@ -310,7 +310,7 @@ export default function SubcoordAdmin({ perfil }) {
         ) : (
           <div style={{ marginTop: 14 }}>
             <div style={{ fontSize: 14, color: '#ef4444', marginBottom: 6 }}>Baja: {formatFecha(e.fecha_baja)} — {e.motivo_baja}</div>
-            <button style={{ ...btnPrimary, background: '#10b981' }} onClick={async () => { await reactivar(e, 'Reactivación autorizada'); const { data } = await fetchElementos(); }}>
+            <button style={{ ...btnPrimary, background: '#10b981' }} onClick={async () => { setError(null); const ok = await reactivar(e, 'Reactivación autorizada'); if (ok) { setFiltroActivo('activos'); setSeccion('directorio'); } }}>
               <CheckCircle size={14} /> Reactivar elemento
             </button>
           </div>
@@ -323,10 +323,19 @@ export default function SubcoordAdmin({ perfil }) {
             <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
               <button style={{ ...btnPrimary, background: '#ef4444' }} onClick={async () => {
                 if (!formBaja.motivo) { setError('Escribe el motivo'); return; }
-                await darDeBaja(e, formBaja.motivo); setShowBaja(false); setSeccion('directorio');
+                setError(null);
+                const ok = await darDeBaja(e, formBaja.motivo);
+                if (ok) { setShowBaja(false); setSeccion('directorio'); }
               }}>Confirmar baja</button>
               <button style={btnSecondary} onClick={() => setShowBaja(false)}>Cancelar</button>
             </div>
+          </div>
+        )}
+
+        {/* El mensaje de error se muestra aquí, junto a los botones (antes solo salía arriba de la pantalla y pasaba desapercibido) */}
+        {error && (
+          <div role="alert" style={{ marginTop: 14, padding: '12px 14px', background: '#fdecea', border: '1px solid #f5b5ad', borderRadius: 8, color: '#b91c1c', fontSize: 16, fontWeight: 600, lineHeight: 1.4 }}>
+            {error}
           </div>
         )}
       </div>
