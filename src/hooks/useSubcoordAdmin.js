@@ -244,42 +244,44 @@ export function useSubcoordAdmin(perfil) {
   };
 
   // ── Crear cuenta nueva (alta de personal) ──────────────────────
+  // La cuenta y el perfil los crea una función segura del servidor (Edge Function "crear-usuario"),
+  // que solo permite usar quien tenga rol mando o subcoord_admin. Así no hace falta abrir el registro público.
   const crearElemento = async (datosForm, passwordTemporal) => {
     setLoading(true);
     setError(null);
-    // 1. Crear usuario en Supabase Auth
-    const { data: authData, error: authErr } = await supabase.auth.signUp({
-      email: datosForm.email,
-      password: passwordTemporal,
+    const { data, error: fnErr } = await supabase.functions.invoke('crear-usuario', {
+      body: {
+        email: datosForm.email,
+        password: passwordTemporal,
+        perfil: {
+          nombre_completo: datosForm.nombre_completo,
+          cargo: datosForm.cargo,
+          grado: datosForm.grado,
+          region: datosForm.region,
+          zona: datosForm.zona || null,
+          coordinacion_especializada: datosForm.coordinacion_especializada || null,
+          numero_empleado: datosForm.numero_empleado,
+          cuip: datosForm.cuip || null,
+          telefono_personal: datosForm.telefono_personal || null,
+        },
+      },
     });
-    if (authErr) { setError('Error al crear cuenta: ' + authErr.message); setLoading(false); return null; }
-    if (!authData.user) { setError('No se pudo crear el usuario'); setLoading(false); return null; }
+    if (fnErr) {
+      // La función responde con un mensaje claro; si no se puede leer, se muestra el mensaje genérico
+      let msg = fnErr.message;
+      try { const cuerpo = await fnErr.context.json(); if (cuerpo && cuerpo.error) msg = cuerpo.error; } catch (_) { /* sin detalle */ }
+      setError('Error al crear cuenta: ' + msg);
+      setLoading(false);
+      return null;
+    }
+    if (!data || !data.user) { setError('No se pudo crear el usuario'); setLoading(false); return null; }
 
-    const nuevoRol = CARGO_A_ROL[datosForm.cargo] || 'agente';
-
-    // 2. Crear perfil
-    const { error: perfErr } = await supabase.from('perfiles').insert([{
-      id: authData.user.id,
-      nombre_completo: datosForm.nombre_completo,
-      rol: nuevoRol,
-      cargo: datosForm.cargo,
-      grado: datosForm.grado,
-      region: datosForm.region,
-      zona: datosForm.zona || null,
-      coordinacion_especializada: datosForm.coordinacion_especializada || null,
-      numero_empleado: datosForm.numero_empleado,
-      cuip: datosForm.cuip || null,
-      telefono_personal: datosForm.telefono_personal || null,
-      activo: true,
-    }]);
-    if (perfErr) { setError('Cuenta creada pero error en perfil: ' + perfErr.message); setLoading(false); return null; }
-
-    // 3. Bitácora
-    await registrarBitacora(authData.user.id, datosForm.nombre_completo, 'alta', null, null, datosForm.cargo, 'Alta de personal', null);
+    // Bitácora
+    await registrarBitacora(data.user.id, datosForm.nombre_completo, 'alta', null, null, datosForm.cargo, 'Alta de personal', null);
 
     setLoading(false);
     await fetchElementos();
-    return authData.user;
+    return data.user;
   };
 
   // ── Métricas ───────────────────────────────────────────────────
