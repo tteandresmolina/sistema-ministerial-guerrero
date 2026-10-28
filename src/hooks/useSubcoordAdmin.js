@@ -49,6 +49,13 @@ const TIPO_DOC_MAP = {
   'Examen Toxicológico': 'examen_toxicologico', 'Póliza de Seguro': 'poliza_seguro', 'Otro': 'otro',
 };
 
+// Lee el mensaje claro que devuelven las funciones del servidor; si no hay, usa el genérico
+async function mensajeDeFuncion(fnErr) {
+  let msg = fnErr.message;
+  try { const cuerpo = await fnErr.context.json(); if (cuerpo && cuerpo.error) msg = cuerpo.error; } catch (_) { /* sin detalle */ }
+  return msg;
+}
+
 export function useSubcoordAdmin(perfil) {
   const [elementos, setElementos] = useState([]);
   const [bitacora, setBitacora] = useState([]);
@@ -158,12 +165,19 @@ export function useSubcoordAdmin(perfil) {
 
   // ── Dar de baja (desactivar) ───────────────────────────────────
   const darDeBaja = async (elemento, motivo) => {
+    // 1. Se bloquea el acceso de la cuenta (marcarla inactiva en el directorio no basta para que no pueda entrar)
+    const { error: fnErr } = await supabase.functions.invoke('estado-usuario', { body: { id: elemento.id, accion: 'baja' } });
+    if (fnErr) { setError('No se pudo bloquear el acceso: ' + await mensajeDeFuncion(fnErr)); return false; }
+    // 2. Se marca en el directorio
     const { error: err } = await supabase.from('perfiles').update({
       activo: false,
       fecha_baja: new Date().toISOString(),
       motivo_baja: motivo,
     }).eq('id', elemento.id);
-    if (err) { setError('Error al dar de baja: ' + err.message); return false; }
+    if (err) {
+      await supabase.functions.invoke('estado-usuario', { body: { id: elemento.id, accion: 'reactivar' } }); // deshace el bloqueo
+      setError('Error al dar de baja: ' + err.message); return false;
+    }
     await registrarBitacora(elemento.id, elemento.nombre_completo, 'baja', 'activo', 'true', 'false', motivo, null);
     await fetchElementos();
     return true;
@@ -171,6 +185,8 @@ export function useSubcoordAdmin(perfil) {
 
   // ── Reactivar ──────────────────────────────────────────────────
   const reactivar = async (elemento, motivo) => {
+    const { error: fnErr } = await supabase.functions.invoke('estado-usuario', { body: { id: elemento.id, accion: 'reactivar' } });
+    if (fnErr) { setError('No se pudo restablecer el acceso: ' + await mensajeDeFuncion(fnErr)); return false; }
     const { error: err } = await supabase.from('perfiles').update({
       activo: true,
       fecha_baja: null,
@@ -267,10 +283,7 @@ export function useSubcoordAdmin(perfil) {
       },
     });
     if (fnErr) {
-      // La función responde con un mensaje claro; si no se puede leer, se muestra el mensaje genérico
-      let msg = fnErr.message;
-      try { const cuerpo = await fnErr.context.json(); if (cuerpo && cuerpo.error) msg = cuerpo.error; } catch (_) { /* sin detalle */ }
-      setError('Error al crear cuenta: ' + msg);
+      setError('Error al crear cuenta: ' + await mensajeDeFuncion(fnErr));
       setLoading(false);
       return null;
     }
