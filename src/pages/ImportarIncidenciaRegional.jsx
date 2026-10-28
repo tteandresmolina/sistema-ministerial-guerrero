@@ -16,6 +16,7 @@ import { supabase } from '../supabaseClient';
 import { Upload, MapPin, CheckCircle2, AlertTriangle, X } from 'lucide-react';
 import { clasificarDelito, MEDIOS_ORDEN, COLOR_MEDIO } from './clasificarDelito';
 import PegarTarjeta, { AvisoCierreMes, DescargaMes } from './PegarTarjeta';
+import { descargarRelacionPendientes } from './RelacionPendientes';
 
 const C = {
   navy: '#001a4d', gold: '#b69054', guinda: '#8b1e1e', white: '#ffffff',
@@ -223,11 +224,21 @@ function RevisarGuardadas({ leafletListo, onCambio }) {
   const [buscando, setBuscando] = useState(false);
   const [guardando, setGuardando] = useState(false);
   const [msg, setMsg] = useState(null);
+  const [bajandoRel, setBajandoRel] = useState(false);
   const mapEl = useRef(null);
   const mapObj = useRef(null);
   const capa = useRef(null);
   const selRef = useRef(null);
   selRef.current = sel;
+
+  const bajarRelacion = async () => {
+    setBajandoRel(true); setMsg(null);
+    try {
+      const r = await descargarRelacionPendientes();
+      setMsg({ tipo: 'ok', texto: 'Relación generada: ' + r.pendientes + ' casos con datos pendientes (' + r.sinUbicar + ' sin ubicar, ' + r.sinConfirmar + ' sin confirmar) y ' + r.sinHora + ' sin hora de aviso.' });
+    } catch (e) { setMsg({ tipo: 'error', texto: 'No se pudo generar la relación: ' + (e.message || e) }); }
+    setBajandoRel(false);
+  };
 
   const cargar = async () => {
     setCargando(true);
@@ -345,6 +356,7 @@ function RevisarGuardadas({ leafletListo, onCambio }) {
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 12 }}>
         <button onClick={() => setFiltro('pendientes')} style={chipFiltro(filtro === 'pendientes')}>Pendientes</button>
         <button onClick={() => setFiltro('todos')} style={chipFiltro(filtro === 'todos')}>Todos</button>
+        <button onClick={bajarRelacion} disabled={bajandoRel} style={{ ...chipFiltro(false), marginLeft: 'auto', fontSize: 16, opacity: bajandoRel ? 0.6 : 1 }}>{bajandoRel ? 'Generando…' : 'Descargar relación para el regional (Excel)'}</button>
       </div>
 
       <div style={rejilla}>
