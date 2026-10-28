@@ -44,10 +44,23 @@ function hora(b, etiqueta) {
   return h > 23 || mi > 59 ? '' : pad(h) + ':' + pad(mi);
 }
 
+// Busca el valor de una etiqueta (varios nombres posibles). El valor puede ir en la misma línea ("Delito: Homicidio...")
+// o en la línea siguiente ("Delito:" y abajo el texto), que es como lo escriben algunas tarjetas.
+function valorDe(b, etiquetas) {
+  for (const et of etiquetas) {
+    const m = b.match(new RegExp('(?:^|\\n)[ \\t]*(?:' + et + ')[ \\t]*:[ \\t]*([^\\n]*)(?:\\n\\s*([^\\n]+))?', 'i'));
+    if (!m) continue;
+    const misma = (m[1] || '').trim();
+    if (misma) return misma;
+    const sig = (m[2] || '').trim();
+    if (sig && !/^[A-Za-zÁÉÍÓÚáéíóúÑñ .]{2,40}:/.test(sig)) return sig;
+  }
+  return '';
+}
+const limpiarValor = (v) => String(v || '').replace(/\s+/g, ' ').replace(/[.\s]+$/, '').trim();
+
 function leerUna(bloque, n) {
   const b = bloque;
-  const avisos = [];
-
   // Fecha: "Acapulco, Guerrero; a 26 de octubre de 2026"
   let fecha = '';
   const mf = b.match(/(\d{1,2})\s+de\s+([a-zA-ZáéíóúÁÉÍÓÚ]+)\s+(?:de|del)\s+(\d{4})/i);
@@ -57,13 +70,12 @@ function leerUna(bloque, n) {
     if (md) fecha = md[3] + '-' + pad(+md[2]) + '-' + pad(+md[1]);
   }
 
-  const sectorCrudo = ((b.match(/Sector\s*:\s*([^\n]+)/i) || [])[1] || '').replace(/[.\s]+$/, '').trim();
-  const asunto = ((b.match(/Asunto\s*:\s*([^\n]+)/i) || [])[1] || '').replace(/[.\s]+$/, '').trim();
-  const tipo = ((b.match(/Tipo de hecho\s*:\s*([^\n]+)/i) || [])[1] || '').replace(/\s+/g, ' ').replace(/[.\s]+$/, '').trim();
+  const sectorCrudo = limpiarValor(valorDe(b, ['Sector', 'Coordinaci[oó]n', 'Zona']));
+  const asunto = limpiarValor(valorDe(b, ['Asunto']));
+  const tipo = limpiarValor(valorDe(b, ['Tipo de hecho', 'Tipo de delito', 'Delito', 'Tipificaci[oó]n', 'Hecho']));
 
   // El lugar puede ir en la misma línea de la etiqueta o en la línea siguiente
-  const ml = b.match(/Lugar de intervenci[oó]n\s*:?[ \t]*([^\n]*)(?:\n\s*([^\n:]+))?/i);
-  const lugar = ml ? ((ml[1] || '').trim() || (ml[2] || '').trim()).replace(/\s+/g, ' ').replace(/[.\s]+$/, '') : '';
+  const lugar = limpiarValor(valorDe(b, ['Lugar de intervenci[oó]n', 'Lugar de los hechos', 'Lugar del hecho', 'Ubicaci[oó]n', 'Lugar']));
 
   // Carpeta de investigación: con etiqueta, o un número suelto de 20 dígitos
   let ci = '';
@@ -75,22 +87,18 @@ function leerUna(bloque, n) {
   const calibre = mcal ? (mcal[1].replace(/\s/g, '') + ((mcal[2] || /mm/i.test(mcal[0])) ? 'MM' : '')).toUpperCase().replace(/MM+$/, 'MM') : '';
 
   const delito = tipo.toUpperCase();
-  const sector = normalizarSector(sectorCrudo);
-  // "Muerte no constitutiva de delito" también se guarda (queda en espera de necropsia y el MP la reclasifica después)
-  const pendiente = /MUERTE NO CONSTITUTIVA|NO CONSTITUTIVA DE DELITO/.test(norm(tipo));
-  const esHomicidio = pendiente || /HOMICID/.test(norm(tipo + ' ' + asunto));
-
-  if (!fecha) avisos.push('No encontré la fecha.');
-  if (!sectorCrudo) avisos.push('No encontré el sector.');
-  else if (!sector) avisos.push('El sector "' + sectorCrudo + '" no está en el catálogo: elígelo de la lista.');
-  if (!tipo) avisos.push('No encontré el tipo de hecho.');
-  else if (!esHomicidio) avisos.push('Esta tarjeta no es de homicidio: aquí solo se guardan homicidios dolosos.');
-  if (!lugar) avisos.push('No encontré el lugar de intervención.');
+  let sector = normalizarSector(sectorCrudo);
+  // Si la tarjeta no dice el sector, se busca el nombre de un sector del catálogo en el lugar; si hay uno solo, se propone y se avisa
+  let sectorAuto = '';
+  if (!sector) {
+    const hallados = SECTORES.filter((x) => new RegExp('(^|[^a-z])' + norm(x).toLowerCase().replace(/\s+/g, '\\s+') + '([^a-z]|$)').test(norm(lugar).toLowerCase()));
+    if (hallados.length === 1) { sector = hallados[0]; sectorAuto = hallados[0]; }
+  }
 
   return {
     id: 't' + n + '-' + Date.now(), fecha, hora: hora(b, 'Hora de aviso'), horaArribo: hora(b, 'Hora de arribo'),
-    sector: sector || '', sectorCrudo, asunto, delito, lugar, ci, calibre,
-    cartulina: /cartulina/i.test(b) ? true : null, esHospital: HOSPITAL_RE.test(lugar), esHomicidio, pendiente, avisos,
+    sector: sector || '', sectorAuto, sectorCrudo, asunto, delito, lugar, ci, calibre,
+    cartulina: /cartulina/i.test(b) ? true : null, esHospital: HOSPITAL_RE.test(lugar),
   };
 }
 
@@ -99,4 +107,22 @@ export function leerTarjetas(texto) {
   const limpio = limpiarTexto(texto);
   if (!/\S/.test(limpio)) return [];
   return dividirTarjetas(limpio).map((b, i) => leerUna(b, i + 1));
+}
+
+// ¿El tipo de hecho es un homicidio? ("Muerte no constitutiva de delito" también se guarda: queda en espera de necropsia)
+export function esTipoHomicidio(delito, asunto) {
+  const n = norm((delito || '') + ' ' + (asunto || ''));
+  return /HOMICID/.test(n) || /MUERTE NO CONSTITUTIVA|NO CONSTITUTIVA DE DELITO/.test(n);
+}
+
+// Avisos con lo que hay EN PANTALLA en este momento: si la persona corrige un campo, el aviso desaparece
+export function revisar(t) {
+  const a = [];
+  if (!t.fecha) a.push('Falta la fecha.');
+  if (!t.sector) a.push(t.sectorCrudo ? 'El sector "' + t.sectorCrudo + '" no está en el catálogo: elígelo de la lista.' : 'No encontré el sector: elígelo de la lista.');
+  else if (t.sectorAuto && t.sector === t.sectorAuto) a.push('El sector se tomó del lugar del hecho (' + t.sector + '). Verifícalo.');
+  if (!t.delito) a.push('Falta el tipo de hecho.');
+  else if (!esTipoHomicidio(t.delito, t.asunto)) a.push('Esta tarjeta no es de homicidio: aquí solo se guardan homicidios dolosos.');
+  if (!t.lugar) a.push('Falta el lugar.');
+  return a;
 }

@@ -14,7 +14,7 @@ import { useState, useEffect } from 'react';
 import * as XLSX from 'xlsx';
 import { supabase } from '../supabaseClient';
 import { ClipboardPaste, Download, CheckCircle2, AlertTriangle, CalendarCheck } from 'lucide-react';
-import { leerTarjetas, SECTORES } from './leerTarjeta';
+import { leerTarjetas, SECTORES, revisar, esTipoHomicidio } from './leerTarjeta';
 import { clasificarDelito, COLOR_MEDIO } from './clasificarDelito';
 import { nombreMesAnio } from './SelectorPeriodo';
 
@@ -202,7 +202,7 @@ export default function PegarTarjeta({ perfil, onGuardado }) {
 
   const problemas = (t) => {
     const p = [];
-    if (!t.esHomicidio) p.push('No es una tarjeta de homicidio.');
+    if (!esTipoHomicidio(t.delito, t.asunto)) p.push('No es una tarjeta de homicidio.');
     if (!t.fecha) p.push('Falta la fecha.');
     if (!t.sector) p.push('Elige el sector.');
     if (!t.lugar) p.push('Falta el lugar.');
@@ -271,7 +271,7 @@ export default function PegarTarjeta({ perfil, onGuardado }) {
 
             {dup[t.id] === 'carpeta' && <div style={{ background: '#fdecea', color: C.guinda, borderRadius: 8, padding: '8px 12px', fontSize: 16, fontWeight: 700, marginBottom: 10 }}><AlertTriangle size={16} style={{ verticalAlign: -2 }} /> Esa carpeta ya está registrada. No se va a duplicar.</div>}
             {dup[t.id] === 'posible' && <div style={{ background: '#fff8e1', color: C.ambar, borderRadius: 8, padding: '8px 12px', fontSize: 16, fontWeight: 700, marginBottom: 10 }}><AlertTriangle size={16} style={{ verticalAlign: -2 }} /> Posible duplicado: ya hay un caso del mismo sector, fecha y hora de aviso.</div>}
-            {t.avisos.map((a, k) => <div key={k} style={{ fontSize: 16, color: C.ambar, marginBottom: 4 }}>• {a}</div>)}
+            {revisar(t).map((a, k) => <div key={k} style={{ fontSize: 16, color: C.ambar, marginBottom: 4 }}>• {a}</div>)}
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: 12, marginTop: 8 }}>
               <label><span style={etiqueta}>Fecha</span><input type="date" style={campo} value={t.fecha} onChange={(e) => poner(t.id, { fecha: e.target.value })} disabled={guardada} /></label>
