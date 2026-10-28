@@ -447,7 +447,15 @@ export default function App() {
 
   useEffect(() => {
     if (sesion?.user) {
-      supabase.from("perfiles").select("*").eq("id", sesion.user.id).single().then(({ data }) => setPerfil(data));
+      supabase.from("perfiles").select("*").eq("id", sesion.user.id).single().then(({ data }) => {
+        // Una cuenta dada de baja no entra al sistema aunque haya iniciado sesión
+        if (data && data.activo === false) {
+          supabase.auth.signOut();
+          window.alert("Tu cuenta está dada de baja. Comunícate con la Subcoordinación Administrativa.");
+          return;
+        }
+        setPerfil(data);
+      });
     } else setPerfil(null);
   }, [sesion]);
 
