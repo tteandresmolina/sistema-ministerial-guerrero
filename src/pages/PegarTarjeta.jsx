@@ -243,13 +243,15 @@ export default function PegarTarjeta({ perfil, onGuardado }) {
 
   return (
     <div>
+      <div style={{ fontSize: 22, fontWeight: 800, color: C.navy, marginBottom: 2 }}>Pegar tarjeta informativa</div>
+      <div style={{ fontSize: 15, fontWeight: 700, color: C.gold, textTransform: 'uppercase', marginBottom: 8 }}>Homicidios dolosos en tiempo real</div>
       <div style={{ fontSize: 17, color: '#374151', lineHeight: 1.5, marginBottom: 10 }}>
         Pega aquí la tarjeta informativa (puedes pegar varias juntas). El sistema lee solo los datos del hecho y tú los revisas antes de guardar.
       </div>
       <textarea value={texto} onChange={(e) => setTexto(e.target.value)} placeholder="Pega aquí el texto de la tarjeta…"
         style={{ ...campo, minHeight: 200, resize: 'vertical', lineHeight: 1.5 }} aria-label="Texto de la tarjeta informativa" />
       <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginTop: 10, alignItems: 'center' }}>
-        <button onClick={leer} disabled={!texto.trim()} style={{ ...btnPrimario, opacity: texto.trim() ? 1 : 0.5 }}><ClipboardPaste size={20} /> Leer tarjeta</button>
+        <button onClick={leer} disabled={!texto.trim()} style={{ ...btnPrimario, opacity: texto.trim() ? 1 : 0.5 }}><ClipboardPaste size={20} /> Leer tarjeta informativa</button>
         {(texto || tarjetas.length > 0) && <button onClick={limpiar} style={btnSecundario}>Limpiar</button>}
         <span style={{ fontSize: 15, color: C.gray }}>No se guardan nombres, edades, domicilios ni la reseña de los hechos.</span>
       </div>
@@ -264,7 +266,7 @@ export default function PegarTarjeta({ perfil, onGuardado }) {
         return (
           <div key={t.id} style={{ background: C.white, border: '1px solid #b6905466', borderLeft: '6px solid ' + (guardada ? C.verde : C.navy), borderRadius: 10, padding: 16, marginTop: 16 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 10 }}>
-              <span style={{ fontSize: 18, fontWeight: 800, color: C.navy }}>Tarjeta {i + 1}</span>
+              <span style={{ fontSize: 18, fontWeight: 800, color: C.navy }}>Tarjeta informativa {i + 1}</span>
               {t.delito && <span style={{ background: color.bg, color: color.tx, borderRadius: 14, padding: '4px 12px', fontSize: 15, fontWeight: 700 }}>{cls.pendiente ? 'En espera de necropsia' : cls.medio}</span>}
               {cls.calificado && <span style={{ background: '#eef1f6', color: C.navy, borderRadius: 14, padding: '4px 12px', fontSize: 15, fontWeight: 700 }}>Calificado</span>}
             </div>
