@@ -561,7 +561,7 @@ export default function SubcoordAdmin({ perfil }) {
             <div style={{ fontSize: 15, color: '#374151' }}>Nombre: <strong>{altaExito.nombre}</strong></div>
             <div style={{ fontSize: 15, color: '#374151' }}>Correo: <strong>{altaExito.email}</strong></div>
             <div style={{ fontSize: 15, color: '#dc2626', fontFamily: 'monospace', fontWeight: 700, marginTop: 6 }}>Contraseña temporal: {altaExito.password}</div>
-            <div style={{ fontSize: 13, color: '#6b7280', marginTop: 6 }}>Entregue estas credenciales al elemento. Al iniciar sesión por primera vez deberá cambiar su contraseña.</div>
+            <div style={{ fontSize: 13, color: '#6b7280', marginTop: 6 }}>Entregue estas credenciales al elemento y pídale que cambie su contraseña en su primer ingreso, con el botón "MI CONTRASEÑA" (arriba a la derecha).</div>
           </div>
         )}
 
@@ -614,7 +614,7 @@ export default function SubcoordAdmin({ perfil }) {
                 <input style={{ ...inputStyle, fontFamily: 'monospace', flex: 1, width: 'auto' }} value={passTemp} onChange={e => setPassTemp(e.target.value)} placeholder="FGE-59793-2026" />
                 <button type="button" style={{ ...btnSecondary, padding: '8px 14px', fontSize: 14, whiteSpace: 'nowrap' }} onClick={generarPass}>Generar</button>
               </div>
-              <div style={{ fontSize: 13, color: '#6b7280', marginTop: 4 }}>El elemento deberá cambiar esta contraseña en su primer ingreso.</div>
+              <div style={{ fontSize: 13, color: '#6b7280', marginTop: 4 }}>Pídale al elemento que la cambie en su primer ingreso con el botón "MI CONTRASEÑA" del encabezado.</div>
             </div>
           </div>
 
