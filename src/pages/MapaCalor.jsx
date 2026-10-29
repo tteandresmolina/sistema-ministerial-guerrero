@@ -672,7 +672,14 @@ export default function MapaCalor({ user, onIniciarProyecto, onImportar, seccion
     { icono: Clock, color: '#b69054', valor: ritmo ? (ritmo < 1 ? 'Más de 1 al día' : 'Cada ' + ritmo.toFixed(1) + ' días') : '—', etiqueta: 'Ritmo de homicidios' },
     { icono: Flag, color: '#001a4d', valor: topSectores[0] ? topSectores[0][0] : '—', etiqueta: 'Colonia con más casos' },
   ];
-  var alcancePantalla = (user && (user.rol === 'coordinador' || user.rol === 'agente') && user.zona) ? 'Coordinación ' + user.zona : ((user && user.region) || 'Región Acapulco');
+  // El título describe lo que se ve (la región de los casos), no la región del perfil de quien mira
+  var regionesDatos = {};
+  puntos.concat(sinUbicar).forEach(function(p) { if (p.fuente === 'incidencia_regional' && p.region) regionesDatos[p.region] = true; });
+  var listaRegiones = Object.keys(regionesDatos);
+  var alcancePantalla = (user && (user.rol === 'coordinador' || user.rol === 'agente') && user.zona) ? 'Coordinación ' + user.zona
+    : listaRegiones.length === 1 ? listaRegiones[0]
+    : listaRegiones.length > 1 ? 'Todas las regiones'
+    : 'Estadística de homicidios';
   var textoDelito = filtroDelito ? filtroDelito.charAt(0) + filtroDelito.slice(1).toLowerCase() : 'Todos los delitos';
 
   return (
