@@ -326,7 +326,14 @@ export default function AnalisisSARA({ user }) {
 
   const [vista, setVista] = useState('listado');
   const [proyectoActivo, setProyectoActivo] = useState(null);
-const [tab, setTab] = useState(MOSTRAR_MAPA_CALOR ? 'mapa' : 'plan');
+// Si se llega desde un acceso del Inicio, se abre directo la pestaña pedida (solo una vez)
+  const [tab, setTab] = useState(() => {
+    try {
+      const t = sessionStorage.getItem('saraTab');
+      if (t) { sessionStorage.removeItem('saraTab'); if (TABS.some((x) => x.key === t && (x.key !== 'importar' || user?.rol === 'mando'))) return t; }
+    } catch (e) { /* sin almacenamiento */ }
+    return MOSTRAR_MAPA_CALOR ? 'mapa' : 'plan';
+  });
   const [visitadas, setVisitadas] = useState({ [MOSTRAR_MAPA_CALOR ? 'mapa' : 'plan']: true });
   const abrirTab = (k) => { setTab(k); setVisitadas((v) => (v[k] ? v : { ...v, [k]: true })); };
   const emptyProyecto = {
