@@ -7,7 +7,8 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../supabaseClient';
-import { RefreshCw, MapPin, Filter, X, Clock, BarChart3, ChevronDown, ChevronUp, Upload } from 'lucide-react';
+import { RefreshCw, MapPin, Filter, X, Clock, BarChart3, ChevronDown, ChevronUp, Upload, Maximize2, Target, Flag } from 'lucide-react';
+import { TarjetaResumen, BarraSuperior, CapasPantalla } from './PantallaMapa';
 import ImportarIncidenciaRegional from './ImportarIncidenciaRegional';
 import ZonasAtencion from './ZonasAtencion';
 import ReglaMapa, { tiempoEntre, textoDistancia } from './ReglaMapa';
@@ -309,9 +310,34 @@ export default function MapaCalor({ user, onIniciarProyecto, onImportar, seccion
   const [fechaHasta, setFechaHasta] = useState('');
   const [filtroDelito, setFiltroDelito] = useState('');
   const [filtroMunicipio, setFiltroMunicipio] = useState('');
+  const [presentacion, setPresentacion] = useState(false); // pantalla completa del mapa (para presentar)
+  const [, setTick] = useState(0);
   const [reproDia, setReproDia] = useState(null); // reproducción del periodo: muestra los casos hasta este día (null = todos)
   const [filtrosAbiertos, setFiltrosAbiertos] = useState(false); // los filtros se muestran como una línea resumen y se abren si se piden
   const [capasAbiertas, setCapasAbiertas] = useState(false); // las capas del mapa se muestran solo si se piden
+
+  // Pantalla completa del mapa: Esc la cierra, y si el navegador salió de pantalla completa también se cierra
+  const entrarPresentacion = function() {
+    setPresentacion(true);
+    try { if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(function() {}); } catch (e) { /* sin pantalla completa del navegador: se usa la del sistema */ }
+  };
+  const salirPresentacion = function() {
+    setPresentacion(false);
+    try { if (document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(function() {}); } catch (e) { /* nada */ }
+  };
+  useEffect(function() {
+    if (!presentacion) return;
+    var alTeclear = function(ev) { if (ev.key === 'Escape') setPresentacion(false); };
+    var alCambiarPantalla = function() { if (!document.fullscreenElement) setPresentacion(false); };
+    window.addEventListener('keydown', alTeclear);
+    document.addEventListener('fullscreenchange', alCambiarPantalla);
+    return function() { window.removeEventListener('keydown', alTeclear); document.removeEventListener('fullscreenchange', alCambiarPantalla); };
+  }, [presentacion]);
+  // El mapa cambia de tamaño al entrar o salir: se recalcula y se vuelve a encuadrar
+  useEffect(function() {
+    var t = setTimeout(function() { if (mapInstance.current) { mapInstance.current.invalidateSize(); setTick(function(x) { return x + 1; }); } }, 150);
+    return function() { clearTimeout(t); };
+  }, [presentacion]);
 
   const [stats, setStats] = useState({ total: 0, por_fuente: {} });
   const [delitosUnicos, setDelitosUnicos] = useState([]);
@@ -639,6 +665,14 @@ export default function MapaCalor({ user, onIniciarProyecto, onImportar, seccion
   puntos.concat(sinUbicar).forEach(function(p) { if (p.fecha) { var k = String(p.fecha).slice(0, 7); cuentaMes[k] = (cuentaMes[k] || 0) + 1; } });
   var mesesChips = Object.keys(cuentaMes).sort().map(function(k) { return { clave: k, n: cuentaMes[k] }; });
   var textoPeriodo = textoPeriodoFiltro(fechaDesde, fechaHasta);
+  // Cifras al estilo de los módulos 911 y Primer Respondiente; se usan en la vista normal y en la pantalla completa
+  var tarjetasResumen = [
+    { icono: MapPin, color: '#b69054', valor: puntosMapa.length, etiqueta: 'Casos en el mapa' },
+    { icono: Target, color: '#8b1e1e', valor: (zonas || []).length, etiqueta: 'Zonas de atención' },
+    { icono: Clock, color: '#b69054', valor: ritmo ? (ritmo < 1 ? 'Más de 1 al día' : 'Cada ' + ritmo.toFixed(1) + ' días') : '—', etiqueta: 'Ritmo de homicidios' },
+    { icono: Flag, color: '#001a4d', valor: topSectores[0] ? topSectores[0][0] : '—', etiqueta: 'Colonia con más casos' },
+  ];
+  var alcancePantalla = (user && (user.rol === 'coordinador' || user.rol === 'agente') && user.zona) ? 'Coordinación ' + user.zona : ((user && user.region) || 'Región Acapulco');
   var textoDelito = filtroDelito ? filtroDelito.charAt(0) + filtroDelito.slice(1).toLowerCase() : 'Todos los delitos';
 
   return (
@@ -658,12 +692,20 @@ export default function MapaCalor({ user, onIniciarProyecto, onImportar, seccion
       </div>
 
       {seccion === 'mapa' && (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 14, marginBottom: 16 }}>
+          {tarjetasResumen.map(function(t) { return <TarjetaResumen key={t.etiqueta} icono={t.icono} color={t.color} valor={t.valor} etiqueta={t.etiqueta} />; })}
+        </div>
+      )}
+      {seccion === 'mapa' && (
         <div style={{ marginBottom: 14 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
-            <div style={{ fontSize: 18, color: C.darkBlue }}><strong style={{ fontSize: 28 }}>{puntosMapa.length}</strong> puntos en el mapa</div>
             <button onClick={function() { setCapasAbiertas(!capasAbiertas); }} aria-expanded={capasAbiertas}
               style={{ background: 'none', border: '1.5px solid #c7cfe0', borderRadius: 7, padding: '6px 14px', color: C.gray, fontSize: 16, fontWeight: 600, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6, minHeight: 40 }}>
               Capas del mapa {capasAbiertas ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+            </button>
+            <button onClick={entrarPresentacion} aria-label="Ver el mapa en pantalla completa"
+              style={{ marginLeft: 'auto', background: C.darkBlue, border: '2px solid ' + C.darkBlue, borderRadius: 8, padding: '8px 18px', color: '#fff', fontSize: 16, fontWeight: 700, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 8, minHeight: 44 }}>
+              <Maximize2 size={18} /> Pantalla completa
             </button>
           </div>
           {capasAbiertas && (
@@ -735,8 +777,17 @@ export default function MapaCalor({ user, onIniciarProyecto, onImportar, seccion
           <MapPin size={28} color={C.gray} /><p style={{ marginTop: 10, fontSize: 16 }}>Cargando mapa...</p>
         </div>
       ) : (
-        <div style={{ borderRadius: 12, overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', border: '1px solid ' + C.lightGray }}>
-          <div ref={mapRef} style={{ width: '100%', height: 500 }} />
+        <div style={presentacion
+          ? { position: 'fixed', inset: 0, zIndex: 90, background: '#001a4d', display: 'flex', flexDirection: 'column' }
+          : { borderRadius: 12, overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', border: '1px solid ' + C.lightGray }}>
+          {presentacion && <BarraSuperior alcance={alcancePantalla} periodo={textoPeriodo} onSalir={salirPresentacion} />}
+          <div style={presentacion ? { position: 'relative', flex: 1, minHeight: 0 } : undefined}>
+            <div ref={mapRef} style={{ width: '100%', height: presentacion ? '100%' : 500 }} />
+            {presentacion && (
+              <CapasPantalla tarjetas={tarjetasResumen} niveles={NIVELES_CALOR} distanciaKm={distanciaKm} zonas={zonas}
+                reproductor={<ReproducirMes fechas={puntosFiltrados.map(function(p) { return p.fecha; })} dia={reproDia} onDia={setReproDia} visibles={puntosMapa.length} total={puntosFiltrados.length} />} />
+            )}
+          </div>
         </div>
       )}
 
