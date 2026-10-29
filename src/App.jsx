@@ -21,6 +21,7 @@ import BodegaIndicios from './pages/BodegaIndicios';
 import RegistroEstatalRedCriminal from './pages/RegistroEstatalRedCriminal';
 import MenuLateral from './pages/MenuLateral';
 import MiCuenta from './pages/MiCuenta';
+import Campana from './pages/Campana';
 import ModuloDetenidos, { BusquedaOperativa, calcularSemaforo, SEMAFORO, REGIONES, Input, Select, TextArea } from './pages/Detenidos';
 
 // ─── CONSTANTES ───────────────────────────────────────────────────────────────
@@ -534,6 +535,7 @@ export default function App() {
           </div>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+          {perfil && <Campana userId={perfil.id} />}
           {perfil && (
             <div style={{ textAlign: "right" }}>
               <div style={{ color: "#ffffff", fontSize: 15, fontWeight: 700 }}>{perfil.nombre_completo}</div>
