@@ -20,13 +20,15 @@ import SubcoordAdmin from './pages/SubcoordAdmin';
 import BodegaIndicios from './pages/BodegaIndicios';
 import RegistroEstatalRedCriminal from './pages/RegistroEstatalRedCriminal';
 import MenuLateral from './pages/MenuLateral';
-import CambiarContrasena from './pages/CambiarContrasena';
+import MiCuenta from './pages/MiCuenta';
 import ModuloDetenidos, { BusquedaOperativa, calcularSemaforo, SEMAFORO, REGIONES, Input, Select, TextArea } from './pages/Detenidos';
 
 // ─── CONSTANTES ───────────────────────────────────────────────────────────────
 const rolLabel = { agente: "Agente", coordinador: "Coordinador de Zona", regional: "Director Regional", mando: "Director General" };
 // Interruptor del menú lateral: true = menú lateral nuevo · false = pestañas de siempre
 const MENU_LATERAL = true;
+// Tamaño de pantalla elegido en Mi cuenta
+const FACTOR_PANTALLA = { normal: 1, grande: 1.12, muy_grande: 1.25 };
 // Grado que se muestra junto al nombre: el cargo completo, en dorado (no el nombre interno del rol)
 const CARGO_ETIQUETA = { agente: "Agente", coordinador_grupo: "Coordinador de Grupo", coordinador: "Coordinador de Zona", regional: "Coordinador Regional", mando: "Director General", subcoord_admin: "Subcoordinación Administrativa" };
 const rolColor = { agente: "#001a4d", coordinador: "#f59e0b", regional: "#a78bfa", mando: "#ef4444" };
@@ -457,6 +459,10 @@ export default function App() {
           return;
         }
         setPerfil(data);
+        // Tamaño de pantalla guardado en su cuenta (si todavía no existe la tabla, se usa el del equipo)
+        supabase.from("preferencias_usuario").select("tamano_pantalla").eq("user_id", sesion.user.id).maybeSingle().then(({ data: pref }) => {
+          if (pref && pref.tamano_pantalla) { setTamanoPantalla(pref.tamano_pantalla); try { localStorage.setItem("tamanoPantalla", pref.tamano_pantalla); } catch (e) { /* sin almacenamiento */ } }
+        });
       });
     } else setPerfil(null);
   }, [sesion]);
@@ -464,7 +470,8 @@ export default function App() {
   const cerrarSesion = async () => { await supabase.auth.signOut(); };
   const [tabApp, setTabApp] = useState("detenidos");
   const [detenidoParaAbrir, setDetenidoParaAbrir] = useState(null);
-  const [mostrarCambioPass, setMostrarCambioPass] = useState(false);
+  const [mostrarMiCuenta, setMostrarMiCuenta] = useState(false);
+  const [tamanoPantalla, setTamanoPantalla] = useState(() => { try { return localStorage.getItem("tamanoPantalla") || "normal"; } catch (e) { return "normal"; } });
 
   if (cargandoSesion) return <div style={{ minHeight: "100vh", background: "#f4f6f9", display: "flex", alignItems: "center", justifyContent: "center", color: "#6b7280" }}>Cargando…</div>;
   if (modoRecuperacion) return <NuevaContrasena onListo={() => setModoRecuperacion(false)} />;
@@ -508,8 +515,16 @@ export default function App() {
     setTabApp("detenidos");
   };
 
+  const guardarTamano = async (clave) => {
+    setTamanoPantalla(clave);
+    try { localStorage.setItem("tamanoPantalla", clave); } catch (e) { /* sin almacenamiento */ }
+    const { error } = await supabase.from("preferencias_usuario").upsert({ user_id: perfil.id, tamano_pantalla: clave, updated_at: new Date().toISOString() });
+    return { ok: true, enCuenta: !error };
+  };
+  const factorPantalla = FACTOR_PANTALLA[tamanoPantalla] || 1;
+
   return (
-    <div style={{ minHeight: "100vh", background: "#f4f6f9", fontFamily: "'Trebuchet MS', sans-serif", color: "#4a5268" }}>
+    <div style={{ zoom: factorPantalla, "--zoom": factorPantalla, minHeight: "calc(100vh / " + factorPantalla + ")", background: "#f4f6f9", fontFamily: "'Trebuchet MS', sans-serif", color: "#4a5268" }}>
       <div style={{ background: "#001a4d", borderBottom: "3px solid #b69054", padding: "16px 22px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <img src="/logo-fge.png" alt="FGE Guerrero" style={{ width: 48, height: 48, borderRadius: "50%", border: "2px solid #b69054" }} />
@@ -527,9 +542,9 @@ export default function App() {
               </span>
             </div>
           )}
-          <button onClick={() => setMostrarCambioPass(true)} style={{ background: "transparent", border: "1.5px solid rgba(255,255,255,0.5)", borderRadius: 7, padding: "10px 18px", color: "#ffffff", fontSize: 16, fontWeight: 700, cursor: "pointer", minHeight: 44 }}>MI CONTRASEÑA</button>
+          <button onClick={() => setMostrarMiCuenta(true)} style={{ background: "transparent", border: "1.5px solid rgba(255,255,255,0.5)", borderRadius: 7, padding: "10px 18px", color: "#ffffff", fontSize: 16, fontWeight: 700, cursor: "pointer", minHeight: 44 }}>MI CUENTA</button>
           <button onClick={cerrarSesion} style={{ background: "transparent", border: "1.5px solid rgba(255,255,255,0.5)", borderRadius: 7, padding: "10px 18px", color: "#ffffff", fontSize: 16, fontWeight: 700, cursor: "pointer", minHeight: 44 }}>SALIR</button>
-          {mostrarCambioPass && <CambiarContrasena onCerrar={() => setMostrarCambioPass(false)} />}
+          {mostrarMiCuenta && perfil && <MiCuenta perfil={perfil} tamano={tamanoPantalla} onTamano={guardarTamano} onCerrar={() => setMostrarMiCuenta(false)} />}
         </div>
       </div>
 
