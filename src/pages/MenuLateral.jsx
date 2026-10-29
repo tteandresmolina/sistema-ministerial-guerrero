@@ -2,11 +2,12 @@ import { useState, useEffect } from "react";
 import {
   FileText, Phone, Siren, MapPin, Search, Users, FolderOpen, Scale, Car, Package,
   Network, Target, LayoutDashboard, History, Archive, Settings, Lock, Menu, X,
-  ChevronDown, ChevronRight, ListChecks,
+  ChevronDown, ChevronRight, ListChecks, Home,
 } from "lucide-react";
 
 // Íconos por pestaña (siempre acompañados de su texto)
-const ICONOS = {
+export const ICONOS = {
+  inicio: Home,
   oficialia: FileText, registro911: Phone, primerrespondiente: Siren, escenacrimen: MapPin,
   indicios: Search, victimastestigos: Users, expediente: FolderOpen,
   ordenes: Scale, vehiculos: Car, bodega: Package, busqueda: Search, detenidos: Lock,
@@ -48,6 +49,7 @@ export default function MenuLateral({ grupos, tabApp, setTabApp }) {
         const Chev = plegado ? ChevronRight : ChevronDown;
         return (
           <div key={g.titulo} style={{ marginBottom: 14 }}>
+            {!g.sinTitulo && (
             <button
               onClick={() => setCerrados((c) => ({ ...c, [g.titulo]: !c[g.titulo] }))}
               aria-expanded={!plegado}
@@ -55,8 +57,9 @@ export default function MenuLateral({ grupos, tabApp, setTabApp }) {
               <span>{g.titulo}</span>
               <Chev size={18} />
             </button>
-            {!plegado && (
-              <div style={{ marginTop: 6, display: "grid", gap: 3 }}>
+            )}
+            {(g.sinTitulo || !plegado) && (
+              <div style={{ marginTop: g.sinTitulo ? 0 : 6, display: "grid", gap: 3 }}>
                 {g.items.map((it) => {
                   const Icono = ICONOS[it.id] || FileText;
                   const activo = it.id === tabApp;
