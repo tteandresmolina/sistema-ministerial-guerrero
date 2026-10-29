@@ -27,6 +27,8 @@ import ModuloDetenidos, { BusquedaOperativa, calcularSemaforo, SEMAFORO, REGIONE
 const rolLabel = { agente: "Agente", coordinador: "Coordinador de Zona", regional: "Director Regional", mando: "Director General" };
 // Interruptor del menú lateral: true = menú lateral nuevo · false = pestañas de siempre
 const MENU_LATERAL = true;
+// Grado que se muestra junto al nombre: el cargo completo, en dorado (no el nombre interno del rol)
+const CARGO_ETIQUETA = { agente: "Agente", coordinador_grupo: "Coordinador de Grupo", coordinador: "Coordinador de Zona", regional: "Coordinador Regional", mando: "Director General", subcoord_admin: "Subcoordinación Administrativa" };
 const rolColor = { agente: "#001a4d", coordinador: "#f59e0b", regional: "#a78bfa", mando: "#ef4444" };
 
 // ─── PANTALLA DE BIENVENIDA ──────────────────────────────────────────────────────
@@ -520,8 +522,8 @@ export default function App() {
           {perfil && (
             <div style={{ textAlign: "right" }}>
               <div style={{ color: "#ffffff", fontSize: 15, fontWeight: 700 }}>{perfil.nombre_completo}</div>
-              <span style={{ background: (rolColor[perfil.rol] || "#6b7280") + "22", color: rolColor[perfil.rol] || "#6b7280", border: `1px solid ${(rolColor[perfil.rol] || "#6b7280")}55`, borderRadius: 4, padding: "2px 10px", fontSize: 14, fontWeight: 700 }}>
-                {perfil.cargo || rolLabel[perfil.rol] || perfil.rol}
+              <span style={{ color: "#d9bd85", border: "1px solid rgba(217,189,133,0.55)", borderRadius: 4, padding: "2px 10px", fontSize: 14, fontWeight: 700, letterSpacing: 0.5, textTransform: "uppercase" }}>
+                {CARGO_ETIQUETA[perfil.cargo] || perfil.cargo || rolLabel[perfil.rol] || perfil.rol}
               </span>
             </div>
           )}
