@@ -10,6 +10,7 @@ import {
   ClipboardList, BarChart3, Camera, Flag, Lock, Calendar,
 } from 'lucide-react';
 import { useSubcoordAdmin } from '../hooks/useSubcoordAdmin';
+import { SECTORES } from './leerTarjeta';
 
 const COLORS = { primary: '#001a4d', gold: '#b69054', white: '#ffffff', bg: '#f4f6fb' };
 const cardStyle = { background: COLORS.white, borderRadius: 10, padding: 18, boxShadow: '0 2px 8px rgba(0,0,0,0.07)', marginBottom: 14 };
@@ -23,6 +24,30 @@ const badge = (color) => ({ display: 'inline-block', padding: '3px 10px', border
 const tituloSeccion = { color: COLORS.gold, fontSize: 15, fontWeight: 800, letterSpacing: 1.5, marginBottom: 14, paddingBottom: 10, borderBottom: '2px solid #b69054', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: 8 };
 
 const REGIONES = ['Región Centro','Región Montaña','Región Costa Grande','Región Costa Chica','Región Tierra Caliente','Región Acapulco','Región Norte'];
+
+// Zona / coordinación. En Región Acapulco se elige de la lista, porque debe escribirse EXACTAMENTE igual que la
+// coordinación del mapa (Renacimiento, Zapata...): de eso depende qué casos ve cada coordinador de zona.
+// Se deja vacía para quien debe ver toda la región (por ejemplo, el Coordinador Regional).
+function CampoZona({ valor, onChange, region, inputStyle, selectStyle, labelStyle, etiqueta }) {
+  const esAcapulco = region === 'Región Acapulco';
+  return (
+    <div>
+      <label style={labelStyle}>{etiqueta}</label>
+      {esAcapulco ? (
+        <>
+          <select style={selectStyle} value={valor || ''} onChange={(ev) => onChange(ev.target.value)}>
+            <option value="">— Sin zona (ve toda la región) —</option>
+            {SECTORES.map((s) => <option key={s} value={s}>{s}</option>)}
+            {valor && !SECTORES.includes(valor) && <option value={valor}>{valor} (valor actual)</option>}
+          </select>
+          <div style={{ fontSize: 13, color: '#6b7280', marginTop: 4 }}>El coordinador de zona y los agentes solo verán los homicidios de esta coordinación. El Coordinador Regional se deja sin zona.</div>
+        </>
+      ) : (
+        <input style={inputStyle} placeholder="Zona / Coordinación" value={valor || ''} onChange={(ev) => onChange(ev.target.value)} />
+      )}
+    </div>
+  );
+}
 
 const FISCALIAS_ESP = [
   'Fiscalía Especializada en Combate a la Corrupción',
@@ -399,7 +424,7 @@ export default function SubcoordAdmin({ perfil }) {
                     {REGIONES.map(r => <option key={r} value={r}>{r}</option>)}
                   </select>
                 </div>
-                <div><label style={labelStyle}>Nueva zona</label><input style={inputStyle} placeholder="Zona / Coordinación" value={formRegion.zona} onChange={ev => setFormRegion({ ...formRegion, zona: ev.target.value })} /></div>
+                <CampoZona etiqueta="Nueva zona" valor={formRegion.zona} region={formRegion.region} onChange={(z) => setFormRegion({ ...formRegion, zona: z })} inputStyle={inputStyle} selectStyle={selectStyle} labelStyle={labelStyle} />
                 <div style={{ gridColumn: '1 / -1' }}>
                   <label style={labelStyle}>Coordinación Especializada (si aplica)</label>
                   <select style={selectStyle} value={formRegion.especializada} onChange={ev => setFormRegion({ ...formRegion, especializada: ev.target.value })}>
@@ -605,7 +630,7 @@ export default function SubcoordAdmin({ perfil }) {
                 {REGIONES.map(r => <option key={r} value={r}>{r}</option>)}
               </select>
             </div>
-            <div><label style={labelStyle}>Zona / Coordinación</label><input style={inputStyle} placeholder="Zona Chilpancingo Norte" value={formAlta.zona} onChange={e => setFormAlta({ ...formAlta, zona: e.target.value })} /></div>
+            <CampoZona etiqueta="Zona / Coordinación" valor={formAlta.zona} region={formAlta.region} onChange={(z) => setFormAlta({ ...formAlta, zona: z })} inputStyle={inputStyle} selectStyle={selectStyle} labelStyle={labelStyle} />
             <div style={{ gridColumn: '1 / -1' }}>
               <label style={labelStyle}>Coordinación Especializada (si aplica)</label>
               <select style={selectStyle} value={formAlta.coordinacion_especializada} onChange={e => setFormAlta({ ...formAlta, coordinacion_especializada: e.target.value })}>
