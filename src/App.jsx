@@ -22,6 +22,7 @@ import RegistroEstatalRedCriminal from './pages/RegistroEstatalRedCriminal';
 import MenuLateral from './pages/MenuLateral';
 import MiCuenta from './pages/MiCuenta';
 import Campana from './pages/Campana';
+import HomeInicio from './pages/HomeInicio';
 import ModuloDetenidos, { BusquedaOperativa, calcularSemaforo, SEMAFORO, REGIONES, Input, Select, TextArea } from './pages/Detenidos';
 
 // ─── CONSTANTES ───────────────────────────────────────────────────────────────
@@ -468,8 +469,10 @@ export default function App() {
     } else setPerfil(null);
   }, [sesion]);
 
-  const cerrarSesion = async () => { await supabase.auth.signOut(); };
-  const [tabApp, setTabApp] = useState("detenidos");
+  const cerrarSesion = async () => { try { sessionStorage.removeItem("tabApp"); } catch (e) { /* nada */ } await supabase.auth.signOut(); };
+  // Al abrir el sistema se entra a Inicio; al recargar la página se queda en la sección donde se estaba
+  const [tabApp, setTabApp] = useState(() => { try { return sessionStorage.getItem("tabApp") || "inicio"; } catch (e) { return "inicio"; } });
+  useEffect(() => { try { sessionStorage.setItem("tabApp", tabApp); } catch (e) { /* sin almacenamiento */ } }, [tabApp]);
   const [detenidoParaAbrir, setDetenidoParaAbrir] = useState(null);
   const [mostrarMiCuenta, setMostrarMiCuenta] = useState(false);
   const [tamanoPantalla, setTamanoPantalla] = useState(() => { try { return localStorage.getItem("tamanoPantalla") || "normal"; } catch (e) { return "normal"; } });
@@ -483,6 +486,7 @@ export default function App() {
   // Menú lateral: mismas pestañas y mismas reglas de visibilidad que el menú horizontal
   const coord = ((perfil && perfil.coordinacion_especializada) || "").toLowerCase();
   const gruposMenu = [
+    { titulo: "Inicio", sinTitulo: true, items: [{ id: "inicio", label: "Inicio" }] },
     { titulo: "Expediente de investigación", items: [
       { id: "oficialia", label: "Oficialía" },
       { id: "registro911", label: "Registro 911" },
@@ -524,6 +528,9 @@ export default function App() {
   };
   const factorPantalla = FACTOR_PANTALLA[tamanoPantalla] || 1;
 
+  const seccionesValidas = gruposMenu.flatMap((g) => g.items.map((i) => i.id));
+  const tabActual = seccionesValidas.includes(tabApp) ? tabApp : "inicio";
+
   return (
     <div style={{ zoom: factorPantalla, "--zoom": factorPantalla, minHeight: "calc(100vh / " + factorPantalla + ")", background: "#f4f6f9", fontFamily: "'Trebuchet MS', sans-serif", color: "#4a5268" }}>
       <div style={{ background: "#001a4d", borderBottom: "3px solid #b69054", padding: "16px 22px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
@@ -531,7 +538,7 @@ export default function App() {
           <img src="/logo-fge.png" alt="FGE Guerrero" style={{ width: 48, height: 48, borderRadius: "50%", border: "2px solid #b69054" }} />
           <div>
             <div style={{ color: "#ffffff", fontSize: 19, fontWeight: 700 }}>FGE GUERRERO — SISTEMA MINISTERIAL</div>
-<div style={{ color: "#b69054", fontSize: 15, fontWeight: 600, letterSpacing: 1.5, marginTop: 2 }}>{["registro911","primerrespondiente","escenacrimen","indicios","victimastestigos","expediente"].includes(tabApp) ? "EXPEDIENTE DE INVESTIGACIÓN POLICIAL" : ["busqueda","detenidos"].includes(tabApp) ? "INDIVIDUALIZACIÓN DE DETENIDOS" : "ANÁLISIS E INTELIGENCIA CRIMINAL"}</div>
+<div style={{ color: "#b69054", fontSize: 15, fontWeight: 600, letterSpacing: 1.5, marginTop: 2 }}>{["registro911","primerrespondiente","escenacrimen","indicios","victimastestigos","expediente"].includes(tabActual) ? "EXPEDIENTE DE INVESTIGACIÓN POLICIAL" : ["busqueda","detenidos"].includes(tabActual) ? "INDIVIDUALIZACIÓN DE DETENIDOS" : "ANÁLISIS E INTELIGENCIA CRIMINAL"}</div>
           </div>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
@@ -592,27 +599,28 @@ export default function App() {
         <style>{`.ml-wrap{display:flex;align-items:flex-start}.ml-main{flex:1;min-width:0}@media (max-width:899px){.ml-wrap{display:block}}`}</style>
       )}
       <div className={MENU_LATERAL ? "ml-wrap" : undefined}>
-      {MENU_LATERAL && <MenuLateral grupos={gruposMenu} tabApp={tabApp} setTabApp={setTabApp} />}
+      {MENU_LATERAL && <MenuLateral grupos={gruposMenu} tabApp={tabActual} setTabApp={setTabApp} />}
       <div className={MENU_LATERAL ? "ml-main" : undefined}>
-      <div style={{ padding: 20, maxWidth: tabApp === "dashboard" ? 1000 : tabApp === "sara" ? 1200 : 800, margin: "0 auto" }}>
-        {tabApp === "busqueda" && <BusquedaOperativa perfil={perfil} onAbrirDetenido={abrirDesdeListaBusqueda} />}
-        {tabApp === "dashboard" && puedeVerDashboard && <DashboardMandos perfil={perfil} />}
-        {tabApp === "historico" && <DashboardHistorico />}
-        {tabApp === "oficialia" && <OficialiaPartes perfil={perfil} />}
-        {tabApp === "registro911" && <Registro911 perfil={perfil} />}
-        {tabApp === "primerrespondiente" && <PrimerRespondiente perfil={perfil} />}
-        {tabApp === "escenacrimen" && <EscenaCrimen perfil={perfil} />}
-        {tabApp === "indicios" && <IndiciosEvidencia perfil={perfil} />}
-        {tabApp === "expediente" && <ExpedientePolicial user={perfil} />}
-        {tabApp === "dashoperativo" && <DashboardOperativo user={perfil} />}
-        {tabApp === "sara" && <AnalisisSARA user={perfil} />}
-        {tabApp === "victimastestigos" && <VictimasTestigos perfil={perfil} />}
-        {tabApp === "ordenes" && <OrdenesAprehension perfil={perfil} />}
-        {tabApp === "vehiculos" && <VehiculosRobo perfil={perfil} />}
-        {tabApp === "subcoord_admin" && <SubcoordAdmin perfil={perfil} />}
-        {tabApp === "bodega" && <BodegaIndicios perfil={perfil} />}
-        {tabApp === "redcriminal" && <RegistroEstatalRedCriminal perfil={perfil} />}
-        {tabApp === "detenidos" && <ModuloDetenidos perfil={perfil} detenidoInicial={detenidoParaAbrir} onDetenidoInicialUsado={() => setDetenidoParaAbrir(null)} />}
+      <div style={{ padding: 20, maxWidth: tabActual === "dashboard" ? 1000 : (tabActual === "sara" || tabActual === "inicio") ? 1200 : 800, margin: "0 auto" }}>
+        {tabActual === "inicio" && <HomeInicio perfil={perfil} grupos={gruposMenu} onIr={setTabApp} />}
+        {tabActual === "busqueda" && <BusquedaOperativa perfil={perfil} onAbrirDetenido={abrirDesdeListaBusqueda} />}
+        {tabActual === "dashboard" && puedeVerDashboard && <DashboardMandos perfil={perfil} />}
+        {tabActual === "historico" && <DashboardHistorico />}
+        {tabActual === "oficialia" && <OficialiaPartes perfil={perfil} />}
+        {tabActual === "registro911" && <Registro911 perfil={perfil} />}
+        {tabActual === "primerrespondiente" && <PrimerRespondiente perfil={perfil} />}
+        {tabActual === "escenacrimen" && <EscenaCrimen perfil={perfil} />}
+        {tabActual === "indicios" && <IndiciosEvidencia perfil={perfil} />}
+        {tabActual === "expediente" && <ExpedientePolicial user={perfil} />}
+        {tabActual === "dashoperativo" && <DashboardOperativo user={perfil} />}
+        {tabActual === "sara" && <AnalisisSARA user={perfil} />}
+        {tabActual === "victimastestigos" && <VictimasTestigos perfil={perfil} />}
+        {tabActual === "ordenes" && <OrdenesAprehension perfil={perfil} />}
+        {tabActual === "vehiculos" && <VehiculosRobo perfil={perfil} />}
+        {tabActual === "subcoord_admin" && <SubcoordAdmin perfil={perfil} />}
+        {tabActual === "bodega" && <BodegaIndicios perfil={perfil} />}
+        {tabActual === "redcriminal" && <RegistroEstatalRedCriminal perfil={perfil} />}
+        {tabActual === "detenidos" && <ModuloDetenidos perfil={perfil} detenidoInicial={detenidoParaAbrir} onDetenidoInicialUsado={() => setDetenidoParaAbrir(null)} />}
       </div>
       </div>
       </div>
