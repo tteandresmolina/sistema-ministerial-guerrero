@@ -712,6 +712,19 @@ const [tab, setTab] = useState(MOSTRAR_MAPA_CALOR ? 'mapa' : 'plan');
           <Target size={22} color={COLORS.gold} /> Análisis Criminal
         </h2>
         <div style={{ fontSize: 15, color: '#6b7280' }}>Dónde y cuándo ocurre el delito, y qué hacemos al respecto.</div>
+        {/* Alcance de lo que ve cada persona: lo decide la base de datos, aquí solo se le explica */}
+        {(user?.rol === 'coordinador' || user?.rol === 'agente') && (
+          <div style={{ marginTop: 8, fontSize: 16, fontWeight: 600, color: user?.zona ? '#001a4d' : '#7a4b00', background: user?.zona ? '#eef1f6' : '#fff8e1', border: '1px solid ' + (user?.zona ? '#c9d1e0' : '#f0d58a'), borderRadius: 8, padding: '8px 12px', display: 'inline-block' }}>
+            {user?.zona
+              ? 'Estás viendo tu coordinación de zona: ' + user.zona
+              : 'Tu cuenta no tiene coordinación de zona asignada, por eso no verás casos. Pide a la Subcoordinación Administrativa que la registre.'}
+          </div>
+        )}
+        {user?.rol === 'regional' && (
+          <div style={{ marginTop: 8, fontSize: 16, fontWeight: 600, color: '#001a4d', background: '#eef1f6', border: '1px solid #c9d1e0', borderRadius: 8, padding: '8px 12px', display: 'inline-block' }}>
+            Vista regional: todas las coordinaciones de {user?.region || 'tu región'}, en conjunto
+          </div>
+        )}
       </div>
 
       {/* Botones de sección con el mismo estilo que Detenidos y Víctimas y Testigos */}
