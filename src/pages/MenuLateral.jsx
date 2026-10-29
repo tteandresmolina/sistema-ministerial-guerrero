@@ -111,7 +111,7 @@ export default function MenuLateral({ grupos, tabApp, setTabApp }) {
 
   // ── Pantalla grande: panel fijo a la izquierda ──
   return (
-    <aside style={{ width: 270, flexShrink: 0, background: PANEL, borderRight: `3px solid ${GOLD}`, position: "sticky", top: 0, alignSelf: "flex-start", height: "100vh", overflowY: "auto" }}>
+    <aside style={{ width: 270, flexShrink: 0, background: PANEL, borderRight: `3px solid ${GOLD}`, position: "sticky", top: 0, alignSelf: "flex-start", height: "calc(100vh / var(--zoom, 1))", overflowY: "auto" }}>
       {panel}
     </aside>
   );
