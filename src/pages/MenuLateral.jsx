@@ -36,7 +36,10 @@ function usePantallaChica() {
 export default function MenuLateral({ grupos, tabApp, setTabApp }) {
   const chica = usePantallaChica();
   const [abierto, setAbierto] = useState(false);          // cajón en pantalla chica
-  const [cerrados, setCerrados] = useState({});           // grupos plegados
+  // Acordeón: los grupos están plegados y solo se abre el de la sección donde estás (o el que tú abras)
+  const grupoDe = (id) => { const g = grupos.find((x) => !x.sinTitulo && x.items.some((i) => i.id === id)); return g ? g.titulo : null; };
+  const [grupoAbierto, setGrupoAbierto] = useState(() => grupoDe(tabApp));
+  useEffect(() => { const t = grupoDe(tabApp); if (t) setGrupoAbierto(t); }, [tabApp]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const actual = grupos.flatMap((g) => g.items).find((i) => i.id === tabApp);
 
@@ -45,13 +48,13 @@ export default function MenuLateral({ grupos, tabApp, setTabApp }) {
   const panel = (
     <nav aria-label="Menú principal" style={{ padding: "14px 10px 24px" }}>
       {grupos.filter((g) => g.items.length > 0).map((g) => {
-        const plegado = !!cerrados[g.titulo];
+        const plegado = grupoAbierto !== g.titulo;
         const Chev = plegado ? ChevronRight : ChevronDown;
         return (
           <div key={g.titulo} style={{ marginBottom: 14 }}>
             {!g.sinTitulo && (
             <button
-              onClick={() => setCerrados((c) => ({ ...c, [g.titulo]: !c[g.titulo] }))}
+              onClick={() => setGrupoAbierto((a) => (a === g.titulo ? null : g.titulo))}
               aria-expanded={!plegado}
               style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", background: "none", border: "none", borderBottom: `1px solid ${GOLD_CLARO}66`, padding: "8px 8px", color: GOLD_CLARO, fontSize: 16, fontWeight: 800, cursor: "pointer", textAlign: "left", minHeight: 40 }}>
               <span>{g.titulo}</span>
