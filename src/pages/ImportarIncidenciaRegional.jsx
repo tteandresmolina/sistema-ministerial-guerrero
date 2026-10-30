@@ -95,6 +95,7 @@ function parsearLibro(wb) {
       zona: col('COORDINACION'), fecha: col('FECHA'), delito: col('DELITO'), ci: col('CARPETA DE INVESTIGACION'),
       lugar: col('LUGAR DE LOS HECHOS'), cartulina: col('CARTULINA'), calibre: col('CALIBRE'),
       vehiculo: col('VEHICULO'), droga: col('DROGA'), lat: col('LATITUD'), lng: col('LONGITUD'), hora: col('HORA'),
+      ubic: col('UBICACION'),   // opcional: "Aproximada" deja el punto en el mapa pero SIN confirmar
     };
     const datos = filas.slice(h + 1);
 
@@ -127,6 +128,7 @@ function parsearLibro(wb) {
       const la = idx.lat >= 0 ? aNumero(r[idx.lat]) : null;
       const lo = idx.lng >= 0 ? aNumero(r[idx.lng]) : null;
       const conCoords = enZona(la, lo);
+      const aprox = conCoords && idx.ubic >= 0 && normalizar(r[idx.ubic]).startsWith('APROX');
       out.push({
         ci, ciRara: ci.length !== 20,
         zonaCruda: String(r[idx.zona] == null ? '' : r[idx.zona]).trim(),
@@ -139,7 +141,7 @@ function parsearLibro(wb) {
         arma: armaTxt(r[idx.calibre]),
         hora: idx.hora >= 0 ? normalizarHora(r[idx.hora]) : null,
         lat: conCoords ? la : null, lng: conCoords ? lo : null,
-        precision: conCoords ? 'manual' : null, confirmada: conCoords, deArchivo: conCoords,
+        precision: conCoords ? (aprox ? 'aproximada' : 'manual') : null, confirmada: conCoords && !aprox, deArchivo: conCoords,
       });
     }
     return { filas: out, totalLeidos, omitidos, repetidos, hoja: nombre };
@@ -303,6 +305,18 @@ function RevisarGuardadas({ leafletListo, onCambio }) {
       setMsg({ tipo: 'error', texto: 'No se pudo guardar' + (error ? ': ' + error.message : ' (sin permiso o el caso ya no existe).') });
       return;
     }
+    // Comprobación: se vuelve a leer el caso para estar seguros de que la base de datos conservó lo que se mandó guardar
+    if ('coordenadas_lat' in cambios || 'ubicacion_confirmada' in cambios) {
+      const { data: leido } = await supabase.from('incidencia_regional').select('coordenadas_lat, coordenadas_lng, ubicacion_confirmada').eq('id', sel).single();
+      const igual = (a, b) => (a == null && b == null) || (a != null && b != null && Math.abs(Number(a) - Number(b)) < 0.00001);
+      const conservado = leido
+        && (!('coordenadas_lat' in cambios) || (igual(leido.coordenadas_lat, cambios.coordenadas_lat) && igual(leido.coordenadas_lng, cambios.coordenadas_lng)))
+        && (!('ubicacion_confirmada' in cambios) || leido.ubicacion_confirmada === cambios.ubicacion_confirmada);
+      if (!conservado) {
+        setMsg({ tipo: 'error', texto: 'La base de datos NO conservó el cambio. En la base quedó: latitud ' + (leido ? leido.coordenadas_lat : '—') + ', longitud ' + (leido ? leido.coordenadas_lng : '—') + ', confirmada: ' + (leido ? String(leido.ubicacion_confirmada) : '—') + '. Copia este mensaje y mándaselo a Claude.' });
+        return;
+      }
+    }
     setFilas((prev) => prev.map((f) => (f.id === sel ? { ...f, ...cambios } : f)));
     setBorrador(null);
     setMsg({ tipo: 'ok', texto: textoOk });
@@ -393,6 +407,9 @@ function RevisarGuardadas({ leafletListo, onCambio }) {
                 <button onClick={confirmarActual} disabled={borrador || sinUbicar(fSel) || fSel.ubicacion_confirmada || guardando} style={{ ...btnSecundario, padding: '8px 14px', fontSize: 13, minHeight: 38, opacity: (borrador || sinUbicar(fSel) || fSel.ubicacion_confirmada) ? 0.45 : 1 }}>Confirmar ubicación actual</button>
                 <button onClick={quitarUbicacion} disabled={sinUbicar(fSel) || guardando} style={{ ...btn, padding: '8px 14px', fontSize: 13, minHeight: 38, background: 'transparent', color: C.rojo, border: '1px solid ' + C.rojo, opacity: sinUbicar(fSel) ? 0.45 : 1 }}>Quitar ubicación</button>
               </div>
+              {msg && (
+                <div role="status" style={{ marginTop: 10, padding: '10px 12px', borderRadius: 8, fontSize: 15, fontWeight: 700, lineHeight: 1.4, background: msg.tipo === 'ok' ? '#e1f5ee' : '#fcebeb', border: '1px solid ' + (msg.tipo === 'ok' ? '#22c55e55' : '#ef444455'), color: msg.tipo === 'ok' ? '#0f6e56' : '#791f1f' }}>{msg.texto}</div>
+              )}
               <div style={{ color: C.gray, fontSize: 12, marginTop: 8 }}>{borrador ? 'Hay un punto sin guardar: presiona "Guardar ubicación".' : 'Haz clic en el mapa para colocar el punto, o arrastra el marcador.'}</div>
             </div>
           ) : (
@@ -407,7 +424,7 @@ function RevisarGuardadas({ leafletListo, onCambio }) {
 
 export default function ImportarIncidenciaRegional({ perfil, onImportado, leafletListo, enPestana = false }) {
   const [abierto, setAbierto] = useState(false);
-  const [modo, setModo] = useState('importar'); // 'importar' | 'tarjeta' | 'revisar'
+  const [modo, setModo] = useState('importar'); // 'importar' | 'tarjeta' (pegar tarjeta informativa) | 'revisar'
   const [fase, setFase] = useState('inicio'); // 'inicio' | 'revision'
   const [region, setRegion] = useState(REGIONES_LISTAS[0]);
   const [resumen, setResumen] = useState(null);
@@ -626,7 +643,7 @@ export default function ImportarIncidenciaRegional({ perfil, onImportado, leafle
       <AvisoCierreMes region={region} />
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 12 }}>
         <button onClick={() => setModo('importar')} style={{ ...btn, padding: '8px 16px', minHeight: 44, fontSize: 16, background: modo === 'importar' ? C.navy : 'transparent', color: modo === 'importar' ? '#fff' : C.navy, border: '2px solid ' + C.navy }}>Importar Excel (histórico)</button>
-        <button onClick={() => setModo('tarjeta')} style={{ ...btn, padding: '8px 16px', minHeight: 44, fontSize: 16, background: modo === 'tarjeta' ? C.navy : 'transparent', color: modo === 'tarjeta' ? '#fff' : C.navy, border: '2px solid ' + C.navy }}>Pegar tarjeta (tiempo real)</button>
+        <button onClick={() => setModo('tarjeta')} style={{ ...btn, padding: '8px 16px', minHeight: 44, fontSize: 16, background: modo === 'tarjeta' ? C.navy : 'transparent', color: modo === 'tarjeta' ? '#fff' : C.navy, border: '2px solid ' + C.navy }}>Pegar tarjeta informativa</button>
         <button onClick={() => setModo('revisar')} style={{ ...btn, padding: '8px 16px', minHeight: 44, fontSize: 16, background: modo === 'revisar' ? C.navy : 'transparent', color: modo === 'revisar' ? '#fff' : C.navy, border: '2px solid ' + C.navy }}>Revisar ubicaciones</button>
       </div>
 
