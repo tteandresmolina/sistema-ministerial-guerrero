@@ -61,8 +61,12 @@ export default function Entorno({ perfil }) {
   };
 
   const presentes = Object.keys(CATEGORIAS).filter((c) => items.some((n) => n.categoria === c));
-  const delFiltro = items.filter((n) => filtro === 'todas' || n.categoria === filtro);
-  const banners = delFiltro.filter((n) => n.banner && esImagen(n.imagen_url) && esEnlace(n.enlace)).slice(0, 2);
+  // Un banner con fecha de término deja de verse el día siguiente; los puestos a mano van primero
+  const hoyISO = new Date().toISOString().slice(0, 10);
+  const vigentes = items.filter((n) => !n.vigente_hasta || String(n.vigente_hasta).slice(0, 10) >= hoyISO);
+  const delFiltro = vigentes.filter((n) => filtro === 'todas' || n.categoria === filtro);
+  const banners = delFiltro.filter((n) => n.banner && esImagen(n.imagen_url) && esEnlace(n.enlace))
+    .sort((a, b) => (a.origen === 'manual' ? 0 : 1) - (b.origen === 'manual' ? 0 : 1)).slice(0, 2);
   const visibles = delFiltro.filter((n) => !n.banner).slice(0, 8);
   const ultimaLectura = items.reduce((m, n) => (n.creada_en && n.creada_en > m ? n.creada_en : m), '');
 
