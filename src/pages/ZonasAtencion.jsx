@@ -3,7 +3,9 @@
 // Criterio operativo (coordinación regional): una zona agrupa 4 o más homicidios a no más de 1 o 2 km
 // entre sí, con al menos 4 ocurridos dentro de un mismo mes (ventana de 30 días).
 // Es un conteo descriptivo, no una prueba estadística.
-// Algoritmo: DBSCAN con distancia haversine; después se verifica la ventana de 30 días.
+// Algoritmo: DBSCAN con distancia haversine donde dos casos son vecinos solo si están cerca en el espacio (1 o 2 km)
+// Y en el tiempo (30 días). Con la historia completa, mirar solo el espacio unía casos de meses distintos en una sola
+// "zona" de cientos de casos y varios kilómetros de radio. Después se verifica la ventana de 30 días.
 
 import { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
@@ -30,7 +32,7 @@ const aFecha = (f) => {
   const d = new Date(String(f).slice(0, 10) + 'T00:00:00');
   return isNaN(d.getTime()) ? null : d;
 };
-const ddmm = (d) => String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0');
+const ddmm = (d) => String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0') + '/' + String(d.getFullYear()).slice(2);
 const frecuente = (lista) => {
   const c = {};
   lista.filter(Boolean).forEach((x) => { c[x] = (c[x] || 0) + 1; });
@@ -55,9 +57,11 @@ export function calcularFocos(puntos, epsM, minPts, ventanaDias) {
   const n = puntos.length;
   const etiqueta = new Array(n).fill(null);
   let id = 0;
+  const tiempos = puntos.map((p) => { const d = aFecha(p.fecha); return d ? d.getTime() : null; });
+  const cercaEnTiempo = (i, j) => !ventanaDias || tiempos[i] === null || tiempos[j] === null || Math.abs(tiempos[i] - tiempos[j]) / 86400000 <= ventanaDias;
   const vecinos = (i) => {
     const r = [];
-    for (let j = 0; j < n; j++) if (distanciaM(puntos[i], puntos[j]) <= epsM) r.push(j);
+    for (let j = 0; j < n; j++) if (cercaEnTiempo(i, j) && distanciaM(puntos[i], puntos[j]) <= epsM) r.push(j);
     return r;
   };
   for (let i = 0; i < n; i++) {
@@ -94,7 +98,8 @@ export function calcularFocos(puntos, epsM, minPts, ventanaDias) {
     const delito = frecuente(miembros.map((m) => m.delito));
     const reg = frecuente(miembros.map((m) => m.region));
     focos.push({
-      clave: centro.lat.toFixed(5) + ',' + centro.lng.toFixed(5),
+      // el mismo lugar puede ser zona en meses distintos: la fecha de inicio y el tamaño evitan que dos zonas compartan identificador
+      clave: centro.lat.toFixed(5) + ',' + centro.lng.toFixed(5) + '|' + (desde ? desde.getTime() : 0) + '|' + miembros.length,
       n: miembros.length, enMes, centro, radioM, miembros,
       sectores: sectoresOrdenados,
       desde, hasta,
