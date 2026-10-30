@@ -204,25 +204,48 @@ function BarraMedios({ porMedio, total }) {
   );
 }
 
-function ColumnasSimples({ items, subtitulos, resaltadas, picos }) {
+// Columnas para series cortas o largas (12 meses, 22 meses, 30 semanas). Se adaptan a la cantidad de columnas:
+// reducen letra y separación, muestran solo las etiquetas que caben y agrupan el año. En pantallas angostas se desliza en horizontal.
+function ColumnasSimples({ items, subtitulos, resaltadas, picos, anios, maxEtiquetas }) {
+  var n = items.length;
   var max = Math.max.apply(null, items.map(function(i) { return i[1]; }).concat([1]));
+  var gap = n <= 12 ? 14 : n <= 20 ? 8 : 3;
+  var fNum = n <= 12 ? 22 : n <= 20 ? 17 : n <= 30 ? 14 : 12;
+  var fLab = n <= 12 ? 17 : n <= 20 ? 14 : 12;
+  var tope = maxEtiquetas || 14;
+  var cada = Math.max(1, Math.ceil(n / tope));
+  var verEtiqueta = function(i) { return i === n - 1 || (i % cada === 0 && n - 1 - i >= cada); };
+  var minAncho = n > 12 ? n * 30 : 0;
   return (
-    <div>
-      <div style={{ display: 'flex', alignItems: 'flex-end', gap: 14, height: 190, borderBottom: '1px solid #d9dee5', padding: '0 4px' }}>
-        {items.map(function(it, ix) { return (
-          <div key={it[0]} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-end', height: '100%' }}>
-            <span style={{ fontSize: 22, fontWeight: 800, color: '#374151', marginBottom: 4 }}>{it[1]}</span>
-            <div style={{ width: '100%', maxWidth: 80, height: (it[1] / max * 74) + '%', minHeight: 5, background: resaltadas && !resaltadas[ix] ? '#e3d3d4' : picos && picos[ix] ? '#8e4f54' : '#b98386', borderRadius: '5px 5px 0 0' }} />
+    <div style={{ overflowX: minAncho ? 'auto' : 'visible' }}>
+      <div style={{ minWidth: minAncho || undefined }}>
+        <div style={{ display: 'flex', alignItems: 'flex-end', gap: gap, height: 190, borderBottom: '1px solid #d9dee5', padding: '0 4px' }}>
+          {items.map(function(it, ix) { return (
+            <div key={ix} style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-end', height: '100%' }}>
+              <span style={{ fontSize: fNum, fontWeight: 800, color: '#374151', marginBottom: 4, lineHeight: 1 }}>{it[1]}</span>
+              <div style={{ width: '100%', maxWidth: 80, height: (it[1] / max * 74) + '%', minHeight: 5, background: resaltadas && !resaltadas[ix] ? '#e3d3d4' : picos && picos[ix] ? '#8e4f54' : '#b98386', borderRadius: '5px 5px 0 0' }} />
+            </div>
+          ); })}
+        </div>
+        <div style={{ display: 'flex', gap: gap, padding: '8px 4px 0' }}>
+          {items.map(function(it, i) { return (
+            <div key={i} style={{ flex: 1, minWidth: 0, textAlign: 'center', minHeight: fLab * 2.6 }}>
+              {verEtiqueta(i) && (
+                <span style={{ display: 'block', position: 'relative', left: '50%', transform: 'translateX(-50%)', width: 'max-content', whiteSpace: 'nowrap' }}>
+                  <span style={{ display: 'block', fontSize: fLab, fontWeight: 600, color: '#374151', lineHeight: 1.2 }}>{it[0]}</span>
+                  {subtitulos && subtitulos[i] && <span style={{ display: 'block', fontSize: Math.max(n > 20 ? 10 : 11, fLab - 2), color: C.gray, lineHeight: 1.2 }}>{subtitulos[i]}</span>}
+                </span>
+              )}
+            </div>
+          ); })}
+        </div>
+        {anios && (
+          <div style={{ display: 'flex', gap: 0, padding: '6px 4px 0' }}>
+            {anios.reduce(function(grupos, a, i) { var u = grupos[grupos.length - 1]; if (u && u.a === a) u.n++; else grupos.push({ a: a, n: 1 }); return grupos; }, []).map(function(g, i) { return (
+              <div key={i} style={{ flex: g.n, minWidth: 0, textAlign: 'center', borderTop: '2px solid #b6905a', marginRight: 3, paddingTop: 3, fontSize: 15, fontWeight: 700, color: '#5a4a1e' }}>{g.a}</div>
+            ); })}
           </div>
-        ); })}
-      </div>
-      <div style={{ display: 'flex', gap: 14, padding: '8px 4px 0' }}>
-        {items.map(function(it, i) { return (
-          <div key={it[0]} style={{ flex: 1, textAlign: 'center' }}>
-            <div style={{ fontSize: 17, fontWeight: 600, color: '#374151' }}>{it[0]}</div>
-            {subtitulos && subtitulos[i] && <div style={{ fontSize: 15, color: C.gray }}>{subtitulos[i]}</div>}
-          </div>
-        ); })}
+        )}
       </div>
     </div>
   );
@@ -251,6 +274,10 @@ function LineaHistorica({ items }) {
   );
 }
 
+// Al guardar la página como PDF o imprimirla, los navegadores quitan los colores de fondo por defecto (las columnas y las barras
+// desaparecían y quedaban solo los números). Esto obliga a conservarlos y evita partir una gráfica entre dos hojas.
+var CSS_IMPRESION = '@media print{*{-webkit-print-color-adjust:exact !important;print-color-adjust:exact !important;} .sin-corte{break-inside:avoid;page-break-inside:avoid;}}';
+
 // Meses con datos: una casilla por mes hasta 12
 function MedidorMeses({ n, meta }) {
   var casillas = [];
@@ -258,6 +285,190 @@ function MedidorMeses({ n, meta }) {
   return (
     <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
       {casillas.map(function(i) { return <div key={i} style={{ width: 34, height: 26, borderRadius: 5, background: i < n ? '#b98386' : '#ece6d8', border: '1px solid #00000015' }} />; })}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------------------------------------
+// Proyección mensual de homicidios. Método simple y explicable: suavizado exponencial del ritmo por día (casos/día)
+// de los meses COMPLETOS, con un rango probable del 80 %. Se comprueba contra los últimos 6 meses (respaldo).
+// No usa estacionalidad: con menos de 2 años de historia sería una suposición.
+// ---------------------------------------------------------------------------------------------------------
+var MESES_MIN_PROYECCION = 12;
+var ABR_MES = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+var MES_LARGO = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+function diasDelMes(clave) { return new Date(Date.UTC(Number(clave.slice(0, 4)), Number(clave.slice(5, 7)), 0)).getUTCDate(); }
+function sumarMes(clave, k) { var y = Number(clave.slice(0, 4)), m = Number(clave.slice(5, 7)) - 1 + k; y += Math.floor(m / 12); m = ((m % 12) + 12) % 12; return y + '-' + String(m + 1).padStart(2, '0'); }
+function abrevMes(clave) { return ABR_MES[Number(clave.slice(5, 7)) - 1]; }
+function mesLargo(clave) { return MES_LARGO[Number(clave.slice(5, 7)) - 1] + ' ' + clave.slice(0, 4); }
+
+export function proyectar(meses) {
+  var completos = meses.filter(function(m) { return !m.parcial; });
+  if (completos.length < MESES_MIN_PROYECCION) return { listo: false, completos: completos.length, faltan: MESES_MIN_PROYECCION - completos.length };
+  var prom = function(a) { return a.reduce(function(s, x) { return s + x; }, 0) / a.length; };
+  var tasas = completos.map(function(m) { return m.n / m.dias; });
+  var inicio = prom(tasas.slice(0, 3));
+  // alfa = el que menos se equivoca al pronosticar el mes siguiente dentro de la propia historia
+  var mejor = null;
+  [0.15, 0.25, 0.35, 0.5, 0.65].forEach(function(a) {
+    var nivel = inicio, sse = 0, k = 0;
+    for (var i = 3; i < tasas.length; i++) { var e = tasas[i] - nivel; sse += e * e; k++; nivel = a * tasas[i] + (1 - a) * nivel; }
+    var rmse = Math.sqrt(sse / k);
+    if (!mejor || rmse < mejor.rmse) mejor = { a: a, rmse: rmse };
+  });
+  var alfa = mejor.a;
+  var niveles = [], errs = [], nivel = inicio;
+  for (var i = 0; i < tasas.length; i++) { niveles.push(nivel); errs.push(tasas[i] - nivel); nivel = alfa * tasas[i] + (1 - alfa) * nivel; }
+  var sigmaDe = function(hasta) { var e = errs.slice(3, hasta); if (e.length < 3) e = errs.slice(3); return Math.sqrt(prom(e.map(function(x) { return x * x; }))); };
+  var sigma = sigmaDe(errs.length);
+  var Z = 1.2816; // rango del 80 %
+  // Respaldo: ¿qué tan bien habría funcionado con los últimos 6 meses?
+  var cubiertos = 0, de = 0, sumaErr = 0;
+  for (var j = Math.max(3, completos.length - 6); j < completos.length; j++) {
+    var d = completos[j].dias, pred = niveles[j] * d, sd = sigmaDe(j) * d;
+    var lo = Math.max(0, Math.round(pred - Z * sd)), hi = Math.round(pred + Z * sd);
+    de++; sumaErr += Math.abs(completos[j].n - pred);
+    if (completos[j].n >= lo && completos[j].n <= hi) cubiertos++;
+  }
+  // Mes en curso (parcial): se incorpora lo que ya pasó, con peso según los días transcurridos
+  var ult = meses[meses.length - 1], parcial = null, nivelAct = nivel;
+  if (ult.parcial) {
+    var dm = diasDelMes(ult.clave), restante = dm - ult.dias, aEf = alfa * (ult.dias / dm);
+    nivelAct = aEf * (ult.n / ult.dias) + (1 - aEf) * nivel;
+    var cierre = ult.n + nivelAct * restante, sdc = sigma * restante;
+    parcial = { clave: ult.clave, nActual: ult.n, dias: ult.dias, restante: restante, cierre: Math.round(cierre), lo: Math.max(ult.n, Math.round(cierre - Z * sdc)), hi: Math.round(cierre + Z * sdc) };
+  }
+  var futuros = [], base = ult.clave;
+  for (var h = 1; h <= 3; h++) {
+    var clave = sumarMes(base, h), dd = diasDelMes(clave), mu = nivelAct * dd, sdh = sigma * dd * Math.sqrt(1 + (h - 1) * alfa * alfa);
+    futuros.push({ clave: clave, mu: Math.round(mu), lo: Math.max(0, Math.round(mu - Z * sdh)), hi: Math.round(mu + Z * sdh) });
+  }
+  var prom12 = prom(tasas.slice(-12)), razon = prom12 > 0 ? nivelAct / prom12 : 1;
+  var tendencia = razon < 0.85 ? 'a la baja' : razon > 1.15 ? 'al alza' : 'estable';
+  // Mismo periodo del año anterior (solo meses completos del último año con datos)
+  var anio = completos[completos.length - 1].clave.slice(0, 4), prevAnio = String(Number(anio) - 1);
+  var actuales = completos.filter(function(m) { return m.clave.slice(0, 4) === anio; });
+  var previos = actuales.map(function(m) { return completos.filter(function(x) { return x.clave === prevAnio + m.clave.slice(4); })[0]; });
+  var interanual = null;
+  if (actuales.length >= 3 && previos.every(Boolean)) {
+    var na = actuales.reduce(function(s, m) { return s + m.n; }, 0), da = actuales.reduce(function(s, m) { return s + m.dias; }, 0);
+    var np = previos.reduce(function(s, m) { return s + m.n; }, 0), dp = previos.reduce(function(s, m) { return s + m.dias; }, 0);
+    interanual = { anio: anio, previo: prevAnio, desde: actuales[0].clave, hasta: actuales[actuales.length - 1].clave, casos: na, casosPrevio: np, pct: np > 0 ? Math.round(((na / da) / (np / dp) - 1) * 100) : null };
+  }
+  return { listo: true, alfa: alfa, sigma: sigma, nivel: nivelAct, tendencia: tendencia, parcial: parcial, futuros: futuros, respaldo: { cubiertos: cubiertos, de: de, mae: de ? sumaErr / de : 0 }, interanual: interanual, tasaProm12: prom12, ultimoCompleto: completos[completos.length - 1].clave };
+}
+
+// Sectores que dejaron de reportar (último caso hace más de 45 días): la proyección podría quedar por debajo de lo real
+export function sectoresSinCasosRecientes(listaPuntos, finISO) {
+  var por = {};
+  listaPuntos.forEach(function(p) { if (!p.sector || !p.fecha) return; var f = String(p.fecha).slice(0, 10); var o = por[p.sector] || (por[p.sector] = { n: 0, ultimo: '' }); o.n++; if (f > o.ultimo) o.ultimo = f; });
+  return Object.keys(por).filter(function(s) { return por[s].n >= 8 && finISO && (Date.parse(finISO) - Date.parse(por[s].ultimo)) / 86400000 > 45; })
+    .map(function(s) { return { sector: s, ultimo: por[s].ultimo, n: por[s].n, dias: Math.round((Date.parse(finISO) - Date.parse(por[s].ultimo)) / 86400000) }; })
+    .sort(function(a, b) { return b.dias - a.dias; });
+}
+
+function GraficaProyeccion({ reales, parcial, futuros }) {
+  var cols = reales.map(function(r) { return { tipo: 'real', clave: r.clave, n: r.n }; });
+  if (parcial) cols.push({ tipo: 'parcial', clave: parcial.clave, n: parcial.nActual, cierre: parcial.cierre, lo: parcial.lo, hi: parcial.hi });
+  futuros.forEach(function(f) { cols.push({ tipo: 'futuro', clave: f.clave, mu: f.mu, lo: f.lo, hi: f.hi }); });
+  var W = 900, H = 330, pl = 14, pr = 14, pt = 46, pb = 74;
+  var max = Math.max.apply(null, cols.map(function(c) { return c.hi != null ? c.hi : c.n; }).concat([1])) * 1.1;
+  var paso = (W - pl - pr) / cols.length, bw = Math.min(46, paso * 0.62), base = H - pb;
+  var y = function(v) { return pt + (H - pt - pb) * (1 - v / max); };
+  var iFut = cols.findIndex(function(c) { return c.tipo === 'futuro'; });
+  var grupos = cols.reduce(function(g, c, i) { var a = c.clave.slice(0, 4), u = g[g.length - 1]; if (u && u.a === a) u.n++; else g.push({ a: a, n: 1, i: i }); return g; }, []);
+  return (
+    <svg viewBox={'0 0 ' + W + ' ' + H} style={{ width: '100%', display: 'block' }} role="img" aria-label="Casos por mes reales y proyección de los próximos meses">
+      <line x1={pl} y1={base} x2={W - pr} y2={base} stroke="#d9dee5" strokeWidth="1.5" />
+      {iFut > 0 && <line x1={pl + iFut * paso} y1={pt - 22} x2={pl + iFut * paso} y2={base + 44} stroke="#b6905a" strokeWidth="2" strokeDasharray="6 5" />}
+      {iFut > 0 && <text x={pl + iFut * paso + 8} y={pt - 8} fontSize="15" fontWeight="800" fill="#7a5a14">Estimado</text>}
+      {cols.map(function(c, i) {
+        var cx = pl + i * paso + paso / 2;
+        var val = c.tipo === 'futuro' ? c.mu : c.n;
+        return (
+          <g key={i}>
+            {c.tipo === 'parcial' && <rect x={cx - bw / 2} y={y(c.cierre)} width={bw} height={Math.max(0, base - y(c.cierre))} fill="#f1e3e4" stroke="#b98386" strokeWidth="2" strokeDasharray="5 4" rx="4" />}
+            <rect x={cx - bw / 2} y={y(val)} width={bw} height={Math.max(3, base - y(val))} fill={c.tipo === 'futuro' ? '#e2cf9c' : c.tipo === 'parcial' ? '#8e4f54' : '#b98386'} stroke={c.tipo === 'futuro' ? '#b6905a' : 'none'} strokeWidth="2" rx="4" />
+            {c.hi != null && (
+              <g stroke="#5a4a1e" strokeWidth="2.5" strokeLinecap="round">
+                <line x1={cx + bw / 2 + 9} y1={y(c.hi)} x2={cx + bw / 2 + 9} y2={y(c.lo)} />
+                <line x1={cx + bw / 2 + 4} y1={y(c.hi)} x2={cx + bw / 2 + 14} y2={y(c.hi)} />
+                <line x1={cx + bw / 2 + 4} y1={y(c.lo)} x2={cx + bw / 2 + 14} y2={y(c.lo)} />
+              </g>
+            )}
+            {c.tipo === 'futuro' && (base - y(val)) >= 30
+              ? <text x={cx} y={y(val) + 22} textAnchor="middle" fontSize="19" fontWeight="800" fill="#3b2f0b">{val}</text>
+              : <text x={cx} y={y(c.tipo === 'parcial' ? c.cierre : val) - 9} textAnchor="middle" fontSize="19" fontWeight="800" fill="#374151">{c.tipo === 'parcial' ? '≈' + c.cierre : val}</text>}
+            <text x={cx} y={base + 22} textAnchor="middle" fontSize="16" fontWeight="600" fill="#374151">{abrevMes(c.clave)}</text>
+            {c.tipo !== 'real' && c.hi != null && <text x={cx} y={base + 40} textAnchor="middle" fontSize="13" fill="#5a4a1e">{c.lo + '–' + c.hi}</text>}
+          </g>
+        );
+      })}
+      {grupos.map(function(g, k) { var x1 = pl + g.i * paso + 4, x2 = pl + (g.i + g.n) * paso - 4; return (
+        <g key={k}><line x1={x1} y1={H - 14} x2={x2} y2={H - 14} stroke="#b6905a" strokeWidth="2" /><text x={(x1 + x2) / 2} y={H + 1} textAnchor="middle" fontSize="15" fontWeight="700" fill="#5a4a1e">{g.a}</text></g>
+      ); })}
+    </svg>
+  );
+}
+
+function BloqueProyeccion({ meses, sinCasos }) {
+  var p = proyectar(meses);
+  var caja = { marginTop: 30, padding: 18, background: '#f6f3ec', border: '1px solid #b6905a40', borderRadius: 12 };
+  if (!p.listo) {
+    return (
+      <div className="sin-corte" style={caja}>
+        <div style={{ fontSize: 20, fontWeight: 700, color: C.darkBlue, marginBottom: 8 }}>Proyección</div>
+        <MedidorMeses n={p.completos} meta={MESES_MIN_PROYECCION} />
+        <div style={{ fontSize: 18, color: C.darkBlue, marginTop: 10 }}>Meses completos con datos: <strong>{p.completos} de {MESES_MIN_PROYECCION}</strong></div>
+        <div style={{ fontSize: 16, color: '#374151', marginTop: 4, lineHeight: 1.5 }}>La proyección se activa con {MESES_MIN_PROYECCION} meses completos de historia. Con menos, sería una suposición y no un dato en el que un mando pueda apoyarse.</div>
+      </div>
+    );
+  }
+  var f1 = p.futuros[0];
+  var puntosConf = (p.respaldo.cubiertos < p.respaldo.de * 0.6 ? -1 : 0) + (sinCasos.length > 0 ? -1 : 0);
+  var confianza = puntosConf === 0 ? 'Alta' : puntosConf === -1 ? 'Media' : 'Baja';
+  var colorConf = puntosConf === 0 ? '#2f6b4f' : puntosConf === -1 ? '#8a6d1f' : '#8b1e1e';
+  var reales = meses.filter(function(m) { return !m.parcial; }).slice(-12).map(function(m) { return { clave: m.clave, n: m.n }; });
+  var t = p.interanual;
+  return (
+    <div className="sin-corte" style={caja}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 12, flexWrap: 'wrap' }}>
+        <div style={{ fontSize: 20, fontWeight: 700, color: C.darkBlue }}>Proyección</div>
+        <div style={{ fontSize: 16, fontWeight: 700, color: colorConf }}>Confianza: {confianza}</div>
+      </div>
+      <div style={{ fontSize: 22, color: C.darkBlue, marginTop: 8, lineHeight: 1.4 }}>
+        Para <strong>{mesLargo(f1.clave)}</strong> se esperan entre <strong>{f1.lo}</strong> y <strong>{f1.hi}</strong> casos <span style={{ color: C.gray, fontSize: 18 }}>(lo más probable: {f1.mu})</span>.
+      </div>
+      {p.parcial && (
+        <div style={{ fontSize: 18, color: C.darkBlue, marginTop: 6, lineHeight: 1.45 }}>
+          <strong>{mesLargo(p.parcial.clave).split(' ')[0].replace(/^./, function(x) { return x.toUpperCase(); })}</strong> cerraría con unos <strong>{p.parcial.cierre}</strong> casos (lleva {p.parcial.nActual} en {p.parcial.dias} días; entre {p.parcial.lo} y {p.parcial.hi}).
+        </div>
+      )}
+      <div style={{ fontSize: 18, color: C.darkBlue, marginTop: 6, lineHeight: 1.45 }}>
+        Ritmo actual: <strong>{p.nivel.toFixed(1)}</strong> casos por día, {Math.abs(Math.round((p.nivel / p.tasaProm12 - 1) * 100))}% {p.nivel >= p.tasaProm12 ? 'más' : 'menos'} que el promedio de los últimos 12 meses: tendencia <strong>{p.tendencia}</strong>.
+      </div>
+      {t && t.pct !== null && (
+        <div style={{ fontSize: 18, color: C.darkBlue, marginTop: 6, lineHeight: 1.45 }}>
+          Frente a {t.previo}: de {nombreMes(t.desde).split(' ')[0].toLowerCase()} a {nombreMes(t.hasta).split(' ')[0].toLowerCase()} de {t.anio} hay <strong>{Math.abs(t.pct)}% {t.pct <= 0 ? 'menos' : 'más'}</strong> casos por día que en el mismo periodo ({t.casos} frente a {t.casosPrevio}).
+        </div>
+      )}
+      <div style={{ marginTop: 14 }}><GraficaProyeccion reales={reales} parcial={p.parcial} futuros={p.futuros} /></div>
+      <div style={{ display: 'flex', gap: 18, flexWrap: 'wrap', fontSize: 15, color: '#374151', marginTop: 6 }}>
+        <span><span style={{ display: 'inline-block', width: 14, height: 14, background: '#b98386', borderRadius: 3, verticalAlign: -2, marginRight: 6 }} />Casos reales</span>
+        <span><span style={{ display: 'inline-block', width: 14, height: 14, background: '#e2cf9c', border: '2px solid #b6905a', borderRadius: 3, verticalAlign: -2, marginRight: 6 }} />Estimado</span>
+        <span><span style={{ display: 'inline-block', width: 3, height: 16, background: '#5a4a1e', verticalAlign: -3, marginRight: 8 }} />Rango probable (8 de cada 10 veces)</span>
+      </div>
+      <div style={{ fontSize: 16, color: '#374151', marginTop: 12, lineHeight: 1.5 }}>
+        <strong>Qué tan confiable es:</strong> aplicado a los últimos {p.respaldo.de} meses, el rango habría acertado en <strong>{p.respaldo.cubiertos} de {p.respaldo.de}</strong>, con un error promedio de unos <strong>{Math.round(p.respaldo.mae)}</strong> casos por mes.
+      </div>
+      {sinCasos.length > 0 && (
+        <div role="status" style={{ marginTop: 10, background: '#fbf3e0', border: '1px solid #c9a24b', borderRadius: 8, padding: '8px 12px', fontSize: 16, color: '#5a4a1e', lineHeight: 1.45 }}>
+          <strong>Ojo con la captura:</strong> {sinCasos.map(function(s) { return s.sector + ' (último caso: ' + mesLargo(s.ultimo.slice(0, 7)) + ')'; }).join('; ')} no {sinCasos.length === 1 ? 'tiene' : 'tienen'} casos recientes. Si es falta de captura y no ausencia de homicidios, la proyección y la baja del año quedan por debajo de lo real.
+        </div>
+      )}
+      <div style={{ fontSize: 14, color: C.gray, marginTop: 10, lineHeight: 1.45 }}>
+        Estimación basada en el ritmo por día de los últimos meses. No considera operativos, cambios en la captura ni hechos extraordinarios; úsala como referencia, no como meta.
+      </div>
     </div>
   );
 }
@@ -434,6 +645,10 @@ export default function MapaCalor({ user, onIniciarProyecto, onImportar, seccion
   // juntaría casos en un mismo punto y marcaría zonas calientes que no existen. Por eso, por defecto no se dibujan ni entran a las zonas.
   const puntosFiltrados = soloConfirmadas ? puntosConUbicacion.filter(function(p) { return p.confirmada !== false; }) : puntosConUbicacion;
   const nAproxOcultos = puntosConUbicacion.length - puntosFiltrados.length;
+  // Con cientos de casos los números se encimaban y tapaban el mapa: se muestran solo cuando son pocos (el número sigue en cada ventana emergente)
+  const LIMITE_NUMEROS = 90;
+  const nHomDibujados = puntosFiltrados.filter(function(p) { return p.fuente === 'incidencia_regional'; }).length;
+  const numerar = nHomDibujados <= LIMITE_NUMEROS;
 
   const analysisPorMunicipio = {};
   const analysisPorDelito = {};
@@ -500,7 +715,7 @@ export default function MapaCalor({ user, onIniciarProyecto, onImportar, seccion
   const hayFechas = !!(fechaDesde || fechaHasta);
   const semIni = hayFechas ? (fechaDesde && fechaDesde >= histIni ? fechaDesde : histIni) : histIni;
   const semFin = hayFechas ? (fechaHasta && fechaHasta < histFin ? fechaHasta : histFin) : histFin;
-  let semHist = [], semMeta = [], ultimaSemanaParcial = false;
+  let semHist = [], semMeta = [], ultimaSemanaParcial = false, semRecortada = false;
   if (semIni && semFin && semIni <= semFin) {
     var nSem = Math.floor((Date.parse(semFin) - Date.parse(semIni)) / (7 * DIAH)) + 1;
     var cs = []; for (var q = 0; q < nSem; q++) cs.push(0);
@@ -513,6 +728,7 @@ export default function MapaCalor({ user, onIniciarProyecto, onImportar, seccion
         : f1.getUTCDate() + ' ' + abr[f1.getUTCMonth()] + '–' + f2.getUTCDate() + ' ' + abr[f2.getUTCMonth()];
       return { ini: f1.toISOString().slice(0, 10), fin: f2.toISOString().slice(0, 10), n: n, et: et };
     }).slice(-26);
+    semRecortada = nSem > 26;
     semHist = semMeta.map(function(m) { return [m.et, m.n]; });
     ultimaSemanaParcial = (Math.floor((Date.parse(semFin) - Date.parse(semIni)) / DIAH) % 7) < 6 && (!fechaHasta || fechaHasta >= histFin);
   }
@@ -532,6 +748,8 @@ export default function MapaCalor({ user, onIniciarProyecto, onImportar, seccion
   const mesesResaltados = hayFechas ? mesesHist.map(function(m) { return m.clave >= (fechaDesde || '0000-00').slice(0, 7) && m.clave <= (fechaHasta || '9999-99').slice(0, 7); }) : null;
 
   // Periodo, ritmo y serie en el tiempo
+  // Sectores que dejaron de reportar: advertencia para la proyección
+  const sectoresSinCasos = sectoresSinCasosRecientes(puntos.concat(sinUbicar).filter(function(p) { return p.fuente === 'incidencia_regional' && filtros[p.fuente] && pasaDemas(p); }), histFin);
   const fechasAn = puntosAnalisis.map(function(p) { return p.fecha ? String(p.fecha).slice(0, 10) : ''; }).filter(Boolean).sort();
   const iniPeriodo = fechaDesde || fechasAn[0] || '';
   const finPeriodo = fechaHasta || fechasAn[fechasAn.length - 1] || '';
@@ -622,8 +840,8 @@ export default function MapaCalor({ user, onIniciarProyecto, onImportar, seccion
         enlaceAnterior +
         (p.descripcion ? '<div style="font-size:11px;color:#333;margin-top:4px;max-width:220px;word-wrap:break-word">' + esc(p.descripcion.substring(0, 120)) + (p.descripcion.length > 120 ? '...' : '') + '</div>' : '') +
         '<div style="font-size:10px;color:#999;margin-top:4px">Lat: ' + p.lat.toFixed(5) + ' · Lng: ' + p.lng.toFixed(5) + '</div></div>';
-      window.L.circleMarker([p.lat, p.lng], { radius: num ? 13 : 8, fillColor: nivel.color, color: p.color, weight: 2.5, opacity: 1, fillOpacity: 0.95, fecha: p.fecha, hora: p.hora, confirmada: p.confirmada, num: num, sector: p.sector, delito: p.delito }).addTo(layerGroup.current).bindPopup(popup);
-      if (num) {
+      window.L.circleMarker([p.lat, p.lng], { radius: num && numerar ? 13 : 8, fillColor: nivel.color, color: p.color, weight: 2.5, opacity: 1, fillOpacity: 0.95, fecha: p.fecha, hora: p.hora, confirmada: p.confirmada, num: num, sector: p.sector, delito: p.delito }).addTo(layerGroup.current).bindPopup(popup);
+      if (num && numerar) {
         window.L.marker([p.lat, p.lng], { interactive: false, keyboard: false, icon: window.L.divIcon({ className: '', iconSize: [26, 26], iconAnchor: [13, 13],
           html: '<div style="width:26px;height:26px;line-height:26px;text-align:center;font:800 13px Segoe UI,sans-serif;color:#111;text-shadow:0 0 3px #fff,0 0 3px #fff">' + num + '</div>' }) }).addTo(layerGroup.current);
       }
@@ -642,7 +860,7 @@ export default function MapaCalor({ user, onIniciarProyecto, onImportar, seccion
       var bounds = window.L.latLngBounds(puntosFiltrados.map(function(p) { return [p.lat, p.lng]; }));
       mapInstance.current.fitBounds(bounds, { padding: [40, 40], maxZoom: 12 });
     }
-  }, [leafletReady, puntosFiltrados, reproDia]);
+  }, [leafletReady, puntosFiltrados, reproDia, numerar]);
 
   // Si cambian los filtros o las capas, la zona elegida ya no corresponde: se quita
   useEffect(function() { setFocoSel(null); setReproDia(null); }, [fechaDesde, fechaHasta, filtroDelito, filtroMunicipio, filtros]);
@@ -816,7 +1034,7 @@ export default function MapaCalor({ user, onIniciarProyecto, onImportar, seccion
           </span>
         ); })}
         <span style={{ color: '#8b1e1e', fontWeight: 600 }}>Resplandor: solo en zonas de atención prioritaria</span>
-        <span style={{ color: '#001a4d', fontWeight: 600 }}>El número en cada punto es el orden cronológico (1 = el más antiguo del periodo mostrado)</span>
+        <span style={{ color: '#001a4d', fontWeight: 600 }}>{numerar ? 'El número en cada punto es el orden cronológico (1 = el más antiguo del periodo mostrado)' : 'Con más de ' + LIMITE_NUMEROS + ' casos los números se ocultan para que el mapa se lea. Filtra por fechas para verlos; el número sigue en la ventana de cada punto.'}</span>
       </div>
       {sinUbicarFiltrados.length > 0 && (
         <div style={{ marginTop: 8, fontSize: 15, color: '#7a4b00', background: '#fff8e1', border: '1px solid #f0d58a', borderRadius: 8, padding: '8px 12px' }}>
@@ -856,6 +1074,7 @@ export default function MapaCalor({ user, onIniciarProyecto, onImportar, seccion
 
       <div style={{ display: seccion === 'panel' ? 'block' : 'none' }}>
         <div style={{ background: C.white, borderRadius: 10, border: '1px solid #b6905440', padding: 22 }}>
+          <style>{CSS_IMPRESION}</style>
           {puntosAnalisis.length === 0 ? (
             <div style={{ fontSize: 17, color: C.gray, textAlign: 'center', padding: 20 }}>Sin datos con estos filtros.</div>
           ) : (
@@ -906,7 +1125,7 @@ export default function MapaCalor({ user, onIniciarProyecto, onImportar, seccion
                 <div style={{ fontSize: 22, fontWeight: 800, color: C.darkBlue, marginBottom: 4 }}>Cómo ha cambiado</div>
                 <div style={{ fontSize: 16, color: C.gray, marginBottom: 14 }}>La línea sigue el periodo que elijas. Las columnas por mes muestran todo el historial y resaltan el mes elegido.</div>
                 <div>
-                  <div style={{ fontSize: 20, fontWeight: 700, color: C.darkBlue, marginBottom: 6 }}>Casos por semana · {hayFechas ? textoPeriodo : 'todo el historial'}</div>
+                  <div style={{ fontSize: 20, fontWeight: 700, color: C.darkBlue, marginBottom: 6 }}>Casos por semana · {hayFechas ? textoPeriodo : semRecortada ? 'últimas 26 semanas' : 'todo el historial'}</div>
                   {semHist.length > 0 ? (
                     <>
                       <div style={{ fontSize: 16, color: C.gray, marginBottom: 10 }}>Cada columna suma los casos de esos 7 días (por ejemplo, "{semHist[0][0]}").</div>
@@ -931,25 +1150,21 @@ export default function MapaCalor({ user, onIniciarProyecto, onImportar, seccion
                     <div style={{ fontSize: 17, color: C.gray, padding: '16px 0' }}>No hay casos en el periodo elegido.</div>
                   )}
                 </div>
-                <div style={{ marginTop: 26, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 28 }}>
+                <div className="sin-corte" style={{ marginTop: 26 }}>
                   {mesesHist.length > 0 && (
                     <div>
-                      <div style={{ fontSize: 20, fontWeight: 700, color: C.darkBlue, marginBottom: 10 }}>Casos por mes</div>
-                      <ColumnasSimples items={mesesHist.map(function(m) { return [m.nombre, m.n]; })} subtitulos={mesesHist.map(function(m, i) { var partes = []; if (i > 0) { var ant = mesesHist[i - 1]; var pc = Math.round(((m.n / m.dias) / (ant.n / ant.dias) - 1) * 100); partes.push((pc >= 0 ? '▲ ' : '▼ ') + Math.abs(pc) + '%'); } if (m.parcial) partes.push('hasta el ' + Number(histFin.slice(8, 10))); return partes.length ? partes.join(' · ') : null; })} resaltadas={mesesResaltados} />
+                      <div style={{ fontSize: 20, fontWeight: 700, color: C.darkBlue, marginBottom: 4 }}>Casos por mes</div>
+                      <div style={{ fontSize: 15, color: C.gray, marginBottom: 10 }}>Debajo de cada mes, el cambio en casos por día frente al mes anterior.</div>
+                      <ColumnasSimples maxEtiquetas={24} anios={mesesHist.map(function(m) { return m.clave.slice(0, 4); })} items={mesesHist.map(function(m) { return [abrevMes(m.clave), m.n]; })} subtitulos={mesesHist.map(function(m, i) { var partes = []; if (i > 0) { var ant = mesesHist[i - 1]; var pc = Math.round(((m.n / m.dias) / (ant.n / ant.dias) - 1) * 100); partes.push((pc >= 0 ? '▲' : '▼') + Math.abs(pc) + '%'); } if (m.parcial) partes.push('al ' + Number(histFin.slice(8, 10))); return partes.length ? partes.join(' ') : null; })} resaltadas={mesesResaltados} />
                     </div>
                   )}
-                  <RankingBarras titulo="Colonias con más casos" icono={<MapPin size={20} color={C.gold} />} items={topSectores.slice(0, 8)} />
                 </div>
               </div>
 
-              <div style={{ marginTop: 30, padding: 18, background: '#f6f3ec', border: '1px solid #b6905440', borderRadius: 12 }}>
-                <div style={{ fontSize: 20, fontWeight: 700, color: C.darkBlue, marginBottom: 8 }}>Proyección</div>
-                <MedidorMeses n={mesesHist.length} meta={12} />
-                <div style={{ fontSize: 18, color: C.darkBlue, marginTop: 10 }}>Meses con datos: <strong>{mesesHist.length} de 12</strong></div>
-                <div style={{ fontSize: 16, color: '#374151', marginTop: 4, lineHeight: 1.5 }}>La proyección se activa con 12 meses de historia. Con menos, sería una suposición y no un dato en el que un mando pueda apoyarse.</div>
-              </div>
+              <BloqueProyeccion meses={mesesHist} sinCasos={sectoresSinCasos} />
 
-              <div style={{ marginTop: 28, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 28 }}>
+              <div className="sin-corte" style={{ marginTop: 28, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 28 }}>
+                <RankingBarras titulo="Colonias con más casos" icono={<MapPin size={20} color={C.gold} />} items={topSectores.slice(0, 8)} />
                 {topMunicipios.length > 1 && <RankingBarras titulo="Municipios" icono={<MapPin size={20} color={C.gold} />} items={topMunicipios} />}
                 {topArmas.length > 0 && <RankingBarras titulo="Arma o calibre" icono={<BarChart3 size={20} color={C.gold} />} items={topArmas} />}
               </div>
