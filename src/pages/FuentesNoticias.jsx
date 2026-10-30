@@ -40,13 +40,16 @@ export default function FuentesNoticias({ perfil, onCerrar }) {
   const [hallados, setHallados] = useState({});
   const [msg, setMsg] = useState(null);
   const [ocupado, setOcupado] = useState('');
+  const [msgFila, setMsgFila] = useState({});
   const [manual, setManual] = useState({ enlace: '', titulo: '', fuente: '', categoria: 'seguridad' });
 
-  const cargar = useCallback(async () => {
+  // reiniciar = ids cuyo formulario se vuelve a llenar con lo guardado; el resto conserva lo que la persona está editando
+  const cargar = useCallback(async (reiniciar = []) => {
     const { data, error } = await supabase.from('fuentes_noticias').select('*').order('categoria', { ascending: true }).order('nombre', { ascending: true });
     if (error) { setMsg({ ok: false, t: 'No se pudieron cargar las fuentes: ' + error.message }); return; }
     setFuentes(data || []);
-    setEdicion(Object.fromEntries((data || []).map((f) => [f.id, { nombre: f.nombre, url: f.url || '', sitio: f.sitio || '', categoria: f.categoria, palabras: (f.palabras_clave || []).join(', '), maximo: f.maximo, activa: f.activa }])));
+    const desdeBase = (f) => ({ nombre: f.nombre, url: f.url || '', sitio: f.sitio || '', categoria: f.categoria, palabras: (f.palabras_clave || []).join(', '), maximo: f.maximo, activa: f.activa, imagen: f.imagen_fija || '' });
+    setEdicion((prev) => Object.fromEntries((data || []).map((f) => [f.id, prev[f.id] && !reiniciar.includes(f.id) ? prev[f.id] : desdeBase(f)])));
   }, []);
   useEffect(() => { cargar(); }, [cargar]);
 
@@ -56,13 +59,30 @@ export default function FuentesNoticias({ perfil, onCerrar }) {
   const guardar = async (f) => {
     const e = edicion[f.id];
     const url = e.url.trim();
-    if (url && !/^https:\/\//i.test(url)) { setMsg({ ok: false, t: 'La dirección del canal debe empezar con https://' }); return; }
-    if (e.activa && !url) { setMsg({ ok: false, t: 'Para activar una fuente primero necesita la dirección de su canal.' }); return; }
+    const avisar = (ok, t) => { setMsgFila((m) => ({ ...m, [f.id]: { ok, t } })); setMsg({ ok, t }); };
+    if (url && !/^https:\/\//i.test(url)) { avisar(false, 'La dirección del canal debe empezar con https://'); return; }
+    if (e.activa && !url) { avisar(false, 'Para activar una fuente primero necesita la dirección de su canal: usa Buscar canal.'); return; }
+    const imagen = (e.imagen || '').trim();
+    if (imagen && !/^https:\/\//i.test(imagen)) { avisar(false, 'La dirección de la imagen debe empezar con https://'); return; }
     setOcupado('g' + f.id);
-    const { error } = await supabase.from('fuentes_noticias').update({ nombre: e.nombre.trim() || f.nombre, url: url || null, sitio: e.sitio.trim() || null, categoria: e.categoria, palabras_clave: aLista(e.palabras), maximo: Math.min(30, Math.max(1, Number(e.maximo) || 8)), activa: !!e.activa }).eq('id', f.id);
+    const { error } = await supabase.from('fuentes_noticias').update({ nombre: e.nombre.trim() || f.nombre, url: url || null, imagen_fija: imagen || null, sitio: e.sitio.trim() || null, categoria: e.categoria, palabras_clave: aLista(e.palabras), maximo: Math.min(30, Math.max(1, Number(e.maximo) || 8)), activa: !!e.activa }).eq('id', f.id);
     setOcupado('');
-    if (error) { setMsg({ ok: false, t: 'No se pudo guardar: ' + error.message }); return; }
-    setMsg({ ok: true, t: 'Fuente guardada.' }); cargar();
+    if (error) { avisar(false, 'No se pudo guardar: ' + error.message); return; }
+    avisar(true, e.activa ? 'Guardada y activada.' : 'Guardada.'); cargar([f.id]);
+  };
+
+  // Activa de una vez las fuentes que respondieron bien en la última prueba
+  const activarLasQueRespondieron = async () => {
+    const listas = fuentes.filter((f) => f.ultimo_estado === 'ok' && f.url && !f.activa);
+    setOcupado('masivo');
+    let n = 0, fallos = 0;
+    for (const f of listas) {
+      const { error } = await supabase.from('fuentes_noticias').update({ activa: true }).eq('id', f.id);
+      if (error) fallos++; else n++;
+    }
+    setOcupado('');
+    setMsg(fallos ? { ok: false, t: 'Se activaron ' + n + ' y fallaron ' + fallos + '.' } : { ok: true, t: 'Se activaron ' + n + (n === 1 ? ' fuente.' : ' fuentes.') });
+    cargar(listas.map((f) => f.id));
   };
 
   const probar = async (id) => {
@@ -71,7 +91,7 @@ export default function FuentesNoticias({ perfil, onCerrar }) {
     setOcupado('');
     if (error) { setMsg({ ok: false, t: 'No se pudo probar: ' + await mensajeDe(error) + ' (¿ya instalaste la función "leer-fuentes"?)' }); return; }
     const r = data.resultados || [];
-    setMsg({ ok: true, t: 'Prueba terminada: ' + r.filter((x) => x.ok).length + ' de ' + r.length + ' fuentes respondieron.' }); cargar();
+    setMsg({ ok: true, t: 'Prueba terminada: ' + r.filter((x) => x.ok).length + ' de ' + r.length + ' fuentes respondieron. Las que respondieron se pueden activar con un clic abajo del mensaje.' }); cargar();
   };
 
   const buscarCanal = async (f) => {
@@ -119,10 +139,13 @@ export default function FuentesNoticias({ perfil, onCerrar }) {
           <a href="https://dof.gob.mx/website/filtroRss.php" target="_blank" rel="noopener noreferrer" style={{ color: P.guinda, fontWeight: 700 }}>su página de filtros RSS</a>, copia la dirección del canal y pégala aquí.
         </div>
 
-        {msg && <div role="status" style={{ background: msg.ok ? '#eef4ea' : '#fdecea', color: msg.ok ? P.verde : P.guinda, borderRadius: 8, padding: '8px 12px', fontSize: 15, fontWeight: 700, marginBottom: 10 }}>{msg.t}</div>}
+        {msg && <div role="status" style={{ position: 'sticky', top: 0, zIndex: 5, background: msg.ok ? '#eef4ea' : '#fdecea', color: msg.ok ? P.verde : P.guinda, border: '1px solid ' + (msg.ok ? '#c9dcc0' : '#f5b5ad'), borderRadius: 8, padding: '8px 12px', fontSize: 15, fontWeight: 700, marginBottom: 10, boxShadow: '0 2px 6px rgba(0,0,0,0.12)' }}>{msg.t}</div>}
 
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 12 }}>
           <button onClick={() => probar(null)} disabled={!!ocupado} style={primario}>{ocupado === 'ptodas' ? 'Probando…' : 'Probar todas las fuentes'}</button>
+          {fuentes.some((f) => f.ultimo_estado === 'ok' && f.url && !f.activa) && (
+            <button onClick={activarLasQueRespondieron} disabled={!!ocupado} style={primario}>{ocupado === 'masivo' ? 'Activando…' : 'Activar las que respondieron (' + fuentes.filter((f) => f.ultimo_estado === 'ok' && f.url && !f.activa).length + ')'}</button>
+          )}
           <button onClick={agregarFuente} style={secundario}><Plus size={16} /> Agregar fuente</button>
         </div>
 
@@ -155,14 +178,21 @@ export default function FuentesNoticias({ perfil, onCerrar }) {
                 <label><span style={{ fontSize: 13, fontWeight: 700, color: P.gris }}>Solo titulares que mencionen (separa con comas; vacío = todos)</span><input style={campo} value={e.palabras || ''} onChange={(ev) => poner(f.id, { palabras: ev.target.value })} /></label>
                 <label><span style={{ fontSize: 13, fontWeight: 700, color: P.gris }}>Máximo de titulares</span><input type="number" min="1" max="30" style={campo} value={e.maximo || 8} onChange={(ev) => poner(f.id, { maximo: ev.target.value })} /></label>
               </div>
+              <label style={{ display: 'block', marginTop: 8 }}>
+                <span style={{ fontSize: 13, fontWeight: 700, color: P.gris }}>Imagen fija como banner (opcional; https). Se guarda en tu almacenamiento y se actualiza en cada lectura</span>
+                <input style={campo} placeholder="https://… (por ejemplo, el gráfico de pronóstico)" value={e.imagen || ''} onChange={(ev) => poner(f.id, { imagen: ev.target.value })} />
+              </label>
+              {f.imagen_estado && <div style={{ fontSize: 14, fontWeight: 700, marginTop: 4, color: f.imagen_estado === 'ok' ? P.verde : P.guinda }}>{f.imagen_estado === 'ok' ? 'Imagen del banner: guardada.' : 'Imagen del banner: ' + (f.imagen_error || 'error')}</div>}
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginTop: 10 }}>
-                <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 15, fontWeight: 700 }}><input type="checkbox" checked={!!e.activa} onChange={(ev) => poner(f.id, { activa: ev.target.checked })} /> Activa</label>
+                <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 15, fontWeight: 700, opacity: (e.url || '').trim() ? 1 : 0.55 }}><input type="checkbox" checked={!!e.activa} disabled={!(e.url || '').trim()} onChange={(ev) => poner(f.id, { activa: ev.target.checked })} /> Activa</label>
                 <button onClick={() => buscarCanal(f)} disabled={!!ocupado} style={secundario}>{ocupado === 'b' + f.id ? 'Buscando…' : 'Buscar canal'}</button>
                 <button onClick={() => probar(f.id)} disabled={!!ocupado} style={secundario}>{ocupado === 'p' + f.id ? 'Probando…' : 'Probar'}</button>
                 <button onClick={() => guardar(f)} disabled={!!ocupado} style={primario}>Guardar</button>
                 <button onClick={() => eliminar(f)} aria-label={'Eliminar ' + f.nombre} style={{ ...btn, background: 'none', border: 'none', color: P.gris }}><Trash2 size={18} /></button>
                 <span style={{ fontSize: 14, fontWeight: 700, color: estadoColor(f), marginLeft: 'auto' }}>{estadoTexto(f)}</span>
               </div>
+              {!(e.url || '').trim() && <div style={{ fontSize: 14, color: P.gris, marginTop: 6 }}>Para activarla, primero necesita la dirección de su canal: escríbela arriba o usa <strong>Buscar canal</strong>.</div>}
+              {msgFila[f.id] && <div style={{ fontSize: 14, fontWeight: 700, marginTop: 6, color: msgFila[f.id].ok ? P.verde : P.guinda }}>{msgFila[f.id].t}</div>}
             </div>
           );
         })}
