@@ -21,6 +21,17 @@ export const CATEGORIAS = {
   analisis: { texto: 'Análisis', color: '#8a7a6a' },
 };
 
+// El tipo de imagen se decide por su contenido real (no por el nombre del archivo): así no pasa un SVG o un HTML disfrazado
+export function tipoImagen(b) {
+  if (b[0] === 0x89 && b[1] === 0x50 && b[2] === 0x4e && b[3] === 0x47) return { ext: 'png', mime: 'image/png' };
+  if (b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff) return { ext: 'jpg', mime: 'image/jpeg' };
+  if (b[0] === 0x47 && b[1] === 0x49 && b[2] === 0x46) return { ext: 'gif', mime: 'image/gif' };
+  if (b[0] === 0x52 && b[1] === 0x49 && b[2] === 0x46 && b[3] === 0x46 && b[8] === 0x57 && b[9] === 0x45 && b[10] === 0x42 && b[11] === 0x50) return { ext: 'webp', mime: 'image/webp' };
+  return null;
+}
+const MAX_IMAGEN = 1500000;
+const idUnico = () => { try { return (globalThis.crypto || window.crypto).randomUUID(); } catch (e) { return Date.now() + '-' + Math.random().toString(36).slice(2, 10); } };
+
 export function fuenteDeEnlace(enlace) {
   let host = '';
   try { host = new URL(enlace).hostname.replace(/^www\./, '').toLowerCase(); } catch (e) { return ''; }
@@ -42,6 +53,8 @@ export default function FuentesNoticias({ perfil, onCerrar }) {
   const [ocupado, setOcupado] = useState('');
   const [msgFila, setMsgFila] = useState({});
   const [manual, setManual] = useState({ enlace: '', titulo: '', fuente: '', categoria: 'seguridad' });
+  const [bannerForm, setBannerForm] = useState({ titulo: '', enlace: '', hasta: '', categoria: 'seguridad', archivo: null });
+  const [bannersPuestos, setBannersPuestos] = useState([]);
 
   // reiniciar = ids cuyo formulario se vuelve a llenar con lo guardado; el resto conserva lo que la persona está editando
   const cargar = useCallback(async (reiniciar = []) => {
@@ -51,7 +64,11 @@ export default function FuentesNoticias({ perfil, onCerrar }) {
     const desdeBase = (f) => ({ nombre: f.nombre, url: f.url || '', sitio: f.sitio || '', categoria: f.categoria, palabras: (f.palabras_clave || []).join(', '), maximo: f.maximo, activa: f.activa, imagen: f.imagen_fija || '' });
     setEdicion((prev) => Object.fromEntries((data || []).map((f) => [f.id, prev[f.id] && !reiniciar.includes(f.id) ? prev[f.id] : desdeBase(f)])));
   }, []);
-  useEffect(() => { cargar(); }, [cargar]);
+  const cargarBanners = useCallback(async () => {
+    const { data } = await supabase.from('noticias').select('*').eq('banner', true).eq('origen', 'manual').order('creada_en', { ascending: false });
+    setBannersPuestos((data || []).filter((x) => x.banner && x.origen === 'manual'));
+  }, []);
+  useEffect(() => { cargar(); cargarBanners(); }, [cargar, cargarBanners]);
 
   const poner = (id, cambios) => setEdicion((e) => ({ ...e, [id]: { ...e[id], ...cambios } }));
   const mensajeDe = async (error) => { let m = error.message; try { const c = await error.context.json(); if (c && c.error) m = c.error; } catch (e) { /* sin detalle */ } return m; };
@@ -115,6 +132,41 @@ export default function FuentesNoticias({ perfil, onCerrar }) {
     const { error } = await supabase.from('fuentes_noticias').delete().eq('id', f.id);
     if (error) { setMsg({ ok: false, t: 'No se pudo eliminar: ' + error.message }); return; }
     cargar();
+  };
+
+  // Banner con imagen subida desde la computadora (solo mando; la base de datos y el almacenamiento también lo exigen)
+  const publicarBanner = async () => {
+    const f = bannerForm;
+    if (f.titulo.trim().length < 5) { setMsg({ ok: false, t: 'Escribe un título corto para el banner.' }); return; }
+    if (!/^https:\/\//i.test(f.enlace.trim())) { setMsg({ ok: false, t: 'El enlace al que lleva el banner debe empezar con https://' }); return; }
+    if (!f.archivo) { setMsg({ ok: false, t: 'Elige la imagen del banner.' }); return; }
+    if (f.archivo.size > MAX_IMAGEN) { setMsg({ ok: false, t: 'La imagen pesa más de 1.5 MB. Redúcela y vuelve a intentarlo.' }); return; }
+    const bytes = new Uint8Array(await f.archivo.arrayBuffer());
+    const tipo = tipoImagen(bytes);
+    if (!tipo) { setMsg({ ok: false, t: 'El archivo no es una imagen válida. Usa PNG, JPG, GIF o WEBP.' }); return; }
+    setOcupado('banner');
+    const ruta = 'banners/' + idUnico() + '.' + tipo.ext;
+    const { error: errSubir } = await supabase.storage.from('noticias').upload(ruta, f.archivo, { contentType: tipo.mime, upsert: false, cacheControl: '300' });
+    if (errSubir) { setOcupado(''); setMsg({ ok: false, t: 'No se pudo subir la imagen: ' + errSubir.message }); return; }
+    const publica = supabase.storage.from('noticias').getPublicUrl(ruta).data.publicUrl;
+    const { error } = await supabase.from('noticias').insert({ origen: 'manual', banner: true, fuente_nombre: 'Banner', categoria: f.categoria, titulo: f.titulo.trim().slice(0, 300), enlace: f.enlace.trim(), imagen_url: publica, vigente_hasta: f.hasta || null, publicada_en: new Date().toISOString(), creada_por: perfil?.id || null });
+    setOcupado('');
+    if (error) {
+      await supabase.storage.from('noticias').remove([ruta]);
+      setMsg({ ok: false, t: /duplicate|unique/i.test(error.message) ? 'Ya hay un banner con ese enlace. Quítalo primero.' : 'No se pudo publicar: ' + error.message });
+      return;
+    }
+    setBannerForm({ titulo: '', enlace: '', hasta: '', categoria: f.categoria, archivo: null });
+    setMsg({ ok: true, t: 'Banner publicado. Ya lo ven todas las personas con sesión, de todas las regiones.' });
+    cargarBanners();
+  };
+  const quitarBanner = async (b) => {
+    if (!window.confirm('¿Quitar el banner "' + b.titulo + '"?')) return;
+    const { error } = await supabase.from('noticias').delete().eq('id', b.id);
+    if (error) { setMsg({ ok: false, t: 'No se pudo quitar: ' + error.message }); return; }
+    const m = String(b.imagen_url || '').match(/\/noticias\/(banners\/[^/?#]+)$/);
+    if (m) await supabase.storage.from('noticias').remove([m[1]]);
+    cargarBanners();
   };
 
   const agregarComunicado = async () => {
@@ -196,6 +248,31 @@ export default function FuentesNoticias({ perfil, onCerrar }) {
             </div>
           );
         })}
+
+        <div style={{ background: '#fff', border: '1px solid ' + P.borde, borderLeft: '5px solid ' + P.guinda, borderRadius: 10, padding: '14px 16px', marginTop: 16 }}>
+          <div style={{ fontSize: 18, fontWeight: 800, color: P.tinta }}>Publicar un banner con imagen</div>
+          <div style={{ fontSize: 14, color: P.gris, margin: '2px 0 10px', lineHeight: 1.5 }}>Para una página que no tiene canal RSS (por ejemplo, el micrositio de personas identificadas en el SEMEFO): sube su imagen, pega el enlace y, si quieres, fija hasta cuándo se ve. <strong>Lo ven todas las personas con sesión, de todas las regiones.</strong></div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 8 }}>
+            <label><span style={{ fontSize: 13, fontWeight: 700, color: P.gris }}>Título del banner</span><input style={campo} value={bannerForm.titulo} maxLength={300} onChange={(ev) => setBannerForm({ ...bannerForm, titulo: ev.target.value })} /></label>
+            <label><span style={{ fontSize: 13, fontWeight: 700, color: P.gris }}>Enlace al que lleva (https)</span><input style={campo} placeholder="https://servicios.fiscaliaguerrero.gob.mx/…" value={bannerForm.enlace} onChange={(ev) => setBannerForm({ ...bannerForm, enlace: ev.target.value })} /></label>
+            <label><span style={{ fontSize: 13, fontWeight: 700, color: P.gris }}>Imagen (PNG, JPG, GIF o WEBP, máximo 1.5 MB)</span><input type="file" accept="image/png,image/jpeg,image/gif,image/webp" style={campo} onChange={(ev) => setBannerForm({ ...bannerForm, archivo: ev.target.files && ev.target.files[0] ? ev.target.files[0] : null })} /></label>
+            <label><span style={{ fontSize: 13, fontWeight: 700, color: P.gris }}>Se ve hasta el (opcional)</span><input type="date" style={campo} value={bannerForm.hasta} onChange={(ev) => setBannerForm({ ...bannerForm, hasta: ev.target.value })} /></label>
+          </div>
+          <button onClick={publicarBanner} disabled={ocupado === 'banner'} style={{ ...primario, marginTop: 10 }}>{ocupado === 'banner' ? 'Publicando…' : 'Publicar banner'}</button>
+          {bannersPuestos.length > 0 && (
+            <div style={{ marginTop: 12 }}>
+              <div style={{ fontSize: 14, fontWeight: 800, color: P.gris, marginBottom: 4 }}>Banners publicados</div>
+              {bannersPuestos.map((b) => (
+                <div key={b.id} style={{ display: 'flex', alignItems: 'center', gap: 10, borderTop: '1px solid ' + P.borde, padding: '6px 0', flexWrap: 'wrap' }}>
+                  <img src={b.imagen_url} alt="" referrerPolicy="no-referrer" style={{ width: 56, height: 40, objectFit: 'cover', borderRadius: 6, border: '1px solid ' + P.borde }} />
+                  <span style={{ fontSize: 15, fontWeight: 700, flex: 1, minWidth: 180 }}>{b.titulo}</span>
+                  <span style={{ fontSize: 13, color: P.gris }}>{b.vigente_hasta ? 'Hasta el ' + String(b.vigente_hasta).slice(0, 10) : 'Sin fecha de término'}</span>
+                  <button onClick={() => quitarBanner(b)} aria-label={'Quitar ' + b.titulo} style={{ ...btn, background: 'none', border: 'none', color: P.gris }}><Trash2 size={18} /> Quitar</button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
 
         <div style={{ background: '#fff', border: '1px solid ' + P.borde, borderLeft: '5px solid ' + P.oro, borderRadius: 10, padding: '14px 16px', marginTop: 16 }}>
           <div style={{ fontSize: 18, fontWeight: 800, color: P.tinta }}>Agregar un comunicado a mano</div>
