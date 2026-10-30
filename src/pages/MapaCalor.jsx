@@ -315,6 +315,7 @@ export default function MapaCalor({ user, onIniciarProyecto, onImportar, seccion
   const [reproDia, setReproDia] = useState(null); // reproducción del periodo: muestra los casos hasta este día (null = todos)
   const [filtrosAbiertos, setFiltrosAbiertos] = useState(false); // los filtros se muestran como una línea resumen y se abren si se piden
   const [capasAbiertas, setCapasAbiertas] = useState(false); // las capas del mapa se muestran solo si se piden
+  const [soloConfirmadas, setSoloConfirmadas] = useState(true); // el mapa y las zonas usan solo ubicaciones confirmadas; el panel cuenta todos los casos
 
   // Pantalla completa del mapa: Esc la cierra, y si el navegador salió de pantalla completa también se cierra
   const entrarPresentacion = function() {
@@ -428,7 +429,11 @@ export default function MapaCalor({ user, onIniciarProyecto, onImportar, seccion
     if (fechaHasta && p.fecha && p.fecha > fechaHasta) return false;
     return pasaDemas(p);
   };
-  const puntosFiltrados = puntos.filter(function(p) { return filtros[p.fuente] && pasaFiltros(p); });
+  const puntosConUbicacion = puntos.filter(function(p) { return filtros[p.fuente] && pasaFiltros(p); });
+  // Las ubicaciones aproximadas (colonia, sector, hospital, coordenada repetida) no son el lugar del hecho: dibujarlas
+  // juntaría casos en un mismo punto y marcaría zonas calientes que no existen. Por eso, por defecto no se dibujan ni entran a las zonas.
+  const puntosFiltrados = soloConfirmadas ? puntosConUbicacion.filter(function(p) { return p.confirmada !== false; }) : puntosConUbicacion;
+  const nAproxOcultos = puntosConUbicacion.length - puntosFiltrados.length;
 
   const analysisPorMunicipio = {};
   const analysisPorDelito = {};
@@ -437,7 +442,7 @@ export default function MapaCalor({ user, onIniciarProyecto, onImportar, seccion
   const analysisPorMes = {};
   // El panel cuenta todos los casos, con o sin ubicación; el mapa solo dibuja los ubicados
   const sinUbicarFiltrados = sinUbicar.filter(function(p) { return filtros[p.fuente] && pasaFiltros(p); });
-  const puntosAnalisis = puntosFiltrados.concat(sinUbicarFiltrados);
+  const puntosAnalisis = puntosConUbicacion.concat(sinUbicarFiltrados);   // el panel cuenta TODOS los casos, con o sin ubicación confirmada
   const pendientesFiltrados = pendientes.filter(function(p) { return filtros[p.fuente] && pasaFiltros(p); });
   const avisoPendientes = pendientesFiltrados.length > 0 ? (
     <div style={{ marginTop: 8, fontSize: 15, color: '#3f4a63', background: '#eef1f6', border: '1px solid #c9d1e0', borderRadius: 8, padding: '8px 12px' }}>
@@ -745,6 +750,10 @@ export default function MapaCalor({ user, onIniciarProyecto, onImportar, seccion
             <Filter size={17} color={C.gold} style={{ verticalAlign: -3, marginRight: 8 }} />
             <strong>Filtros:</strong> {textoPeriodo} · {textoDelito} · {filtroMunicipio || 'Todos los municipios'}
           </div>
+          <label style={{ display: 'inline-flex', alignItems: 'center', gap: 8, fontSize: 16, fontWeight: 600, color: C.darkBlue, cursor: 'pointer' }}>
+            <input type="checkbox" checked={soloConfirmadas} onChange={function(e) { setSoloConfirmadas(e.target.checked); }} style={{ width: 18, height: 18 }} />
+            Mapa y zonas: solo ubicaciones confirmadas
+          </label>
           <button onClick={function() { setFiltrosAbiertos(!filtrosAbiertos); }} aria-expanded={filtrosAbiertos}
             style={{ background: 'none', border: '1.5px solid #c7cfe0', borderRadius: 7, padding: '6px 14px', color: C.darkBlue, fontSize: 16, fontWeight: 600, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6, minHeight: 40 }}>
             {filtrosAbiertos ? 'Ocultar filtros' : 'Cambiar filtros'} {filtrosAbiertos ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
@@ -816,6 +825,11 @@ export default function MapaCalor({ user, onIniciarProyecto, onImportar, seccion
       )}
       {avisoPendientes}
 
+      {soloConfirmadas && nAproxOcultos > 0 && (
+        <div role="status" style={{ marginTop: 10, background: '#fbf3e0', border: '1px solid #c9a24b', borderRadius: 8, padding: '8px 12px', fontSize: 15, color: '#5a4a1e', lineHeight: 1.45 }}>
+          <strong>{nAproxOcultos}</strong> {nAproxOcultos === 1 ? 'caso tiene' : 'casos tienen'} ubicación aproximada o sin confirmar: no se dibujan ni cuentan para las zonas, pero sí están en las cifras del análisis. Se confirman en <em>Revisar ubicaciones</em>.
+        </div>
+      )}
       <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
         <ReglaMapa obtenerMapa={function() { return mapInstance.current; }} />
         <RadioMapa obtenerMapa={function() { return mapInstance.current; }} />
