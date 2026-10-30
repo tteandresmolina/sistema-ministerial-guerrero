@@ -13,6 +13,8 @@ import FuentesNoticias, { CATEGORIAS } from './FuentesNoticias';
 const P = { tinta: '#1f2937', gris: '#5a6478', guinda: '#8b1e1e', oro: '#b6905a', borde: '#e8e2d4', marfil: '#f7f1e6' };
 const ESPERA_MIN = 30;
 const esEnlace = (u) => /^https?:\/\//i.test(String(u || ''));
+const esImagen = (u) => /^https:\/\//i.test(String(u || ''));   // solo imágenes de tu almacenamiento (el servidor las guarda ahí)
+const ocultarSiFalla = (ev) => { ev.currentTarget.style.display = 'none'; };
 const dominio = (u) => { try { return new URL(u).hostname.replace(/^www\./, ''); } catch (e) { return ''; } };
 
 export default function Entorno({ perfil }) {
@@ -59,7 +61,9 @@ export default function Entorno({ perfil }) {
   };
 
   const presentes = Object.keys(CATEGORIAS).filter((c) => items.some((n) => n.categoria === c));
-  const visibles = items.filter((n) => filtro === 'todas' || n.categoria === filtro).slice(0, 8);
+  const delFiltro = items.filter((n) => filtro === 'todas' || n.categoria === filtro);
+  const banners = delFiltro.filter((n) => n.banner && esImagen(n.imagen_url) && esEnlace(n.enlace)).slice(0, 2);
+  const visibles = delFiltro.filter((n) => !n.banner).slice(0, 8);
   const ultimaLectura = items.reduce((m, n) => (n.creada_en && n.creada_en > m ? n.creada_en : m), '');
 
   const chip = (activo) => ({ border: activo ? '2px solid ' + P.oro : '1.5px solid #d8d2c2', background: activo ? P.marfil : '#fff', color: P.tinta, borderRadius: 16, padding: '4px 12px', fontSize: 14, fontWeight: 700, cursor: 'pointer' });
@@ -78,6 +82,21 @@ export default function Entorno({ perfil }) {
         </div>
       )}
 
+      {banners.length > 0 && (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 10, margin: '10px 0 6px' }}>
+          {banners.map((b) => (
+            <a key={b.id} href={b.enlace} target="_blank" rel="noopener noreferrer" aria-label={b.titulo + ' (se abre la fuente)'}
+              style={{ display: 'block', textDecoration: 'none', border: '1px solid ' + P.borde, borderRadius: 12, overflow: 'hidden', background: '#fff', boxShadow: '0 1px 4px rgba(0,0,0,0.08)' }}>
+              <img src={b.imagen_url} alt={b.titulo} loading="lazy" referrerPolicy="no-referrer" onError={ocultarSiFalla} style={{ display: 'block', width: '100%', maxHeight: 220, objectFit: 'contain', background: '#f1ede3' }} />
+              <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, padding: '8px 12px', borderTop: '1px solid ' + P.borde }}>
+                <span style={{ fontSize: 15, fontWeight: 800, color: P.tinta }}>{b.titulo}</span>
+                <span style={{ fontSize: 13, color: P.guinda, fontWeight: 700, whiteSpace: 'nowrap' }}>{b.creada_en ? haceCuanto(b.creada_en) + ' · ' : ''}Abrir <ExternalLink size={13} style={{ verticalAlign: -1 }} /></span>
+              </span>
+            </a>
+          ))}
+        </div>
+      )}
+
       <div style={{ marginTop: 6 }}>
         {!cargado ? <div style={{ fontSize: 16, color: P.gris, padding: '10px 0' }}>Cargando…</div>
           : visibles.length === 0 ? (
@@ -88,7 +107,13 @@ export default function Entorno({ perfil }) {
             const cat = CATEGORIAS[n.categoria] || CATEGORIAS.seguridad;
             const cuando = n.publicada_en || n.creada_en;
             return (
-              <div key={n.id} style={{ padding: '9px 0', borderTop: '1px solid ' + P.borde }}>
+              <div key={n.id} style={{ padding: '9px 0', borderTop: '1px solid ' + P.borde, display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+                {esImagen(n.imagen_url) && esEnlace(n.enlace) && (
+                  <a href={n.enlace} target="_blank" rel="noopener noreferrer" aria-hidden="true" tabIndex={-1} style={{ flexShrink: 0 }}>
+                    <img src={n.imagen_url} alt="" loading="lazy" referrerPolicy="no-referrer" onError={ocultarSiFalla} style={{ display: 'block', width: 84, height: 84, objectFit: 'cover', borderRadius: 8, border: '1px solid ' + P.borde, background: '#f1ede3' }} />
+                  </a>
+                )}
+                <div style={{ minWidth: 0 }}>
                 {esEnlace(n.enlace)
                   ? <a href={n.enlace} target="_blank" rel="noopener noreferrer" title={dominio(n.enlace)} style={{ fontSize: 16, fontWeight: 700, color: P.tinta, textDecoration: 'none', lineHeight: 1.35 }}>{n.titulo} <ExternalLink size={14} style={{ verticalAlign: -1, color: P.gris }} /></a>
                   : <span style={{ fontSize: 16, fontWeight: 700, color: P.tinta }}>{n.titulo}</span>}
@@ -97,6 +122,7 @@ export default function Entorno({ perfil }) {
                   <span>{n.fuente_nombre}</span>
                   {n.origen === 'manual' && <span style={{ border: '1px solid ' + P.oro, color: '#7a5a22', borderRadius: 4, padding: '0 6px', fontWeight: 700 }}>Curado</span>}
                   {cuando && <span>· {haceCuanto(cuando)}</span>}
+                </div>
                 </div>
               </div>
             );
