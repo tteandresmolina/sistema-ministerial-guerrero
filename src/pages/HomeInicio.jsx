@@ -7,8 +7,9 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
-import { Target, ArrowRight } from 'lucide-react';
+import { Target, ArrowRight, MapPin } from 'lucide-react';
 import { haceCuanto } from './Campana';
+import Entorno from './Entorno';
 import { analizarCasos, construirResumen, construirAtencion, fechaLarga } from './resumenInicio';
 
 const P = { tinta: '#1f2937', gris: '#5a6478', guinda: '#8b1e1e', guindaSuave: '#9a5a5e', oro: '#b6905a', oroTexto: '#7a5a22', marfil: '#f7f1e6', borde: '#e8e2d4', verde: '#4a6b3a', fondoItem: '#fbf9f4' };
@@ -126,6 +127,28 @@ export default function HomeInicio({ perfil, grupos, onIr }) {
         <Cifra etiqueta="Avisos sin leer" valor={sinLeer} detalle="En tu campana, arriba a la derecha" />
       </div>
 
+      {/* Hallazgos en fosas clandestinas: un dato que conjuga a varias áreas, por eso va destacado */}
+      {hayDatos && a.hallazgosTotal > 0 && (
+        <div style={{ background: P.marfil, border: '1px solid ' + P.borde, borderLeft: '6px solid ' + P.guinda, borderRadius: 14, padding: '16px 22px', marginTop: 16, display: 'flex', alignItems: 'center', gap: 22, flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+            <span style={{ width: 52, height: 52, borderRadius: 12, background: '#fff', border: '1px solid ' + P.borde, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><MapPin size={28} color={P.guinda} /></span>
+            <div>
+              <div style={{ fontSize: 14, fontWeight: 700, letterSpacing: 1, color: P.oroTexto, textTransform: 'uppercase' }}>Hallazgos en fosas clandestinas</div>
+              <div style={{ fontSize: 15, color: P.gris }}>Últimos 30 días</div>
+            </div>
+          </div>
+          <div style={{ fontSize: 46, fontWeight: 800, color: P.guinda, lineHeight: 1 }}>{a.hallazgos30}</div>
+          <div style={{ fontSize: 16, color: P.tinta, lineHeight: 1.5 }}>
+            <div><strong>{a.hallazgosTotal}</strong> en total</div>
+            <div>Último: <strong>{fechaLarga(a.ultimoHallazgo)}</strong></div>
+          </div>
+          <div style={{ flex: 1, minWidth: 240, fontSize: 15, color: P.gris, lineHeight: 1.5 }}>
+            Cada hallazgo es una carpeta de investigación. Es un dato que conjuga a varias áreas para su localización: búsqueda de personas, periciales y Ministerio Público.
+          </div>
+          {tieneSara && <button onClick={() => ir('sara', 'panel')} style={{ background: '#fff', border: '1.5px solid ' + P.guinda, borderRadius: 8, padding: '8px 14px', color: P.guinda, fontSize: 15, fontWeight: 700, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6, minHeight: 42 }}>Ver el panel <ArrowRight size={16} /></button>}
+        </div>
+      )}
+
       {/* Resumen, atención y Análisis Criminal */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: 16, marginTop: 16, alignItems: 'start' }}>
         <div style={{ display: 'grid', gap: 16 }}>
@@ -172,6 +195,8 @@ export default function HomeInicio({ perfil, grupos, onIr }) {
               </div>
             </div>
           )}
+
+          <Entorno perfil={perfil} />
 
           {avisos.length > 0 && (
             <div style={tarjeta}>
