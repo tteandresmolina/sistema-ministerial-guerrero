@@ -36,6 +36,18 @@ export function analizarCasos(casos, hoy = new Date()) {
   for (let b = 0; b < 8; b++) { const fin = hoyD - 7 * (7 - b); semanas.push({ ini: deDia(fin - 6), fin: deDia(fin), n: 0 }); }
   const porMes = {};
 
+  // Hallazgos en fosa clandestina: se cuentan todos (aunque el caso esté en espera de necropsia): un hallazgo es un hallazgo.
+  // Cada uno es una carpeta de investigación (no es el número de víctimas).
+  let hallazgos30 = 0, hallazgos7 = 0, hallazgosTotal = 0, ultimoHallazgo = '';
+  (casos || []).forEach((c) => {
+    if (!c.fecha || !clasificarDelito(c.delito).hallazgo) return;
+    const f = String(c.fecha).slice(0, 10), edad = hoyD - aDia(f);
+    hallazgosTotal++;
+    if (f > ultimoHallazgo) ultimoHallazgo = f;
+    if (edad >= 0 && edad < 30) hallazgos30++;
+    if (edad >= 0 && edad < 7) hallazgos7++;
+  });
+
   validos.forEach((c) => {
     if (!c.fecha) return;
     const f = String(c.fecha).slice(0, 10);
@@ -73,6 +85,7 @@ export function analizarCasos(casos, hoy = new Date()) {
     promSemana: prom, repunte, zonas, topZona, medioTop,
     sinUbicar, sinConfirmar, pctUbicados: total > 0 ? Math.round((total - sinUbicar) / total * 100) : null,
     pendientesNecropsia: pendientes.length, porMes,
+    hallazgos30, hallazgos7, hallazgosTotal, ultimoHallazgo,
   };
 }
 
@@ -84,6 +97,11 @@ export function construirResumen(a) {
     : a.cambioPct === 0 ? ', igual que en los 30 días anteriores.'
     : ', ' + Math.abs(a.cambioPct) + '% ' + (a.cambioPct > 0 ? 'más' : 'menos') + ' que en los 30 días anteriores.';
   frases.push([{ t: 'En los últimos 30 días hubo ' }, { t: a.n30 + ' homicidios', b: true }, { t: comp }]);
+  if (a.hallazgosTotal > 0) {
+    frases.push(a.hallazgos30 > 0
+      ? [{ t: 'Se registraron ' }, { t: a.hallazgos30 + (a.hallazgos30 === 1 ? ' hallazgo' : ' hallazgos') + ' en fosa clandestina', b: true }, { t: ' en los últimos 30 días (' + a.hallazgosTotal + ' en total).' }]
+      : [{ t: 'No hubo hallazgos en fosa clandestina en los últimos 30 días (' + a.hallazgosTotal + ' en total).' }]);
+  }
   if (a.repunte) frases.push([{ t: 'La semana ' }, { t: rangoLargo(a.repunte.ini, a.repunte.fin), b: true }, { t: ' fue un repunte, con ' + a.repunte.n + ' casos (el promedio semanal es ' + a.promSemana.toFixed(1) + ').' }]);
   else frases.push([{ t: 'En las últimas 8 semanas no hubo repuntes: ninguna semana superó en 50% el promedio.' }]);
   if (a.topZona) frases.push([{ t: a.topZona.zona, b: true }, { t: ' concentra ' + a.topZona.n + ' casos (' + a.topZona.pct + '%) y es la coordinación con más homicidios.' }]);
@@ -97,6 +115,10 @@ export function construirResumen(a) {
 // Asuntos que requieren atención, de mayor a menor prioridad. accion: { texto, seccion, tab } o null
 export function construirAtencion(a, { rol, hoy = new Date(), avisosSinLeer = 0 } = {}) {
   const items = [];
+  if (a && a.hallazgos7 > 0) {
+    items.push({ nivel: 'alta', titulo: a.hallazgos7 === 1 ? 'Hallazgo en fosa clandestina esta semana' : a.hallazgos7 + ' hallazgos en fosa clandestina esta semana',
+      detalle: 'Último: ' + fechaLarga(a.ultimoHallazgo) + '. Involucra a varias áreas para su localización', accion: { texto: 'Ver en el mapa', seccion: 'sara', tab: 'mapa' } });
+  }
   if (a && a.topZona && a.topZona.n >= 4) {
     items.push({ nivel: 'alta', titulo: a.topZona.zona + ' concentra ' + a.topZona.n + ' homicidios en 30 días', detalle: a.topZona.pct + '% de los casos del periodo', accion: { texto: 'Ver en el mapa', seccion: 'sara', tab: 'mapa' } });
   }
