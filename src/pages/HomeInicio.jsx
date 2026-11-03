@@ -14,7 +14,7 @@ import Entorno from './Entorno';
 import { analizarCasos, construirResumen, construirAtencion, fechaLarga } from './resumenInicio';
 
 // Marca de versión: aparece chica al final del Inicio para saber de un vistazo qué versión está publicada
-const VERSION = 'Inicio 3 nov 2026 · tablero';
+const VERSION = 'Inicio 4 nov 2026 · tablero + necropsia';
 
 // "1 cada 19 h": el ritmo dicho en frecuencia, como lo dicen los observatorios.
 // Vive aquí (y no se importa) para que el Inicio compile aunque resumenInicio.js todavía no se haya actualizado.
@@ -152,6 +152,13 @@ export default function HomeInicio({ perfil, grupos, onIr }) {
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><MapPin size={26} color={P.guinda} aria-hidden="true" /><div style={NUM}>{a.hallazgos30}</div></div>
                 <div style={SUB}>en 30 días</div>
                 <div style={{ fontSize: 14, color: P.gris, marginTop: 5 }}>{a.hallazgosTotal} en total · último {fechaLarga(a.ultimoHallazgo)}</div>
+              </PostIt>
+            )}
+            {a.pendientesNecropsia > 0 && (
+              <PostIt titulo="En espera de necropsia" fondo={PIT.arena} ayuda="Muertes no constitutivas de delito: no cuentan como homicidio doloso hasta que el Ministerio Público las reclasifique.">
+                <div style={NUM}>{a.pendientes30 || 0}</div>
+                <div style={SUB}>en 30 días</div>
+                <div style={{ fontSize: 14, color: P.gris, marginTop: 5 }}>{a.pendientesNecropsia} en total{a.pendientesViejos > 0 ? ' · ' + a.pendientesViejos + ' con más de 30 días' : ''}</div>
               </PostIt>
             )}
             <PostIt titulo="En el mapa" fondo={PIT.oro}>

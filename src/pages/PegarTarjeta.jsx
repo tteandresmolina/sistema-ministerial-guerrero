@@ -59,6 +59,14 @@ async function ubicar(t) {
 }
 
 // ---------- Excel del mes (misma plantilla que manda el regional; el importador la lee igual) ----------
+// Una sola forma de escribir "no constitutiva de delito" en la base, la escriban como la escriban
+// ("Homicidio no constitutivo de delito", "muerte no constitutiva…"): así la estadística no queda con dos redacciones.
+export function delitoParaGuardar(d) {
+  const t = String(d || '').replace(/\s+/g, ' ').trim();
+  const m = t.match(/no constitutiv[oa]\s+de\s+delito(?:\s*\(([^)]*)\))?/i);
+  return m ? 'MUERTE NO CONSTITUTIVA DE DELITO' + (m[1] && m[1].trim() ? ' (' + m[1].trim().toUpperCase() + ')' : '') : t;
+}
+
 export const ENCABEZADOS = ['COORDINACION', 'FECHA', 'DELITO', 'CARPETA DE INVESTIGACIÓN', 'LUGAR DE LOS HECHOS', 'CARTULINA LOCALIZADA',
   'CALIBRE DE ARMA', 'VEHICULO ASEGURADO', 'DROGA ASEGURADA', 'HORA', 'LATITUD', 'LONGITUD'];
 const siNo = (v) => (v === true ? 'SI' : v === false ? 'NO' : '');
@@ -80,10 +88,17 @@ export function filasExcel(registros) {
 }
 
 export function libroDelMes(registros) {
-  const ws = XLSX.utils.json_to_sheet(filasExcel(registros), { header: ENCABEZADOS });
-  ws['!cols'] = [{ wch: 16 }, { wch: 12 }, { wch: 46 }, { wch: 26 }, { wch: 60 }, { wch: 12 }, { wch: 14 }, { wch: 12 }, { wch: 12 }, { wch: 8 }, { wch: 11 }, { wch: 11 }];
+  const anchos = [{ wch: 16 }, { wch: 12 }, { wch: 46 }, { wch: 26 }, { wch: 60 }, { wch: 12 }, { wch: 14 }, { wch: 12 }, { wch: 12 }, { wch: 8 }, { wch: 11 }, { wch: 11 }];
+  // Dos hojas: los homicidios dolosos y las muertes no constitutivas de delito (en espera de necropsia), como las lleva la estadística mensual
+  const dolosos = registros.filter((r) => !clasificarDelito(r.delito).pendiente);
+  const noConst = registros.filter((r) => clasificarDelito(r.delito).pendiente);
+  const ws = XLSX.utils.json_to_sheet(filasExcel(dolosos), { header: ENCABEZADOS });
+  ws['!cols'] = anchos;
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'HOMICIDIOS DOLOSOS');
+  const wn = XLSX.utils.json_to_sheet(filasExcel(noConst), { header: ENCABEZADOS });
+  wn['!cols'] = anchos;
+  XLSX.utils.book_append_sheet(wb, wn, 'NO CONSTITUTIVAS');
   return wb;
 }
 
@@ -165,18 +180,19 @@ export default function PegarTarjeta({ perfil, onGuardado }) {
   const [tarjetas, setTarjetas] = useState([]);
   const [estado, setEstado] = useState({});   // id -> { tipo: 'trabajando' | 'ok' | 'error', texto }
   const [dup, setDup] = useState({});          // id -> 'carpeta' | 'posible'
+  const [dupInfo, setDupInfo] = useState({});    // id -> { delito, obs } de la carpeta que ya está registrada
   const [leido, setLeido] = useState(false);
 
   const poner = (id, cambios) => setTarjetas((ts) => ts.map((t) => (t.id === id ? { ...t, ...cambios } : t)));
 
   const revisarDuplicados = async (ts) => {
-    const marca = {};
+    const marca = {}; const info = {};
     try {
       const cis = ts.map((t) => t.ci).filter((c) => /\d{10,}/.test(c));
-      const existentes = new Set();
+      const existentes = new Set(); const datosCI = {};
       if (cis.length) {
-        const { data } = await supabase.from('incidencia_regional').select('carpeta_investigacion').in('carpeta_investigacion', cis);
-        (data || []).forEach((r) => existentes.add(r.carpeta_investigacion));
+        const { data } = await supabase.from('incidencia_regional').select('carpeta_investigacion, delito, observaciones').in('carpeta_investigacion', cis);
+        (data || []).forEach((r) => { existentes.add(r.carpeta_investigacion); datosCI[r.carpeta_investigacion] = { delito: r.delito || '', obs: r.observaciones || '' }; });
       }
       const fechas = [...new Set(ts.map((t) => t.fecha).filter(Boolean))];
       let mismos = [];
@@ -186,11 +202,35 @@ export default function PegarTarjeta({ perfil, onGuardado }) {
         mismos = data || [];
       }
       ts.forEach((t) => {
-        if (existentes.has(t.ci)) marca[t.id] = 'carpeta';
+        if (existentes.has(t.ci)) { marca[t.id] = 'carpeta'; info[t.id] = datosCI[t.ci]; }
         else if (t.hora && mismos.some((r) => r.zona === t.sector && String(r.fecha).slice(0, 10) === t.fecha && r.hora_conocimiento && String(r.hora_conocimiento).slice(0, 5) === t.hora)) marca[t.id] = 'posible';
       });
     } catch (e) { /* si falla la revisión, el guardado vuelve a revisar la carpeta */ }
-    setDup(marca);
+    setDup(marca); setDupInfo(info);
+  };
+
+  // Una carpeta ya registrada puede llegar con otra tipificación (por ejemplo, la necropsia mostró que sí fue homicidio):
+  // en vez de duplicarla se ofrece reclasificarla, y la nota queda en las observaciones del caso.
+  const normDelito = (d) => String(d || '').replace(/\s+/g, ' ').trim().toUpperCase();
+  const puedeReclasificar = (t) => !!(dup[t.id] === 'carpeta' && dupInfo[t.id] && t.delito && esTipoHomicidio(t.delito, t.asunto) && normDelito(dupInfo[t.id].delito) !== normDelito(t.delito));
+  const reclasificar = async (t) => {
+    const info = dupInfo[t.id]; if (!info) return;
+    setEstado((e) => ({ ...e, [t.id]: { tipo: 'trabajando', texto: 'Reclasificando…' } }));
+    const hoy = new Date();
+    const cuando = String(hoy.getDate()).padStart(2, '0') + '/' + String(hoy.getMonth() + 1).padStart(2, '0') + '/' + hoy.getFullYear();
+    const nuevo = delitoParaGuardar(t.delito);
+    const nota = 'Reclasificada de "' + (info.delito || 'sin tipificar') + '" a "' + nuevo + '" el ' + cuando + ' (tarjeta informativa).';
+    const { data, error } = await supabase.from('incidencia_regional')
+      .update({ delito: nuevo, observaciones: info.obs ? info.obs + ' | ' + nota : nota, updated_at: new Date().toISOString() })
+      .eq('carpeta_investigacion', t.ci).select('id');
+    if (error || !data || data.length === 0) {
+      setEstado((e) => ({ ...e, [t.id]: { tipo: 'error', texto: 'No se pudo reclasificar' + (error ? ': ' + error.message : ' (sin permiso o la carpeta ya no existe).') } }));
+      return;
+    }
+    setDupInfo((x) => ({ ...x, [t.id]: { ...info, delito: nuevo, obs: info.obs ? info.obs + ' | ' + nota : nota } }));
+    const pend = clasificarDelito(t.delito).pendiente;
+    setEstado((e) => ({ ...e, [t.id]: { tipo: 'ok', texto: 'Reclasificada. ' + (pend ? 'Queda en espera de necropsia: no cuenta como homicidio doloso.' : 'Ahora cuenta como homicidio doloso, con la fecha del hecho.') } }));
+    if (onGuardado) onGuardado();
   };
 
   const leer = async () => {
@@ -222,7 +262,7 @@ export default function PegarTarjeta({ perfil, onGuardado }) {
       if (t.lat != null && t.lng != null) ub = { lat: t.lat, lng: t.lng, precision: 'tarjeta' };
       else { setEstado((e) => ({ ...e, [t.id]: { tipo: 'trabajando', texto: 'Buscando la ubicación…' } })); ub = await ubicar(t); }
       const fila = {
-        carpeta_investigacion: t.ci, region: REGION, zona: t.sector, fecha: t.fecha, delito: t.delito || null,
+        carpeta_investigacion: t.ci, region: REGION, zona: t.sector, fecha: t.fecha, delito: delitoParaGuardar(t.delito) || null,
         lugar_hechos: t.lugar, observaciones: null,
         coordenadas_lat: ub ? ub.lat : null, coordenadas_lng: ub ? ub.lng : null, ubicacion_confirmada: !!(ub && ub.precision === 'tarjeta'),
         lugar_es_hospital: t.esHospital, cartulina: t.cartulina, vehiculo_asegurado: null, droga_asegurada: null,
@@ -275,6 +315,12 @@ export default function PegarTarjeta({ perfil, onGuardado }) {
             </div>
 
             {dup[t.id] === 'carpeta' && <div style={{ background: '#fdecea', color: C.guinda, borderRadius: 8, padding: '8px 12px', fontSize: 16, fontWeight: 700, marginBottom: 10 }}><AlertTriangle size={16} style={{ verticalAlign: -2 }} /> Esa carpeta ya está registrada. No se va a duplicar.</div>}
+            {puedeReclasificar(t) && !guardada && (
+              <div style={{ background: '#fff8e1', border: '1px solid #f0d58a', borderRadius: 8, padding: '10px 12px', fontSize: 16, color: C.navy, marginBottom: 10, display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+                <span style={{ flex: 1, minWidth: 240 }}>Está registrada como <strong>{dupInfo[t.id].delito || 'sin tipificar'}</strong>. Esta tarjeta dice <strong>{t.delito}</strong>.</span>
+                <button onClick={() => reclasificar(t)} disabled={est && est.tipo === 'trabajando'} style={{ ...btnPrimario, opacity: est && est.tipo === 'trabajando' ? 0.5 : 1 }}>Reclasificar</button>
+              </div>
+            )}
             {dup[t.id] === 'posible' && <div style={{ background: '#fff8e1', color: C.ambar, borderRadius: 8, padding: '8px 12px', fontSize: 16, fontWeight: 700, marginBottom: 10 }}><AlertTriangle size={16} style={{ verticalAlign: -2 }} /> Posible duplicado: ya hay un caso del mismo sector, fecha y hora de aviso.</div>}
             {revisar(t).map((a, k) => <div key={k} style={{ fontSize: 16, color: C.ambar, marginBottom: 4 }}>• {a}</div>)}
 

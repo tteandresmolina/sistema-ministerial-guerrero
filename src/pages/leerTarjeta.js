@@ -30,6 +30,15 @@ function limpiarTexto(t) {
 }
 
 function dividirTarjetas(limpio) {
+  // Cada tarjeta trae su línea de fecha ("Acapulco, Guerrero; a 31 de octubre del 2026"): es la marca más confiable para separarlas,
+  // aunque unas traigan encabezado ("Tarjeta informativa…") y otras no (las de levantamiento cadavérico pegadas juntas).
+  const reFecha = /(?:^|\n)[ \t]*Acapulco,?\s*Guerrero[;,.]?\s*a\s+\d{1,2}\s+de\s+[a-zA-ZáéíóúÁÉÍÓÚ]+/gi;
+  const pos = []; let mm;
+  while ((mm = reFecha.exec(limpio))) pos.push(mm.index + (mm[0].charAt(0) === '\n' ? 1 : 0));
+  if (pos.length >= 2) {
+    const bloques = pos.map((p, i) => limpio.slice(p, i + 1 < pos.length ? pos[i + 1] : undefined)).filter((x) => x.replace(/\s/g, '').length > 120);
+    if (bloques.length >= 2) return bloques;
+  }
   const nT = (limpio.match(/TARJETA INFORMATIVA/gi) || []).length;
   if (nT < 2) return [limpio];
   const nF = (limpio.match(/FISCAL[IÍ]A GENERAL DEL ESTADO/gi) || []).length;
@@ -58,6 +67,29 @@ function valorDe(b, etiquetas) {
     if (misma) return misma;
     const sig = (m[2] || '').trim();
     if (sig && !/^[A-Za-zÁÉÍÓÚáéíóúÑñ .]{2,40}:/.test(sig) && !OTRA_ETIQUETA.test(sig)) return sig;
+  }
+  return '';
+}
+
+// El lugar puede ocupar varios renglones ("Avenida X…" y abajo "Hospital General…"): se juntan los que siguen
+// si parecen continuación de la dirección y se corta en el primer renglón vacío o la siguiente etiqueta.
+const CONTINUA_DIRECCION = /^(hospital|cl[ií]nica|centro de salud|cruz roja|imss|issste|frente|entre|esquina|a la altura|junto|c\.?\s?p\.?|col\.?|colonia|fracc|calle|avenida|av\.|carretera|km\b|lote|manzana|mz\b|[aá]rea|interior|exterior)/i;
+function lugarDe(b) {
+  const lineas = b.split('\n');
+  const et = /^[ \t]*(?:Lugar de intervenci[oó]n|Lugar de los hechos|Lugar del hecho|Ubicaci[oó]n|Lugar)[ \t]*(?:[:.][ \t]*(.*))?$/i;
+  for (let i = 0; i < lineas.length; i++) {
+    const m = lineas[i].match(et);
+    if (!m) continue;
+    const partes = [];
+    if ((m[1] || '').trim()) partes.push(m[1].trim());
+    for (let j = i + 1; j < lineas.length && j <= i + 5; j++) {
+      const l = lineas[j].trim();
+      if (!l) { if (partes.length) break; continue; }
+      if (OTRA_ETIQUETA.test(l) || /^[A-Za-zÁÉÍÓÚáéíóúÑñ .]{2,40}:/.test(l)) break;
+      if (partes.length && !CONTINUA_DIRECCION.test(l)) break;
+      partes.push(l);
+    }
+    if (partes.length) return partes.join(', ');
   }
   return '';
 }
@@ -114,7 +146,7 @@ function fechaDe(b, ci) {
 // "Coordenadas: 16.900250,-99.827278" → { lat, lng } si caen en la zona de Acapulco y Coyuca
 function coordenadasDe(b) {
   const v = valorDe(b, ['Coordenadas?', 'Coordenadas GPS', 'Ubicaci[oó]n GPS']);
-  const m = v.match(/(-?\d{1,3}\.\d{3,})\s*[,;\s]\s*(-?\d{1,3}\.\d{3,})/);
+  const m = v.match(/(-?\d{1,3}\.\d{3,})\s*[,;]?\s*(-?\d{1,3}\.\d{3,})/);   // "16.86,-99.87", "16.85 -99.84" y "16.8605549-99.871673"
   if (!m) return null;
   const la = parseFloat(m[1]); let lo = parseFloat(m[2]); if (lo > 0) lo = -lo;
   return la >= 16.4 && la <= 17.5 && lo >= -100.6 && lo <= -99.0 ? { lat: la, lng: lo } : null;
@@ -128,10 +160,14 @@ function leerUna(bloque, n) {
 
   const sectorCrudo = limpiarValor(valorDe(b, ['Sector', 'Coordinaci[oó]n', 'Zona']));
   const asunto = limpiarValor(valorDe(b, ['Asunto']));
-  const tipo = limpiarValor(valorDe(b, ['Tipo de hecho', 'Tipo de delito', 'Delito', 'Tipificaci[oó]n', 'Hecho']));
+  // El tipo puede venir en "Tipo de hecho", "Tipo de hecho delictivo", "Tipo de delito" o "Delito": si hay varios, gana el que dice homicidio
+  // o muerte no constitutiva (en algunas tarjetas "Tipo de hecho" describe la escena y el delito va en otra línea).
+  const candidatos = ['Tipo de hecho', 'Tipo de hecho delictivo', 'Tipo de delito', 'Delito', 'Tipificaci[oó]n', 'Hecho delictivo', 'Hecho']
+    .map((et) => limpiarValor(valorDe(b, [et]))).filter(Boolean);
+  const tipo = candidatos.find((c) => esTipoHomicidio(c, '')) || candidatos[0] || '';
 
   // El lugar puede ir en la misma línea de la etiqueta o en la línea siguiente
-  const lugar = limpiarValor(valorDe(b, ['Lugar de intervenci[oó]n', 'Lugar de los hechos', 'Lugar del hecho', 'Ubicaci[oó]n', 'Lugar']));
+  const lugar = limpiarValor(lugarDe(b) || valorDe(b, ['Lugar de intervenci[oó]n', 'Lugar de los hechos', 'Lugar del hecho', 'Ubicaci[oó]n', 'Lugar']));
 
   // Carpeta de investigación: con etiqueta, o un número suelto de 20 dígitos
   let ci = '';
@@ -142,7 +178,10 @@ function leerUna(bloque, n) {
   const mcal = b.match(/calibre\s*(\.?\d{2,3})\s*(mm|milimetros)?/i) || b.match(/\b(\d{1,2})\s?mm\b/i);
   const calibre = mcal ? (mcal[1].replace(/\s/g, '') + ((mcal[2] || /mm/i.test(mcal[0])) ? 'MM' : '')).toUpperCase().replace(/MM+$/, 'MM') : '';
 
-  const delito = tipo.toUpperCase();
+  let delito = tipo.toUpperCase();
+  // "Persona privada de la vida, muerte no constitutiva de delito (accidente de trabajo)" → siempre el mismo texto, con su aclaración
+  const mnc = tipo.match(/no constitutiv[oa]\s+de\s+delito(?:\s*\(([^)]*)\))?/i);
+  if (mnc) delito = 'MUERTE NO CONSTITUTIVA DE DELITO' + (mnc[1] && mnc[1].trim() ? ' (' + mnc[1].trim().toUpperCase() + ')' : '');
   let sector = normalizarSector(sectorCrudo);
   // Si la tarjeta no trae la etiqueta del sector se deduce, en este orden: de lo que dice el texto ("turno del Sector Zapata"),
   // de la unidad de la carpeta de investigación y, al final, del nombre de un sector en el lugar. Siempre se avisa para que se verifique.
