@@ -11,7 +11,18 @@ import { supabase } from '../supabaseClient';
 import { Target, ArrowRight, MapPin } from 'lucide-react';
 import { haceCuanto } from './Campana';
 import Entorno from './Entorno';
-import { analizarCasos, construirResumen, construirAtencion, fechaLarga, frecuenciaTexto } from './resumenInicio';
+import { analizarCasos, construirResumen, construirAtencion, fechaLarga } from './resumenInicio';
+
+// Marca de versión: aparece chica al final del Inicio para saber de un vistazo qué versión está publicada
+const VERSION = 'Inicio 4 nov 2026 · tablero + necropsia';
+
+// "1 cada 19 h": el ritmo dicho en frecuencia, como lo dicen los observatorios.
+// Vive aquí (y no se importa) para que el Inicio compile aunque resumenInicio.js todavía no se haya actualizado.
+function frecuenciaTexto(porDia) {
+  if (!porDia || porDia <= 0) return '—';
+  if (porDia >= 1) { const h = Math.round(24 / porDia); return h <= 1 ? '1 por hora' : '1 cada ' + h + ' h'; }
+  const d = Math.round(1 / porDia); return '1 cada ' + d + (d === 1 ? ' día' : ' días');
+}
 
 const P = { tinta: '#1f2937', gris: '#5a6478', guinda: '#8b1e1e', guindaSuave: '#8e4f54', oro: '#b6905a', oroTexto: '#7a5a22', marfil: '#f7f1e6', borde: '#e8e2d4', verde: '#4a6b3a', fondoItem: '#fbf9f4', numero: '#7b1e3a' };
 const PIT = { oro: '#fbf3d9', guinda: '#f6e4e6', arena: '#f1ece0' };
@@ -119,7 +130,7 @@ export default function HomeInicio({ perfil, grupos, onIr }) {
               <div style={NUM}>{a.n30}</div>
               <div style={SUB}>homicidios</div>
               <Cambio pct={a.cambioPct} texto="vs 30 días previos" />
-              {a.cambioAnioPct !== null && <Cambio pct={a.cambioAnioPct} texto={'vs hace un año (' + a.nAnio + ')'} />}
+              {a.cambioAnioPct != null && <Cambio pct={a.cambioAnioPct} texto={'vs hace un año (' + a.nAnio + ')'} />}
               <Tendencia valores={a.semanas.map((s) => s.n)} />
             </PostIt>
             <PostIt titulo="Ritmo" fondo={PIT.guinda}>
@@ -141,6 +152,13 @@ export default function HomeInicio({ perfil, grupos, onIr }) {
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><MapPin size={26} color={P.guinda} aria-hidden="true" /><div style={NUM}>{a.hallazgos30}</div></div>
                 <div style={SUB}>en 30 días</div>
                 <div style={{ fontSize: 14, color: P.gris, marginTop: 5 }}>{a.hallazgosTotal} en total · último {fechaLarga(a.ultimoHallazgo)}</div>
+              </PostIt>
+            )}
+            {a.pendientesNecropsia > 0 && (
+              <PostIt titulo="En espera de necropsia" fondo={PIT.arena} ayuda="Muertes no constitutivas de delito: no cuentan como homicidio doloso hasta que el Ministerio Público las reclasifique.">
+                <div style={NUM}>{a.pendientes30 || 0}</div>
+                <div style={SUB}>en 30 días</div>
+                <div style={{ fontSize: 14, color: P.gris, marginTop: 5 }}>{a.pendientesNecropsia} en total{a.pendientesViejos > 0 ? ' · ' + a.pendientesViejos + ' con más de 30 días' : ''}</div>
               </PostIt>
             )}
             <PostIt titulo="En el mapa" fondo={PIT.oro}>
@@ -220,6 +238,7 @@ export default function HomeInicio({ perfil, grupos, onIr }) {
           )}
         </div>
       </div>
+      <div style={{ marginTop: 14, textAlign: 'right', fontSize: 12, color: '#9a9484' }}>{VERSION}</div>
     </div>
   );
 }

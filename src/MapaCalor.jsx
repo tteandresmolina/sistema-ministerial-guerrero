@@ -479,6 +479,7 @@ function BloqueProyeccion({ meses, sinCasos }) {
 var PIT_ORO = '#fbf3d9', PIT_GUINDA = '#f6e4e6', PIT_ARENA = '#f1ece0';
 var NUM_GRANDE = { fontSize: 46, fontWeight: 800, color: '#7b1e3a', lineHeight: 1.05 };
 var NUM_MEDIO = { fontSize: 34, fontWeight: 800, color: '#7b1e3a', lineHeight: 1.1 };
+var SUB_TABLERO = { fontSize: 16, color: '#374151' };
 
 // Mini línea de tendencia (sparkline): forma de la serie, sin ejes ni números. Base en cero para no exagerar los cambios.
 // parcial: el último valor real es de un mes en curso (se dibuja punteado y hueco). extra: valores estimados (punteado dorado).
@@ -640,6 +641,7 @@ export default function MapaCalor({ user, onIniciarProyecto, onImportar, seccion
   const [reproDia, setReproDia] = useState(null); // reproducción del periodo: muestra los casos hasta este día (null = todos)
   const [filtrosAbiertos, setFiltrosAbiertos] = useState(false); // los filtros se muestran como una línea resumen y se abren si se piden
   const [capasAbiertas, setCapasAbiertas] = useState(false); // las capas del mapa se muestran solo si se piden
+  const [verPendientes, setVerPendientes] = useState(true);   // capa aparte (gris): muertes no constitutivas de delito en espera de necropsia
   const [verCompleto, setVerCompleto] = useState(false);   // el panel abre en el tablero ejecutivo; el análisis detallado se pide
   const [chipAbierto, setChipAbierto] = useState(null);
   const [leyendaAbierta, setLeyendaAbierta] = useState(false);
@@ -776,6 +778,8 @@ export default function MapaCalor({ user, onIniciarProyecto, onImportar, seccion
   const sinUbicarFiltrados = sinUbicar.filter(function(p) { return filtros[p.fuente] && pasaFiltros(p); });
   const puntosAnalisis = puntosConUbicacion.concat(sinUbicarFiltrados);   // el panel cuenta TODOS los casos, con o sin ubicación confirmada
   const pendientesFiltrados = pendientes.filter(function(p) { return filtros[p.fuente] && pasaFiltros(p); });
+  // Se dibujan en una capa aparte (gris): no cuentan como homicidio, no entran a las zonas ni al mapa de calor
+  const pendientesMapa = pendientesFiltrados.filter(function(p) { return p.lat != null && !isNaN(p.lat) && p.lng != null && !isNaN(p.lng); });
   const avisoPendientes = pendientesFiltrados.length > 0 ? (
     <div style={{ marginTop: 8, fontSize: 15, color: '#3f4a63', background: '#eef1f6', border: '1px solid #c9d1e0', borderRadius: 8, padding: '8px 12px' }}>
       <strong>{pendientesFiltrados.length} caso{pendientesFiltrados.length > 1 ? 's' : ''} en espera de necropsia</strong> (muerte no constitutiva de delito): no se cuenta{pendientesFiltrados.length > 1 ? 'n' : ''} como homicidio doloso hasta que el Ministerio Público los reclasifique.
@@ -974,13 +978,26 @@ export default function MapaCalor({ user, onIniciarProyecto, onImportar, seccion
       var etiqueta = '<div style="transform:translate(-50%,-100%);background:#8b1e1e;color:#fff;font:700 12px Segoe UI,sans-serif;padding:2px 9px;border-radius:10px;white-space:nowrap;box-shadow:0 1px 3px rgba(0,0,0,.35)">Zona ' + z.numero + ' · ' + z.n + ' casos</div>';
       window.L.marker([z.centro.lat + radio / 111320, z.centro.lng], { interactive: false, keyboard: false, icon: window.L.divIcon({ className: '', iconSize: [0, 0], html: etiqueta }) }).addTo(layerGroup.current);
     });
+    if (verPendientes) {
+      pendientesMapa.forEach(function(p) {
+        window.L.circleMarker([p.lat, p.lng], { radius: 7, fillColor: '#8a8f98', color: '#ffffff', weight: 2, opacity: 1, fillOpacity: 0.9 })
+          .addTo(layerGroup.current)
+          .bindPopup('<div style="font-family:Segoe UI,sans-serif;min-width:190px">' +
+            '<div style="font-weight:800;font-size:15px;color:#4b5563;margin-bottom:2px">En espera de necropsia</div>' +
+            '<div style="font-size:12px;color:#374151">Muerte no constitutiva de delito: no cuenta como homicidio doloso.</div>' +
+            (p.sector ? '<div style="font-size:11px;color:#666;margin-top:3px">📍 ' + esc(p.sector) + '</div>' : '') +
+            (p.fecha ? '<div style="font-size:11px;color:#666">📅 ' + esc(String(p.fecha).slice(0, 10)) + '</div>' : '') +
+            (p.descripcion ? '<div style="font-size:11px;color:#333;margin-top:4px;max-width:220px;word-wrap:break-word">' + esc(String(p.descripcion).substring(0, 120)) + '</div>' : '') +
+            '</div>');
+      });
+    }
     if (focoSel) {
       mapInstance.current.fitBounds(window.L.latLngBounds(focoSel.miembros.map(function(m) { return [m.lat, m.lng]; })), { padding: [70, 70], maxZoom: 15 });
     } else if (!reproDia && puntosFiltrados.length > 0) {
       var bounds = window.L.latLngBounds(puntosFiltrados.map(function(p) { return [p.lat, p.lng]; }));
       mapInstance.current.fitBounds(bounds, { padding: [40, 40], maxZoom: 12 });
     }
-  }, [leafletReady, puntosFiltrados, reproDia, numerar]);
+  }, [leafletReady, puntosFiltrados, reproDia, numerar, verPendientes, pendientesMapa.length]);
 
   // Si cambian los filtros o las capas, la zona elegida ya no corresponde: se quita
   useEffect(function() { setFocoSel(null); setReproDia(null); }, [fechaDesde, fechaHasta, filtroDelito, filtroMunicipio, filtros]);
@@ -1115,6 +1132,13 @@ export default function MapaCalor({ user, onIniciarProyecto, onImportar, seccion
             <input type="checkbox" checked={soloConfirmadas} onChange={function(e) { setSoloConfirmadas(e.target.checked); }} style={{ width: 18, height: 18 }} />
             <span title="El mapa y las zonas usan solo ubicaciones confirmadas; el panel cuenta todos los casos">Solo confirmadas</span>
           </label>
+          {pendientesFiltrados.length > 0 && (
+            <label style={{ display: 'inline-flex', alignItems: 'center', gap: 8, fontSize: 16, fontWeight: 600, color: C.darkBlue, cursor: 'pointer' }}>
+              <input type="checkbox" checked={verPendientes} onChange={function(e) { setVerPendientes(e.target.checked); }} style={{ width: 18, height: 18 }} />
+              <span style={{ width: 12, height: 12, borderRadius: 6, background: '#8a8f98', display: 'inline-block' }} />
+              <span title="Muertes no constitutivas de delito: se ven en gris y no cuentan como homicidio ni entran a las zonas">En espera de necropsia ({pendientesMapa.length})</span>
+            </label>
+          )}
           <button onClick={function() { setFiltrosAbiertos(!filtrosAbiertos); }} aria-expanded={filtrosAbiertos}
             style={{ background: 'none', border: '1.5px solid #c7cfe0', borderRadius: 7, padding: '6px 14px', color: C.darkBlue, fontSize: 16, fontWeight: 600, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6, minHeight: 40 }}>
             {filtrosAbiertos ? 'Cerrar' : 'Filtros'} {filtrosAbiertos ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
@@ -1182,6 +1206,7 @@ export default function MapaCalor({ user, onIniciarProyecto, onImportar, seccion
         <div style={{ marginTop: 8, fontSize: 15, color: '#374151', lineHeight: 1.55, background: '#fbf3d9', borderRadius: 8, padding: '10px 14px' }}>
           <div>El color de cada punto indica cuántos casos hay a menos de {distanciaKm} km: {NIVELES_CALOR.map(function(n) { return n.label.toLowerCase() + ' (' + n.casos + ')'; }).join(', ')}.</div>
           <div>El resplandor marca solo las zonas de atención prioritaria.</div>
+          <div>Los puntos grises son muertes no constitutivas de delito en espera de necropsia: no cuentan como homicidio ni entran a las zonas.</div>
           <div>{numerar ? 'El número en cada punto es el orden cronológico (1 = el más antiguo del periodo mostrado).' : 'Con más de ' + LIMITE_NUMEROS + ' casos los números se ocultan para que el mapa se lea; filtra por fechas para verlos.'}</div>
         </div>
       )}
@@ -1246,6 +1271,16 @@ export default function MapaCalor({ user, onIniciarProyecto, onImportar, seccion
                           : <div><div style={NUM_GRANDE}>—</div><div style={{ fontSize: 16, color: '#374151' }}>faltan {proyeccion.faltan} meses</div></div>}
                         {f1 && <div style={{ marginTop: 6 }}><MiniLinea valores={realesProy} extra={extraProy} /></div>}
                       </PostIt>
+                      {pendientesFiltrados.length > 0 && (function() {
+                        var pendMes = act ? pendientesFiltrados.filter(function(p) { return String(p.fecha || '').slice(0, 7) === act.clave; }).length : 0;
+                        return (
+                          <PostIt titulo="En espera de necropsia" fondo={PIT_ARENA}>
+                            <div style={NUM_GRANDE}>{pendMes}</div>
+                            <div style={SUB_TABLERO}>{act ? act.nombre.toLowerCase() : 'este mes'}</div>
+                            <div style={{ fontSize: 14, color: '#5a4a1e', marginTop: 5 }}>{pendientesFiltrados.length} en total</div>
+                          </PostIt>
+                        );
+                      })()}
                       <PostIt titulo="Zonas de atención" fondo={PIT_ORO}>
                         <div style={NUM_GRANDE}>{zonas ? zonas.length : 0}</div>
                         <div style={{ fontSize: 16, color: '#374151' }}>{mejorZona ? <span>mayor: <strong>{mejorZona.corto || mejorZona.nombre || 'Zona 1'}</strong> · {mejorZona.n}</span> : 'sin zonas'}</div>

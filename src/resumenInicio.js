@@ -72,6 +72,14 @@ export function analizarCasos(casos, hoy = new Date()) {
     for (let b = 0; b < 8; b++) { const d = aDia(f); if (d >= aDia(semanas[b].ini) && d <= aDia(semanas[b].fin)) { semanas[b].n++; break; } }
   });
 
+  // Muertes no constitutivas de delito (en espera de necropsia): las recientes y las que llevan más de 30 días sin reclasificarse
+  let pendientes30 = 0, pendientesViejos = 0;
+  pendientes.forEach((c) => {
+    if (!c.fecha) return;
+    const edad = hoyD - aDia(String(c.fecha).slice(0, 10));
+    if (edad >= 0 && edad < 30) pendientes30++; else if (edad >= 30) pendientesViejos++;
+  });
+
   const zonas = Object.entries(porZona).sort((a, b) => b[1] - a[1]);
   const topZona = zonas[0] ? { zona: zonas[0][0], n: zonas[0][1], pct: Math.round(zonas[0][1] / n30 * 100) } : null;
   const mediosOrden = Object.entries(medios).filter((e) => e[0] !== 'Por determinar').sort((a, b) => b[1] - a[1]);
@@ -93,7 +101,7 @@ export function analizarCasos(casos, hoy = new Date()) {
     semanas: semanas.map((s) => ({ ...s, etiqueta: etiquetaSemana(s.ini, s.fin) })),
     promSemana: prom, repunte, zonas, topZona, medioTop,
     sinUbicar, sinConfirmar, pctUbicados: total > 0 ? Math.round((total - sinUbicar) / total * 100) : null,
-    pendientesNecropsia: pendientes.length, porMes,
+    pendientesNecropsia: pendientes.length, pendientes30, pendientesViejos, porMes,
     hallazgos30, hallazgos7, hallazgosTotal, ultimoHallazgo,
   };
 }
@@ -136,6 +144,9 @@ export function construirAtencion(a, { rol, hoy = new Date(), avisosSinLeer = 0 
   }
   if (a && a.sinUbicar > 0) {
     items.push({ nivel: 'media', titulo: a.sinUbicar + (a.sinUbicar === 1 ? ' caso sin ubicar' : ' casos sin ubicar'), detalle: a.sinConfirmar > 0 ? 'Y ' + a.sinConfirmar + ' con la ubicación sin confirmar' : 'Cuentan en el panel, pero no aparecen en el mapa', accion: rol === 'mando' ? { texto: 'Revisar ubicaciones', seccion: 'sara', tab: 'importar' } : null });
+  }
+  if (a && a.pendientesViejos > 0) {
+    items.push({ nivel: 'media', titulo: a.pendientesViejos + (a.pendientesViejos === 1 ? ' caso lleva' : ' casos llevan') + ' más de 30 días en espera de necropsia', detalle: 'Pide al MP el resultado para reclasificarlos o confirmarlos', accion: { texto: 'Ver en el mapa', seccion: 'sara', tab: 'mapa' } });
   }
   if (a && a.pendientesNecropsia > 0) {
     items.push({ nivel: 'info', titulo: a.pendientesNecropsia + (a.pendientesNecropsia === 1 ? ' caso en espera de necropsia' : ' casos en espera de necropsia'), detalle: 'No cuentan como homicidio doloso hasta que el MP los reclasifique', accion: null });
