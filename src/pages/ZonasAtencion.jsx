@@ -117,6 +117,11 @@ const textoZona = (f) => {
   const nombres = f.sectores.map(([s]) => s);
   return nombres.length <= 1 ? (nombres[0] || 'Zona sin sector') : nombres.slice(0, -1).join(', ') + ' y ' + nombres[nombres.length - 1];
 };
+// Versión corta para la pantalla ampliada: los dos sectores con más casos y cuántos más hay
+const textoCorto = (f) => {
+  const n = f.sectores.map(([s]) => s);
+  return n.length <= 2 ? (n.join(' y ') || 'Zona sin sector') : n[0] + ', ' + n[1] + ' y ' + (n.length - 2) + (n.length - 2 === 1 ? ' más' : ' más');
+};
 const textoRango = (f) => (f.desde && f.hasta ? 'del ' + ddmm(f.desde) + ' al ' + ddmm(f.hasta) : 'sin fechas');
 const fechaLarga = (d) => String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0') + '/' + d.getFullYear();
 const km1 = (m) => (Math.round(m / 100) / 10).toFixed(1);
@@ -144,7 +149,7 @@ export default function ZonasAtencion({ puntos, seleccionada, onSeleccionar, onI
   // Avisa al mapa qué zonas hay para que las marque siempre (solo cuando cambian)
   const firma = km + '|' + focos.map((f) => f.clave + ':' + f.n).join(',');
   useEffect(() => {
-    if (onZonas) onZonas(focos.map((f, i) => ({ clave: f.clave, numero: i + 1, n: f.n, centro: f.centro, radioM: f.radioM, miembros: f.miembros.map((m) => ({ lat: m.lat, lng: m.lng })) })));
+    if (onZonas) onZonas(focos.map((f, i) => ({ clave: f.clave, numero: i + 1, nombre: textoZona(f), corto: textoCorto(f), n: f.n, centro: f.centro, radioM: f.radioM, miembros: f.miembros.map((m) => ({ lat: m.lat, lng: m.lng })) })));
   }, [firma]);
 
   const cambiarDistancia = (k) => { setKm(k); if (onSeleccionar) onSeleccionar(null); };
@@ -191,8 +196,7 @@ export default function ZonasAtencion({ puntos, seleccionada, onSeleccionar, onI
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 10, margin: '8px 0 12px', fontSize: 15, color: '#374151' }}>
-        <span><strong>{MIN_CASOS} o más homicidios en un mes</strong>, a no más de {km} km entre sí</span>
-        <span style={{ color: C.gray }}>· {puntos.length} casos en el mapa{sinUbicar > 0 ? ' · ' + sinUbicar + ' sin ubicar' : ''}</span>
+        <span><strong>{MIN_CASOS}+ casos en 30 días</strong> a ≤ {km} km</span>
         <button onClick={() => setVerInfo(!verInfo)} style={{ background: 'none', border: 'none', color: C.guinda, fontSize: 14, fontWeight: 700, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4, padding: '6px 4px', minHeight: 36 }}>
           <Info size={15} /> {verInfo ? 'Ocultar' : '¿Cómo se calcula?'}
         </button>
@@ -215,16 +219,15 @@ export default function ZonasAtencion({ puntos, seleccionada, onSeleccionar, onI
           {focos.map((f, i) => {
             const activa = seleccionada === f.clave;
             return (
-              <div key={f.clave} style={{ border: '2px solid ' + (activa ? C.guinda : C.border), background: activa ? '#fbf1f1' : C.white, borderRadius: 10, padding: 14 }}>
+              <div key={f.clave} style={{ border: '2px solid ' + (activa ? C.guinda : '#e6d9b8'), background: activa ? '#fbf1f1' : '#fbf3d9', borderRadius: 12, padding: 14, boxShadow: '0 2px 6px rgba(90,74,30,0.12)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 8 }}>
-                  <span style={{ fontSize: 16, fontWeight: 800, color: C.navy }}>Zona {i + 1}</span>
+                  <span style={{ fontSize: 17, fontWeight: 800, color: C.guinda }}>Zona {i + 1}</span>
                   <span style={{ background: C.guinda, color: C.white, borderRadius: 14, padding: '3px 12px', fontSize: 14, fontWeight: 800, whiteSpace: 'nowrap' }}>{f.n} casos</span>
                 </div>
                 <div style={{ fontSize: 15, fontWeight: 700, color: '#374151', marginTop: 6 }}>{textoSectores(f)}</div>
                 <div style={{ fontSize: 14, color: C.gray, marginTop: 4 }}>
                   {textoRango(f)}{f.porSemana ? ' · ≈ ' + f.porSemana + ' por semana' : ''}
                 </div>
-                {f.delito && f.delito.n >= 2 && <div style={{ fontSize: 13, color: C.gray, marginTop: 4 }}>Más frecuente: {f.delito.valor} ({f.delito.n})</div>}
                 <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 12 }}>
                   <button onClick={() => onSeleccionar && onSeleccionar(activa ? null : { clave: f.clave, centro: f.centro, radioM: f.radioM, miembros: f.miembros.map((m) => ({ lat: m.lat, lng: m.lng })) })}
                     style={{ ...btn, background: activa ? C.guinda : 'transparent', color: activa ? C.white : C.guinda, border: '2px solid ' + C.guinda }}>
@@ -232,7 +235,7 @@ export default function ZonasAtencion({ puntos, seleccionada, onSeleccionar, onI
                   </button>
                   {onIniciarProyecto && (
                     <button onClick={() => iniciar(f)} style={{ ...btn, background: C.gold, color: C.white, border: 'none' }}>
-                      Iniciar plan de acción para esta zona
+                      Plan de acción
                     </button>
                   )}
                 </div>

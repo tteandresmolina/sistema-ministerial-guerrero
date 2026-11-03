@@ -473,6 +473,120 @@ function BloqueProyeccion({ meses, sinCasos }) {
   );
 }
 
+// ---------------------------------------------------------------------------------------------------------
+// Tablero ejecutivo: "post-its" con un número grande y casi nada de texto (estilo observatorio). Lo demás queda en "Ver análisis completo".
+// ---------------------------------------------------------------------------------------------------------
+var PIT_ORO = '#fbf3d9', PIT_GUINDA = '#f6e4e6', PIT_ARENA = '#f1ece0';
+var NUM_GRANDE = { fontSize: 46, fontWeight: 800, color: '#7b1e3a', lineHeight: 1.05 };
+var NUM_MEDIO = { fontSize: 34, fontWeight: 800, color: '#7b1e3a', lineHeight: 1.1 };
+
+// Mini línea de tendencia (sparkline): forma de la serie, sin ejes ni números. Base en cero para no exagerar los cambios.
+// parcial: el último valor real es de un mes en curso (se dibuja punteado y hueco). extra: valores estimados (punteado dorado).
+function MiniLinea({ valores, extra, parcial }) {
+  var W = 160, H = 38, p = 4;
+  var ext = extra || [];
+  var todos = valores.concat(ext);
+  if (todos.length < 2) return null;
+  var max = Math.max.apply(null, todos.concat([1]));
+  var x = function(i) { return p + i * (W - 2 * p) / (todos.length - 1); };
+  var y = function(v) { return H - p - (H - 2 * p) * (v / max); };
+  var n = valores.length;
+  var tramoFirme = parcial && n > 2 ? valores.slice(0, n - 1) : valores;
+  var pts = function(arr, desde) { return arr.map(function(v, i) { return x(desde + i) + ',' + y(v); }).join(' '); };
+  var ult = n - 1;
+  return (
+    <svg viewBox={'0 0 ' + W + ' ' + H} style={{ width: '100%', height: 38, display: 'block' }} role="img" aria-label="Tendencia de los últimos meses">
+      <polyline points={pts(tramoFirme, 0)} fill="none" stroke="#8e4f54" strokeWidth="2.4" strokeLinejoin="round" strokeLinecap="round" />
+      {parcial && n > 2 && <line x1={x(n - 2)} y1={y(valores[n - 2])} x2={x(ult)} y2={y(valores[ult])} stroke="#8e4f54" strokeWidth="2.4" strokeDasharray="3 4" strokeLinecap="round" />}
+      {ext.length > 0 && <polyline points={x(ult) + ',' + y(valores[ult]) + ' ' + pts(ext, n)} fill="none" stroke="#b6905a" strokeWidth="2.4" strokeDasharray="3 4" strokeLinecap="round" strokeLinejoin="round" />}
+      <circle cx={x(ult)} cy={y(valores[ult])} r="3.6" fill={parcial ? '#fbf3d9' : '#8e4f54'} stroke="#8e4f54" strokeWidth="2" />
+      {ext.length > 0 && <circle cx={x(todos.length - 1)} cy={y(todos[todos.length - 1])} r="3.6" fill="#e2cf9c" stroke="#b6905a" strokeWidth="2" />}
+    </svg>
+  );
+}
+
+// "1 cada 19 h": el ritmo dicho como lo dicen los observatorios, en frecuencia y no en decimales
+function frecuenciaTexto(porDia) {
+  if (!porDia || porDia <= 0) return '—';
+  if (porDia >= 1) { var h = Math.round(24 / porDia); return h <= 1 ? '1 por hora' : '1 cada ' + h + ' h'; }
+  var d = Math.round(1 / porDia); return '1 cada ' + d + (d === 1 ? ' día' : ' días');
+}
+
+function PostIt({ titulo, fondo, children, ancho }) {
+  return (
+    <div className="sin-corte" style={{ background: fondo || PIT_ORO, borderRadius: 12, padding: '14px 16px 16px', boxShadow: '0 2px 6px rgba(90,74,30,0.16)', borderTop: '5px solid ' + (fondo === PIT_GUINDA ? '#8b1e1e' : '#b6905a'), minWidth: 0, gridColumn: ancho ? '1 / -1' : undefined }}>
+      <div style={{ fontSize: 14, fontWeight: 800, letterSpacing: 0.7, color: '#7a5a14', textTransform: 'uppercase', marginBottom: 6 }}>{titulo}</div>
+      {children}
+    </div>
+  );
+}
+
+function ChipCambio({ pct, contra }) {
+  var sube = pct >= 0;
+  return <span style={{ display: 'inline-block', marginTop: 8, padding: '3px 10px', borderRadius: 14, fontSize: 15, fontWeight: 800, background: sube ? '#8b1e1e' : '#5a4a1e', color: '#fff' }}>{sube ? '▲' : '▼'} {Math.abs(pct)}% vs {contra.toLowerCase()}</span>;
+}
+
+// "Dónde": las 5 colonias o sectores con más casos, solo nombre, barra y número
+function MiniBarras({ items }) {
+  var max = Math.max.apply(null, items.map(function(i) { return i[1]; }).concat([1]));
+  return (
+    <div>
+      {items.map(function(it, i) { return (
+        <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: i ? 7 : 0 }}>
+          <div style={{ width: '34%', fontSize: 16, fontWeight: 700, color: '#374151', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{it[0]}</div>
+          <div style={{ flex: 1, background: '#00000010', borderRadius: 5, height: 18 }}><div style={{ width: (it[1] / max * 100) + '%', height: '100%', background: i === 0 ? '#8e4f54' : '#b98386', borderRadius: 5 }} /></div>
+          <div style={{ width: 38, textAlign: 'right', fontSize: 18, fontWeight: 800, color: '#374151' }}>{it[1]}</div>
+        </div>
+      ); })}
+    </div>
+  );
+}
+
+// "Cómo": una sola barra con los tres medios más frecuentes y "otros"
+function BarraApilada({ porMedio, total }) {
+  var lista = MEDIOS_ORDEN.filter(function(m) { return porMedio[m] > 0; }).map(function(m) { return [m, porMedio[m]]; }).sort(function(a, b) { return b[1] - a[1]; });
+  var top = lista.slice(0, 3), resto = lista.slice(3).reduce(function(s, x) { return s + x[1]; }, 0);
+  var segs = top.concat(resto > 0 ? [['Otros', resto]] : []);
+  var corto = function(m) { return m === 'Desmembramiento, desollado o calcinado' ? 'Desmembramiento' : m; };
+  return (
+    <div>
+      <div style={{ display: 'flex', height: 38, borderRadius: 8, overflow: 'hidden' }}>
+        {segs.map(function(s, i) { var p = Math.round(s[1] / total * 100); var c = COLOR_MEDIO[s[0]] || { bg: '#d9d2c3', tx: '#374151' }; return (
+          <div key={i} style={{ width: (s[1] / total * 100) + '%', background: c.bg, color: c.tx, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 800 }}>{p >= 9 ? p + '%' : ''}</div>
+        ); })}
+      </div>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px 14px', marginTop: 10 }}>
+        {segs.map(function(s, i) { var c = COLOR_MEDIO[s[0]] || { bg: '#d9d2c3' }; return (
+          <span key={i} style={{ fontSize: 15, color: '#374151' }}><span style={{ display: 'inline-block', width: 12, height: 12, background: c.bg, borderRadius: 3, marginRight: 6, verticalAlign: -1 }} /><strong>{corto(s[0])}</strong> {s[1]}</span>
+        ); })}
+      </div>
+    </div>
+  );
+}
+
+// "Cuándo": línea de las últimas semanas, sin una etiqueta por punto; solo el máximo y el último
+function LineaSemanas({ items, parcial }) {
+  var W = 560, H = 160, pl = 12, pr = 12, pt = 30, pb = 14;
+  var max = Math.max.apply(null, items.map(function(i) { return i[1]; }).concat([1]));
+  var paso = items.length > 1 ? (W - pl - pr) / (items.length - 1) : 0;
+  var pts = items.map(function(it, i) { return { x: pl + i * paso, y: pt + (H - pt - pb) * (1 - it[1] / max), n: it[1] }; });
+  var iMax = 0; pts.forEach(function(p, i) { if (p.n >= pts[iMax].n) iMax = i; });
+  var ult = pts[pts.length - 1];
+  var area = pts.length > 1 ? 'M' + pts[0].x + ',' + (H - pb) + ' L' + pts.map(function(p) { return p.x + ',' + p.y; }).join(' L') + ' L' + ult.x + ',' + (H - pb) + ' Z' : '';
+  return (
+    <svg viewBox={'0 0 ' + W + ' ' + H} style={{ width: '100%', display: 'block' }} role="img" aria-label="Casos por semana en las últimas semanas">
+      <line x1={pl} y1={H - pb} x2={W - pr} y2={H - pb} stroke="#d9dee5" strokeWidth="1.5" />
+      {area && <path d={area} fill="#b9838620" />}
+      <polyline points={(parcial && pts.length > 2 ? pts.slice(0, -1) : pts).map(function(p) { return p.x + ',' + p.y; }).join(' ')} fill="none" stroke="#8e4f54" strokeWidth="3.5" strokeLinejoin="round" strokeLinecap="round" />
+      {parcial && pts.length > 2 && <line x1={pts[pts.length - 2].x} y1={pts[pts.length - 2].y} x2={ult.x} y2={ult.y} stroke="#8e4f54" strokeWidth="3" strokeDasharray="5 6" strokeLinecap="round" />}
+      <circle cx={pts[iMax].x} cy={pts[iMax].y} r="9" fill="none" stroke="#b6905a" strokeWidth="3" />
+      <circle cx={pts[iMax].x} cy={pts[iMax].y} r="5" fill="#8e4f54" />
+      <text x={pts[iMax].x} y={pts[iMax].y - 14} textAnchor="middle" fontSize="20" fontWeight="800" fill="#374151">{pts[iMax].n}</text>
+      {iMax !== pts.length - 1 && <g><circle cx={ult.x} cy={ult.y} r="6" fill={parcial ? '#fbf3d9' : '#8e4f54'} stroke="#8e4f54" strokeWidth="3" /><text x={ult.x} y={ult.y - 12} textAnchor="end" fontSize="18" fontWeight="800" fill={parcial ? '#8a7566' : '#374151'}>{ult.n}{parcial ? '*' : ''}</text></g>}
+    </svg>
+  );
+}
+
 function fechaLarga(iso) {
   var p = String(iso).slice(0, 10).split('-');
   var m = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
@@ -526,6 +640,9 @@ export default function MapaCalor({ user, onIniciarProyecto, onImportar, seccion
   const [reproDia, setReproDia] = useState(null); // reproducción del periodo: muestra los casos hasta este día (null = todos)
   const [filtrosAbiertos, setFiltrosAbiertos] = useState(false); // los filtros se muestran como una línea resumen y se abren si se piden
   const [capasAbiertas, setCapasAbiertas] = useState(false); // las capas del mapa se muestran solo si se piden
+  const [verCompleto, setVerCompleto] = useState(false);   // el panel abre en el tablero ejecutivo; el análisis detallado se pide
+  const [chipAbierto, setChipAbierto] = useState(null);
+  const [leyendaAbierta, setLeyendaAbierta] = useState(false);
   const [soloConfirmadas, setSoloConfirmadas] = useState(true); // el mapa y las zonas usan solo ubicaciones confirmadas; el panel cuenta todos los casos
 
   // Pantalla completa del mapa: Esc la cierra, y si el navegador salió de pantalla completa también se cierra
@@ -748,6 +865,9 @@ export default function MapaCalor({ user, onIniciarProyecto, onImportar, seccion
   const mesesResaltados = hayFechas ? mesesHist.map(function(m) { return m.clave >= (fechaDesde || '0000-00').slice(0, 7) && m.clave <= (fechaHasta || '9999-99').slice(0, 7); }) : null;
 
   // Periodo, ritmo y serie en el tiempo
+  const proyeccion = proyectar(mesesHist);
+  // "ene 2025 – oct 2026": lo que abarca el historial, en pocas palabras
+  const resumenHistoria = mesesHist.length ? (mesesHist[0].clave.slice(0, 4) === mesesHist[mesesHist.length - 1].clave.slice(0, 4) ? ABR_MES[Number(mesesHist[0].clave.slice(5, 7)) - 1].toLowerCase() + ' – ' + ABR_MES[Number(mesesHist[mesesHist.length - 1].clave.slice(5, 7)) - 1].toLowerCase() + ' ' + mesesHist[0].clave.slice(0, 4) : ABR_MES[Number(mesesHist[0].clave.slice(5, 7)) - 1].toLowerCase() + ' ' + mesesHist[0].clave.slice(0, 4) + ' – ' + ABR_MES[Number(mesesHist[mesesHist.length - 1].clave.slice(5, 7)) - 1].toLowerCase() + ' ' + mesesHist[mesesHist.length - 1].clave.slice(0, 4)) : '';
   // Sectores que dejaron de reportar: advertencia para la proyección
   const sectoresSinCasos = sectoresSinCasosRecientes(puntos.concat(sinUbicar).filter(function(p) { return p.fuente === 'incidencia_regional' && filtros[p.fuente] && pasaDemas(p); }), histFin);
   const fechasAn = puntosAnalisis.map(function(p) { return p.fecha ? String(p.fecha).slice(0, 10) : ''; }).filter(Boolean).sort();
@@ -905,6 +1025,25 @@ export default function MapaCalor({ user, onIniciarProyecto, onImportar, seccion
     : 'Estadística de homicidios';
   var textoDelito = filtroDelito ? filtroDelito.charAt(0) + filtroDelito.slice(1).toLowerCase() : 'Todos los delitos';
 
+  // Avisos de una línea (tocar uno muestra su explicación). Sustituyen a los recuadros largos de texto.
+  var chipsAviso = [];
+  if (sectoresSinCasos.length) chipsAviso.push({ k: 'captura', t: '⚠ Captura: ' + sectoresSinCasos.map(function(x) { return x.sector; }).join(', '), x: 'Estos sectores no tienen casos recientes. Si es falta de captura y no ausencia de homicidios, las cifras y la proyección quedan por debajo de lo real.' });
+  if (sinUbicarFiltrados.length) chipsAviso.push({ k: 'sinubicar', t: sinUbicarFiltrados.length + ' sin ubicar', x: 'Cuentan en las cifras pero no se dibujan en el mapa. Se ubican en la pestaña Importar → Revisar ubicaciones.' });
+  if (soloConfirmadas && nAproxOcultos > 0) chipsAviso.push({ k: 'aprox', t: nAproxOcultos + ' con ubicación aproximada', x: 'Cuentan en las cifras, pero no se dibujan ni entran a las zonas hasta confirmar su ubicación (Importar → Revisar ubicaciones).' });
+  if (pendientesFiltrados.length) chipsAviso.push({ k: 'necropsia', t: pendientesFiltrados.length + ' en espera de necropsia', x: 'Muerte no constitutiva de delito: no se cuenta como homicidio doloso hasta que el Ministerio Público la reclasifique.' });
+  var renderChips = function() {
+    if (!chipsAviso.length) return null;
+    var sel = chipsAviso.filter(function(c) { return c.k === chipAbierto; })[0];
+    return (
+      <div style={{ marginTop: 10 }}>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          {chipsAviso.map(function(c) { return <button key={c.k} onClick={function() { setChipAbierto(chipAbierto === c.k ? null : c.k); }} style={{ background: c.k === 'captura' ? '#fbf3e0' : '#fff', border: '1.5px solid ' + (c.k === 'captura' ? '#c9a24b' : '#d9d2c3'), borderRadius: 16, padding: '6px 14px', fontSize: 15, fontWeight: 700, color: '#5a4a1e', cursor: 'pointer', minHeight: 36 }}>{c.t}</button>; })}
+        </div>
+        {sel && <div role="status" style={{ marginTop: 8, fontSize: 15, color: '#5a4a1e', background: '#fbf3e0', border: '1px solid #c9a24b', borderRadius: 8, padding: '8px 12px', lineHeight: 1.45 }}>{sel.x}</div>}
+      </div>
+    );
+  };
+
   return (
     <div style={{ marginBottom: 20 }}>
       <div style={{ display: seccion === 'importar' ? 'none' : 'block' }}>
@@ -964,17 +1103,21 @@ export default function MapaCalor({ user, onIniciarProyecto, onImportar, seccion
 
       <div style={{ background: hayFiltrosActivos ? C.lightGold : C.white, border: hayFiltrosActivos ? '1px solid #b6905440' : '1px solid transparent', borderRadius: 10, padding: 14, marginBottom: 14, boxShadow: '0 1px 4px rgba(0,0,0,0.08)' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
-          <div style={{ fontSize: 17, color: C.darkBlue, lineHeight: 1.5 }}>
-            <Filter size={17} color={C.gold} style={{ verticalAlign: -3, marginRight: 8 }} />
-            <strong>Filtros:</strong> {textoPeriodo} · {textoDelito} · {filtroMunicipio || 'Todos los municipios'}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+            <Filter size={17} color={C.gold} />
+            {[
+              { k: 'p', t: fechaDesde || fechaHasta ? textoPeriodo : (mesesHist.length ? 'Todo · ' + resumenHistoria : 'Todo el periodo'), activo: !!(fechaDesde || fechaHasta) },
+              filtroDelito ? { k: 'd', t: filtroDelito.length > 30 ? filtroDelito.slice(0, 29) + '…' : filtroDelito, activo: true, ayuda: filtroDelito } : null,
+              filtroMunicipio ? { k: 'm', t: filtroMunicipio, activo: true } : null,
+            ].filter(Boolean).map(function(c) { return <span key={c.k} title={c.ayuda || c.t} style={{ fontSize: 16, fontWeight: 700, padding: '4px 12px', borderRadius: 14, background: c.activo ? '#fbf3d9' : '#fff', border: '1.5px solid ' + (c.activo ? '#b6905a' : '#d9d2c3'), color: c.activo ? '#7b1e3a' : '#374151' }}>{c.t}</span>; })}
           </div>
           <label style={{ display: 'inline-flex', alignItems: 'center', gap: 8, fontSize: 16, fontWeight: 600, color: C.darkBlue, cursor: 'pointer' }}>
             <input type="checkbox" checked={soloConfirmadas} onChange={function(e) { setSoloConfirmadas(e.target.checked); }} style={{ width: 18, height: 18 }} />
-            Mapa y zonas: solo ubicaciones confirmadas
+            <span title="El mapa y las zonas usan solo ubicaciones confirmadas; el panel cuenta todos los casos">Solo confirmadas</span>
           </label>
           <button onClick={function() { setFiltrosAbiertos(!filtrosAbiertos); }} aria-expanded={filtrosAbiertos}
             style={{ background: 'none', border: '1.5px solid #c7cfe0', borderRadius: 7, padding: '6px 14px', color: C.darkBlue, fontSize: 16, fontWeight: 600, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6, minHeight: 40 }}>
-            {filtrosAbiertos ? 'Ocultar filtros' : 'Cambiar filtros'} {filtrosAbiertos ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+            {filtrosAbiertos ? 'Cerrar' : 'Filtros'} {filtrosAbiertos ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
           </button>
         </div>
         {filtrosAbiertos && (
@@ -1025,29 +1168,24 @@ export default function MapaCalor({ user, onIniciarProyecto, onImportar, seccion
         </div>
       )}
 
-      <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 18, fontSize: 14, color: C.gray, flexWrap: 'wrap' }} title="Cada punto toma su color según cuántos casos hay a menos de esa distancia">
-        <span style={{ fontWeight: 600 }}>Concentración (casos en un radio de {distanciaKm} km):</span>
+      <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 14, fontSize: 15, color: C.gray, flexWrap: 'wrap' }}>
+        <span style={{ fontWeight: 700 }}>Casos a {distanciaKm} km:</span>
         {NIVELES_CALOR.map(function(n) { return (
-          <span key={n.label} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <span key={n.label} style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
             <span style={{ width: 14, height: 14, borderRadius: 3, background: n.color, display: 'inline-block' }} />
-            <span><strong style={{ color: '#374151' }}>{n.label}</strong> · {n.casos}</span>
+            <strong style={{ color: '#374151' }}>{String(n.casos).replace(/ casos?$/, '')}</strong>
           </span>
         ); })}
-        <span style={{ color: '#8b1e1e', fontWeight: 600 }}>Resplandor: solo en zonas de atención prioritaria</span>
-        <span style={{ color: '#001a4d', fontWeight: 600 }}>{numerar ? 'El número en cada punto es el orden cronológico (1 = el más antiguo del periodo mostrado)' : 'Con más de ' + LIMITE_NUMEROS + ' casos los números se ocultan para que el mapa se lea. Filtra por fechas para verlos; el número sigue en la ventana de cada punto.'}</span>
+        <button onClick={function() { setLeyendaAbierta(!leyendaAbierta); }} aria-label="Cómo leer el mapa" style={{ background: 'none', border: '1.5px solid #b6905a', color: '#7a5a14', borderRadius: 14, padding: '3px 12px', fontSize: 14, fontWeight: 800, cursor: 'pointer', minHeight: 32 }}>ⓘ Cómo leerlo</button>
       </div>
-      {sinUbicarFiltrados.length > 0 && (
-        <div style={{ marginTop: 8, fontSize: 15, color: '#7a4b00', background: '#fff8e1', border: '1px solid #f0d58a', borderRadius: 8, padding: '8px 12px' }}>
-          <strong>{sinUbicarFiltrados.length} caso{sinUbicarFiltrados.length > 1 ? 's' : ''} sin ubicación</strong> no aparece{sinUbicarFiltrados.length > 1 ? 'n' : ''} en el mapa, pero sí cuenta{sinUbicarFiltrados.length > 1 ? 'n' : ''} en el panel de análisis. Para ubicarlos, usa la pestaña Importar.
+      {leyendaAbierta && (
+        <div style={{ marginTop: 8, fontSize: 15, color: '#374151', lineHeight: 1.55, background: '#fbf3d9', borderRadius: 8, padding: '10px 14px' }}>
+          <div>El color de cada punto indica cuántos casos hay a menos de {distanciaKm} km: {NIVELES_CALOR.map(function(n) { return n.label.toLowerCase() + ' (' + n.casos + ')'; }).join(', ')}.</div>
+          <div>El resplandor marca solo las zonas de atención prioritaria.</div>
+          <div>{numerar ? 'El número en cada punto es el orden cronológico (1 = el más antiguo del periodo mostrado).' : 'Con más de ' + LIMITE_NUMEROS + ' casos los números se ocultan para que el mapa se lea; filtra por fechas para verlos.'}</div>
         </div>
       )}
-      {avisoPendientes}
-
-      {soloConfirmadas && nAproxOcultos > 0 && (
-        <div role="status" style={{ marginTop: 10, background: '#fbf3e0', border: '1px solid #c9a24b', borderRadius: 8, padding: '8px 12px', fontSize: 15, color: '#5a4a1e', lineHeight: 1.45 }}>
-          <strong>{nAproxOcultos}</strong> {nAproxOcultos === 1 ? 'caso tiene' : 'casos tienen'} ubicación aproximada o sin confirmar: no se dibujan ni cuentan para las zonas, pero sí están en las cifras del análisis. Se confirman en <em>Revisar ubicaciones</em>.
-        </div>
-      )}
+      {renderChips()}
       <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
         <ReglaMapa obtenerMapa={function() { return mapInstance.current; }} />
         <RadioMapa obtenerMapa={function() { return mapInstance.current; }} />
@@ -1079,7 +1217,67 @@ export default function MapaCalor({ user, onIniciarProyecto, onImportar, seccion
             <div style={{ fontSize: 17, color: C.gray, textAlign: 'center', padding: 20 }}>Sin datos con estos filtros.</div>
           ) : (
             <>
-              <div style={{ padding: 16, backgroundColor: C.lightGold, borderRadius: 10, border: '1px solid #b6905440' }}>
+              {(function() {
+                var act = cambioRitmo ? cambioRitmo.actual : null;
+                var f1 = proyeccion.listo ? proyeccion.futuros[0] : null;
+                var mejorZona = zonas && zonas.length ? zonas[0] : null;
+                var dia = act ? act.n / act.dias : null;
+                var claveAnt = act ? (Number(act.clave.slice(0, 4)) - 1) + act.clave.slice(4) : null;
+                var mesAnt = claveAnt ? mesesHist.filter(function(m) { return m.clave === claveAnt; })[0] : null;
+                var pctAnio = act && mesAnt && mesAnt.n > 0 ? Math.round(((act.n / act.dias) / (mesAnt.n / mesAnt.dias) - 1) * 100) : null;
+                var serie12 = mesesHist.slice(-12).map(function(m) { return m.n; });
+                var tasa12 = mesesHist.slice(-12).map(function(m) { return Math.round(m.n / m.dias * 100) / 100; });
+                var realesProy = mesesHist.filter(function(m) { return !m.parcial; }).slice(-6).map(function(m) { return m.n; });
+                var extraProy = proyeccion.listo ? (proyeccion.parcial ? [proyeccion.parcial.cierre] : []).concat([proyeccion.futuros[0].mu]) : [];
+                return (
+                  <div>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: 12 }}>
+                      {act && (
+                        <PostIt titulo={act.nombre + (act.parcial ? ' · al ' + Number(histFin.slice(8, 10)) : '')} fondo={PIT_ORO}>
+                          <div style={NUM_GRANDE}>{act.n}</div>
+                          <div style={{ fontSize: 16, color: '#374151' }}>homicidios</div>
+                          {cambioRitmo && <ChipCambio pct={cambioRitmo.pct} contra={cambioRitmo.contra} />}
+                          {pctAnio !== null && <div style={{ fontSize: 14, color: '#3b2f0b', marginTop: 5 }}>{pctAnio >= 0 ? '▲' : '▼'} {Math.abs(pctAnio)} % vs {ABR_MES[Number(claveAnt.slice(5, 7)) - 1].toLowerCase()} {claveAnt.slice(0, 4)} ({mesAnt.n})</div>}
+                          <div style={{ marginTop: 6 }}><MiniLinea valores={serie12} parcial={act.parcial} /></div>
+                        </PostIt>
+                      )}
+                      <PostIt titulo={f1 ? mesLargo(f1.clave).split(' ')[0] + ' · estimado' : 'Proyección'} fondo={PIT_GUINDA}>
+                        {f1 ? <div><div style={NUM_GRANDE}>{f1.lo}–{f1.hi}</div><div style={{ fontSize: 16, color: '#374151' }}>probable <strong>{f1.mu}</strong></div></div>
+                          : <div><div style={NUM_GRANDE}>—</div><div style={{ fontSize: 16, color: '#374151' }}>faltan {proyeccion.faltan} meses</div></div>}
+                        {f1 && <div style={{ marginTop: 6 }}><MiniLinea valores={realesProy} extra={extraProy} /></div>}
+                      </PostIt>
+                      <PostIt titulo="Zonas de atención" fondo={PIT_ORO}>
+                        <div style={NUM_GRANDE}>{zonas ? zonas.length : 0}</div>
+                        <div style={{ fontSize: 16, color: '#374151' }}>{mejorZona ? <span>mayor: <strong>{mejorZona.nombre || 'Zona 1'}</strong> · {mejorZona.n}</span> : 'sin zonas'}</div>
+                      </PostIt>
+                      {dia !== null && (
+                        <PostIt titulo="Ritmo" fondo={PIT_ARENA}>
+                          <div style={NUM_MEDIO}>{frecuenciaTexto(dia)}</div>
+                          <div style={{ fontSize: 16, color: '#374151' }}>homicidio · {act.nombre.toLowerCase()}</div>
+                          <div style={{ marginTop: 6 }}><MiniLinea valores={tasa12} parcial={act.parcial} /></div>
+                        </PostIt>
+                      )}
+                    </div>
+                    <div style={{ marginTop: 12, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 12 }}>
+                      {topSectores.length > 0 && <PostIt titulo="Dónde" fondo={PIT_ARENA}><MiniBarras items={topSectores.slice(0, 5)} /></PostIt>}
+                      {homicidios.length > 0 && <PostIt titulo="Cómo" fondo={PIT_GUINDA}><BarraApilada porMedio={porMedio} total={homicidios.length} /></PostIt>}
+                      {semHist.length > 1 && <PostIt titulo={semRecortada ? 'Cuándo · últimas 26 semanas' : 'Cuándo · por semana'} fondo={PIT_ORO}><LineaSemanas items={semHist} parcial={ultimaSemanaParcial} />{ultimaSemanaParcial && <div style={{ fontSize: 14, color: '#6b5a2a', marginTop: 2 }}>* semana en curso, incompleta</div>}</PostIt>}
+                      {proyeccion.listo && (
+                        <PostIt titulo="Proyección" fondo={PIT_ARENA} ancho>
+                          <GraficaProyeccion reales={mesesHist.filter(function(m) { return !m.parcial; }).slice(-8).map(function(m) { return { clave: m.clave, n: m.n }; })} parcial={proyeccion.parcial} futuros={proyeccion.futuros} />
+                          <div style={{ fontSize: 15, color: '#374151', marginTop: 6 }}>Barras doradas: estimado · línea: rango probable (8 de cada 10 veces) · acertó en <strong>{proyeccion.respaldo.cubiertos} de {proyeccion.respaldo.de}</strong> de los últimos meses</div>
+                        </PostIt>
+                      )}
+                    </div>
+                    {renderChips()}
+                    <div style={{ marginTop: 16, textAlign: 'center' }}>
+                      <button onClick={function() { setVerCompleto(!verCompleto); }} style={{ background: 'none', border: '2px solid #7b1e3a', color: '#7b1e3a', borderRadius: 8, padding: '10px 22px', fontSize: 16, fontWeight: 800, cursor: 'pointer', minHeight: 44 }}>{verCompleto ? 'Ocultar el análisis completo ▲' : 'Ver el análisis completo ▼'}</button>
+                    </div>
+                  </div>
+                );
+              })()}
+              {verCompleto && (<>
+              <div style={{ marginTop: 22, padding: 16, backgroundColor: C.lightGold, borderRadius: 10, border: '1px solid #b6905440' }}>
                 <div style={{ fontSize: 15, fontWeight: 700, color: C.gold, textTransform: 'uppercase', marginBottom: 6 }}>Lo más importante</div>
                 <div style={{ fontSize: 19, color: C.darkBlue, lineHeight: 1.65 }}>
                   Se analizaron <strong>{puntosAnalisis.length}</strong> incidentes
@@ -1175,6 +1373,7 @@ export default function MapaCalor({ user, onIniciarProyecto, onImportar, seccion
                   <RankingBarras titulo="Tal como la escribió el MP" icono={<BarChart3 size={20} color={C.gold} />} items={topDelitos} />
                 </div>
               </details>
+              </>)}
             </>
           )}
         </div>
