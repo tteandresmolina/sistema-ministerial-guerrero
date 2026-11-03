@@ -38,6 +38,7 @@ export function clasificarDelito(texto) {
   let medio = 'Por determinar';
   for (const r of REGLAS) { if (r.palabras.some((p) => n.includes(p))) { medio = r.medio; break; } }
   // "Muerte no constitutiva de delito": mientras no haya resultado de necropsia NO es homicidio doloso; el MP reclasifica después
-  const pendiente = /MUERTE NO CONSTITUTIVA|NO CONSTITUTIVA DE DELITO/.test(n);
+  // "no constitutiva" o "no constitutivo" (femenino o masculino): "Muerte no constitutiva de delito", "Homicidio no constitutivo de delito"…
+  const pendiente = /NO CONSTITUTIV[OA]/.test(n);
   return { medio, pendiente, calificado: n.includes('CALIFICADO'), hallazgo: /\bFOSAS?\b|CLANDESTIN|INHUMAD/.test(n) ? 'Hallazgo en fosa' : null };
 }

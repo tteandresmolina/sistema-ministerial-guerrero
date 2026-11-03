@@ -217,12 +217,14 @@ export default function PegarTarjeta({ perfil, onGuardado }) {
     try {
       const { data: ya } = await supabase.from('incidencia_regional').select('carpeta_investigacion').eq('carpeta_investigacion', t.ci);
       if (ya && ya.length) { setEstado((e) => ({ ...e, [t.id]: { tipo: 'error', texto: 'Esa carpeta ya está registrada: no se duplica.' } })); return; }
-      setEstado((e) => ({ ...e, [t.id]: { tipo: 'trabajando', texto: 'Buscando la ubicación…' } }));
-      const ub = await ubicar(t);
+      // Si la tarjeta ya trae las coordenadas del lugar de intervención, se usan tal cual (no hace falta buscar la dirección)
+      let ub;
+      if (t.lat != null && t.lng != null) ub = { lat: t.lat, lng: t.lng, precision: 'tarjeta' };
+      else { setEstado((e) => ({ ...e, [t.id]: { tipo: 'trabajando', texto: 'Buscando la ubicación…' } })); ub = await ubicar(t); }
       const fila = {
         carpeta_investigacion: t.ci, region: REGION, zona: t.sector, fecha: t.fecha, delito: t.delito || null,
         lugar_hechos: t.lugar, observaciones: null,
-        coordenadas_lat: ub ? ub.lat : null, coordenadas_lng: ub ? ub.lng : null, ubicacion_confirmada: false,
+        coordenadas_lat: ub ? ub.lat : null, coordenadas_lng: ub ? ub.lng : null, ubicacion_confirmada: !!(ub && ub.precision === 'tarjeta'),
         lugar_es_hospital: t.esHospital, cartulina: t.cartulina, vehiculo_asegurado: null, droga_asegurada: null,
         arma_calibre: t.calibre || null, mes_reporte: t.fecha.slice(0, 7), hora_conocimiento: t.hora || null,
         registrado_por_id: perfil ? perfil.id : null,
@@ -231,6 +233,7 @@ export default function PegarTarjeta({ perfil, onGuardado }) {
       if (error && /hora_conocimiento/i.test(error.message || '')) { const { hora_conocimiento, ...resto } = fila; ({ error } = await supabase.from('incidencia_regional').insert(resto)); }
       if (error) { setEstado((e) => ({ ...e, [t.id]: { tipo: 'error', texto: 'No se pudo guardar: ' + error.message } })); return; }
       const donde = !ub ? 'Sin ubicación: cuenta en el panel y puedes ubicarla en Revisar ubicaciones.'
+        : ub.precision === 'tarjeta' ? 'Ubicada con las coordenadas de la tarjeta.'
         : ub.precision === 'direccion' ? 'Ubicada por la dirección. Verifica el punto en Revisar ubicaciones.'
         : 'Ubicada de forma aproximada (por la colonia). Verifica el punto en Revisar ubicaciones.';
       const pend = clasificarDelito(t.delito).pendiente ? ' Está en espera de necropsia: no cuenta como homicidio doloso hasta que el MP la reclasifique.' : '';
