@@ -1248,7 +1248,7 @@ export default function MapaCalor({ user, onIniciarProyecto, onImportar, seccion
                       </PostIt>
                       <PostIt titulo="Zonas de atención" fondo={PIT_ORO}>
                         <div style={NUM_GRANDE}>{zonas ? zonas.length : 0}</div>
-                        <div style={{ fontSize: 16, color: '#374151' }}>{mejorZona ? <span>mayor: <strong>{mejorZona.nombre || 'Zona 1'}</strong> · {mejorZona.n}</span> : 'sin zonas'}</div>
+                        <div style={{ fontSize: 16, color: '#374151' }}>{mejorZona ? <span>mayor: <strong>{mejorZona.corto || mejorZona.nombre || 'Zona 1'}</strong> · {mejorZona.n}</span> : 'sin zonas'}</div>
                       </PostIt>
                       {dia !== null && (
                         <PostIt titulo="Ritmo" fondo={PIT_ARENA}>

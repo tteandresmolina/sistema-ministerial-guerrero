@@ -122,6 +122,8 @@ const textoCorto = (f) => {
   const n = f.sectores.map(([s]) => s);
   return n.length <= 2 ? (n.join(' y ') || 'Zona sin sector') : n[0] + ', ' + n[1] + ' y ' + (n.length - 2) + (n.length - 2 === 1 ? ' más' : ' más');
 };
+// Para la tarjeta: los tres sectores con más casos y cuántos más hay (el detalle completo va en el plan de acción)
+const textoSectoresVista = (f) => f.sectores.slice(0, 3).map(([s, k]) => s + ' (' + k + ')').join(', ') + (f.sectores.length > 3 ? ' y ' + (f.sectores.length - 3) + ' más' : '');
 const textoRango = (f) => (f.desde && f.hasta ? 'del ' + ddmm(f.desde) + ' al ' + ddmm(f.hasta) : 'sin fechas');
 const fechaLarga = (d) => String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0') + '/' + d.getFullYear();
 const km1 = (m) => (Math.round(m / 100) / 10).toFixed(1);
@@ -134,6 +136,8 @@ export default function ZonasAtencion({ puntos, seleccionada, onSeleccionar, onI
   const km = kmProp != null ? kmProp : kmInterno;
   const setKm = (k) => { if (onKm) onKm(k); else setKmInterno(k); };
   const [verInfo, setVerInfo] = useState(false);
+  // Una zona de atención es donde se concentran los casos ahora. Con toda la historia, un punto caliente que dura años se volvía una sola "zona" de cientos de casos.
+  const [ventana, setVentana] = useState(90);
   const [sinUbicar, setSinUbicar] = useState(null);
 
   // Casos del registro que todavía no tienen coordenadas: no entran al mapa ni a las zonas
@@ -144,7 +148,10 @@ export default function ZonasAtencion({ puntos, seleccionada, onSeleccionar, onI
     return () => { vivo = false; };
   }, [puntos.length]);
 
-  const { focos, aislados } = calcularFocos(puntos, km * 1000, MIN_CASOS, VENTANA_DIAS);
+  const fMax = puntos.reduce((m, p) => { const f = p.fecha ? String(p.fecha).slice(0, 10) : ''; return f > m ? f : m; }, '');
+  const corte = ventana && fMax ? new Date(Date.parse(fMax) - ventana * 86400000).toISOString().slice(0, 10) : '';
+  const puntosVentana = corte ? puntos.filter((p) => !p.fecha || String(p.fecha).slice(0, 10) >= corte) : puntos;
+  const { focos, aislados } = calcularFocos(puntosVentana, km * 1000, MIN_CASOS, VENTANA_DIAS);
 
   // Avisa al mapa qué zonas hay para que las marque siempre (solo cuando cambian)
   const firma = km + '|' + focos.map((f) => f.clave + ':' + f.n).join(',');
@@ -197,6 +204,13 @@ export default function ZonasAtencion({ puntos, seleccionada, onSeleccionar, onI
 
       <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 10, margin: '8px 0 12px', fontSize: 15, color: '#374151' }}>
         <span><strong>{MIN_CASOS}+ casos en 30 días</strong> a ≤ {km} km</span>
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+          <span style={{ color: C.gray, fontWeight: 600 }}>Periodo:</span>
+          {[[30, '30 d'], [90, '90 d'], [0, 'Todo']].map(([d, t]) => (
+            <button key={d} onClick={() => { setVentana(d); if (onSeleccionar) onSeleccionar(null); }} aria-pressed={ventana === d}
+              style={{ padding: '4px 12px', borderRadius: 14, fontSize: 14, fontWeight: 700, cursor: 'pointer', minHeight: 34, border: ventana === d ? '2px solid ' + C.guinda : '1.5px solid #d9d2c3', background: ventana === d ? C.guinda : '#fff', color: ventana === d ? '#fff' : C.gray }}>{t}</button>
+          ))}
+        </span>
         <button onClick={() => setVerInfo(!verInfo)} style={{ background: 'none', border: 'none', color: C.guinda, fontSize: 14, fontWeight: 700, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4, padding: '6px 4px', minHeight: 36 }}>
           <Info size={15} /> {verInfo ? 'Ocultar' : '¿Cómo se calcula?'}
         </button>
@@ -224,7 +238,7 @@ export default function ZonasAtencion({ puntos, seleccionada, onSeleccionar, onI
                   <span style={{ fontSize: 17, fontWeight: 800, color: C.guinda }}>Zona {i + 1}</span>
                   <span style={{ background: C.guinda, color: C.white, borderRadius: 14, padding: '3px 12px', fontSize: 14, fontWeight: 800, whiteSpace: 'nowrap' }}>{f.n} casos</span>
                 </div>
-                <div style={{ fontSize: 15, fontWeight: 700, color: '#374151', marginTop: 6 }}>{textoSectores(f)}</div>
+                <div style={{ fontSize: 15, fontWeight: 700, color: '#374151', marginTop: 6 }}>{textoSectoresVista(f)}</div>
                 <div style={{ fontSize: 14, color: C.gray, marginTop: 4 }}>
                   {textoRango(f)}{f.porSemana ? ' · ≈ ' + f.porSemana + ' por semana' : ''}
                 </div>
