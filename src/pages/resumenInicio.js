@@ -16,6 +16,13 @@ const aDia = (iso) => { const p = String(iso).slice(0, 10).split('-').map(Number
 const deDia = (d) => new Date(d * DIA).toISOString().slice(0, 10);
 const diaDeHoy = (hoy) => Math.floor(Date.UTC(hoy.getFullYear(), hoy.getMonth(), hoy.getDate()) / DIA);
 
+// "1 cada 19 h": el ritmo dicho como lo dicen los observatorios, en frecuencia y no en decimales
+export function frecuenciaTexto(porDia) {
+  if (!porDia || porDia <= 0) return '—';
+  if (porDia >= 1) { const h = Math.round(24 / porDia); return h <= 1 ? '1 por hora' : '1 cada ' + h + ' h'; }
+  const d = Math.round(1 / porDia); return '1 cada ' + d + (d === 1 ? ' día' : ' días');
+}
+
 export function fechaLarga(iso) { const p = String(iso).slice(0, 10).split('-'); return Number(p[2]) + ' de ' + MESES[Number(p[1]) - 1]; }
 export function rangoLargo(a, b) {
   const pa = a.split('-'), pb = b.split('-');
@@ -30,7 +37,7 @@ export function analizarCasos(casos, hoy = new Date()) {
   const validos = [], pendientes = [];
   (casos || []).forEach((c) => { (clasificarDelito(c.delito).pendiente ? pendientes : validos).push(c); });
 
-  let n30 = 0, nPrev = 0, ultima = '';
+  let n30 = 0, nPrev = 0, nAnio = 0, ultima = '';
   const porZona = {}, medios = {};
   const semanas = [];
   for (let b = 0; b < 8; b++) { const fin = hoyD - 7 * (7 - b); semanas.push({ ini: deDia(fin - 6), fin: deDia(fin), n: 0 }); }
@@ -61,6 +68,7 @@ export function analizarCasos(casos, hoy = new Date()) {
       const m = clasificarDelito(c.delito).medio;
       medios[m] = (medios[m] || 0) + 1;
     } else if (edad >= 30 && edad < 60) nPrev++;
+    if (edad >= 365 && edad < 395) nAnio++;   // los mismos 30 días, un año antes
     for (let b = 0; b < 8; b++) { const d = aDia(f); if (d >= aDia(semanas[b].ini) && d <= aDia(semanas[b].fin)) { semanas[b].n++; break; } }
   });
 
@@ -78,8 +86,9 @@ export function analizarCasos(casos, hoy = new Date()) {
   const total = validos.length;
 
   return {
-    total, n30, nPrev, ultima,
+    total, n30, nPrev, nAnio, ultima,
     cambioPct: nPrev > 0 ? Math.round((n30 / nPrev - 1) * 100) : null,
+    cambioAnioPct: nAnio > 0 ? Math.round((n30 / nAnio - 1) * 100) : null,
     ritmo: n30 > 0 ? 30 / n30 : null, ritmoPrev: nPrev > 0 ? 30 / nPrev : null,
     semanas: semanas.map((s) => ({ ...s, etiqueta: etiquetaSemana(s.ini, s.fin) })),
     promSemana: prom, repunte, zonas, topZona, medioTop,

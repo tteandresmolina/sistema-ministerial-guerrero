@@ -76,7 +76,7 @@ export default function Entorno({ perfil }) {
     <div style={{ background: '#fff', borderRadius: 14, padding: '18px 20px', boxShadow: '0 1px 4px rgba(0,0,0,0.07)', border: '1px solid ' + P.borde }}>
       <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' }}>
         <h3 style={{ fontSize: 19, fontWeight: 800, color: P.tinta, margin: 0 }}>Entorno</h3>
-        <span style={{ fontSize: 13, color: P.gris }}>Seguridad y justicia · solo titulares</span>
+        <span style={{ fontSize: 13, color: P.gris }}>{ultimaLectura ? 'Actualizado ' + haceCuanto(ultimaLectura) : ''}</span>
       </div>
 
       {presentes.length > 1 && (
@@ -119,7 +119,7 @@ export default function Entorno({ perfil }) {
                 )}
                 <div style={{ minWidth: 0 }}>
                 {esEnlace(n.enlace)
-                  ? <a href={n.enlace} target="_blank" rel="noopener noreferrer" title={dominio(n.enlace)} style={{ fontSize: 16, fontWeight: 700, color: P.tinta, textDecoration: 'none', lineHeight: 1.35 }}>{n.titulo} <ExternalLink size={14} style={{ verticalAlign: -1, color: P.gris }} /></a>
+                  ? <a href={n.enlace} target="_blank" rel="noopener noreferrer" title={'Se abre la fuente: ' + dominio(n.enlace)} style={{ fontSize: 16, fontWeight: 700, color: P.tinta, textDecoration: 'none', lineHeight: 1.35 }}>{n.titulo} <ExternalLink size={14} style={{ verticalAlign: -1, color: P.gris }} /></a>
                   : <span style={{ fontSize: 16, fontWeight: 700, color: P.tinta }}>{n.titulo}</span>}
                 <div style={{ fontSize: 13, color: P.gris, marginTop: 3, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                   <span style={{ background: cat.color + '22', color: cat.color, borderRadius: 4, padding: '0 7px', fontWeight: 700 }}>{cat.texto}</span>
@@ -134,7 +134,7 @@ export default function Entorno({ perfil }) {
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap', marginTop: 8, borderTop: '1px solid ' + P.borde, paddingTop: 10 }}>
-        <span style={{ fontSize: 13, color: P.gris }}>{ultimaLectura ? 'Actualizado ' + haceCuanto(ultimaLectura) : 'Sin actualizaciones todavía'}. Para leer la nota se abre la fuente.</span>
+        <span style={{ fontSize: 13, color: P.gris }}>{ultimaLectura ? '' : 'Sin actualizaciones todavía'}</span>
         {esMando && (
           <span style={{ display: 'inline-flex', gap: 8 }}>
             <button onClick={actualizarYa} disabled={leyendo} style={{ ...chip(false), display: 'inline-flex', alignItems: 'center', gap: 6, opacity: leyendo ? 0.6 : 1 }}><RefreshCw size={14} /> {leyendo ? 'Actualizando…' : 'Actualizar ahora'}</button>
