@@ -11,6 +11,7 @@ import { RefreshCw, MapPin, Filter, X, Clock, BarChart3, ChevronDown, ChevronUp,
 import { TarjetaResumen, BarraSuperior, CapasPantalla } from './PantallaMapa';
 import ImportarIncidenciaRegional from './ImportarIncidenciaRegional';
 import ZonasAtencion from './ZonasAtencion';
+import { descargarMes } from './PegarTarjeta';
 import ReglaMapa, { tiempoEntre, textoDistancia } from './ReglaMapa';
 import RadioMapa from './RadioMapa';
 import ReproducirMes from './ReproducirMes';
@@ -411,6 +412,75 @@ function GraficaProyeccion({ reales, parcial, futuros }) {
   );
 }
 
+// ---------------------------------------------------------------------------------------------------------
+// Estadística del mes: las tres categorías por separado, como las lleva la estadística mensual del regional
+// (homicidios dolosos · homicidios culposos · muertes no constitutivas de delito), por sector y con totales.
+// ---------------------------------------------------------------------------------------------------------
+function EstadisticaMes({ dolosos, pendientes, culposos }) {
+  var [mes, setMes] = useState(null);
+  var [verSector, setVerSector] = useState(false);
+  var [bajando, setBajando] = useState(false);
+  var [errExcel, setErrExcel] = useState('');
+  var base = [];
+  dolosos.forEach(function(p) { base.push({ f: String(p.fecha || '').slice(0, 7), s: p.sector || 'Sin sector', c: 'd' }); });
+  culposos.forEach(function(p) { base.push({ f: String(p.fecha || '').slice(0, 7), s: p.sector || 'Sin sector', c: 'c' }); });
+  pendientes.forEach(function(p) { base.push({ f: String(p.fecha || '').slice(0, 7), s: p.sector || 'Sin sector', c: 'n' }); });
+  var claves = Array.from(new Set(base.map(function(x) { return x.f; }).filter(Boolean))).sort().slice(-6);
+  if (!claves.length) return null;
+  var m = mes && claves.indexOf(mes) >= 0 ? mes : claves[claves.length - 1];
+  var cuenta = {}, tot = { d: 0, c: 0, n: 0 };
+  base.forEach(function(x) { if (x.f !== m) return; var r = cuenta[x.s] || (cuenta[x.s] = { d: 0, c: 0, n: 0 }); r[x.c]++; tot[x.c]++; });
+  var filas = Object.keys(cuenta).map(function(s) { return [s, cuenta[s]]; }).sort(function(a, b) { return (b[1].d + b[1].c + b[1].n) - (a[1].d + a[1].c + a[1].n) || (a[0] < b[0] ? -1 : 1); });
+  var bajar = function() {
+    setBajando(true); setErrExcel('');
+    Promise.resolve(descargarMes('Región Acapulco', m)).catch(function(e) { setErrExcel('No se pudo generar el Excel: ' + (e && e.message ? e.message : e)); }).then(function() { setBajando(false); });
+  };
+  var col = function(n, etq, color) { return (
+    <div style={{ flex: '1 1 110px', minWidth: 100, textAlign: 'center' }}>
+      <div style={{ fontSize: 40, fontWeight: 800, lineHeight: 1.05, color: color }}>{n}</div>
+      <div style={{ fontSize: 15, color: '#374151', marginTop: 2 }}>{etq}</div>
+    </div>
+  ); };
+  var celda = { padding: '6px 8px', textAlign: 'right', fontSize: 16, borderTop: '1px solid #e6dcc3' };
+  return (
+    <div style={{ marginTop: 12 }}>
+      <PostIt titulo={'Estadística de ' + mesLargo(m)} fondo={PIT_ORO}>
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', margin: '2px 0 10px' }}>
+          {claves.map(function(k) { return (
+            <button key={k} onClick={function() { setMes(k); }} aria-pressed={k === m}
+              style={{ padding: '4px 12px', borderRadius: 14, fontSize: 14, fontWeight: 700, cursor: 'pointer', minHeight: 34, border: k === m ? '2px solid #7b1e3a' : '1.5px solid #d9d2c3', background: k === m ? '#7b1e3a' : '#fff', color: k === m ? '#fff' : '#5a6478' }}>{abrevMes(k)} {k.slice(2, 4)}</button>
+          ); })}
+        </div>
+        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+          {col(tot.d, 'Homicidios dolosos', '#7b1e3a')}
+          {col(tot.c, 'Homicidios culposos', '#5a4a1e')}
+          {col(tot.n, 'No constitutivas de delito', '#6b7280')}
+        </div>
+        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center', marginTop: 12 }}>
+          <button onClick={function() { setVerSector(!verSector); }} aria-expanded={verSector} style={{ background: 'none', border: '2px solid #7b1e3a', color: '#7b1e3a', borderRadius: 8, padding: '6px 16px', fontSize: 15, fontWeight: 800, cursor: 'pointer', minHeight: 40 }}>{verSector ? 'Ocultar por sector ▲' : 'Ver por sector ▼'}</button>
+          <button onClick={bajar} disabled={bajando} style={{ background: '#7b1e3a', border: '2px solid #7b1e3a', color: '#fff', borderRadius: 8, padding: '6px 16px', fontSize: 15, fontWeight: 800, cursor: 'pointer', minHeight: 40, opacity: bajando ? 0.6 : 1 }}>{bajando ? 'Generando…' : 'Descargar Excel del mes'}</button>
+        </div>
+        {errExcel && <div style={{ fontSize: 14, color: '#8b1e1e', marginTop: 6 }}>{errExcel}</div>}
+        {verSector && (
+          <div style={{ overflowX: 'auto', marginTop: 10 }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 360 }}>
+              <thead><tr style={{ fontSize: 14, color: '#5a4a1e' }}>
+                <th style={{ textAlign: 'left', padding: '4px 8px' }}>Sector</th><th style={{ padding: '4px 8px', textAlign: 'right' }}>Dolosos</th><th style={{ padding: '4px 8px', textAlign: 'right' }}>Culposos</th><th style={{ padding: '4px 8px', textAlign: 'right' }}>No const.</th><th style={{ padding: '4px 8px', textAlign: 'right' }}>Total</th>
+              </tr></thead>
+              <tbody>
+                {filas.map(function(f) { var r = f[1]; return (
+                  <tr key={f[0]}><td style={{ ...celda, textAlign: 'left', fontWeight: 700 }}>{f[0]}</td><td style={celda}>{r.d || ''}</td><td style={celda}>{r.c || ''}</td><td style={celda}>{r.n || ''}</td><td style={{ ...celda, fontWeight: 800 }}>{r.d + r.c + r.n}</td></tr>
+                ); })}
+                <tr><td style={{ ...celda, textAlign: 'left', fontWeight: 800 }}>Total</td><td style={{ ...celda, fontWeight: 800 }}>{tot.d}</td><td style={{ ...celda, fontWeight: 800 }}>{tot.c}</td><td style={{ ...celda, fontWeight: 800 }}>{tot.n}</td><td style={{ ...celda, fontWeight: 800 }}>{tot.d + tot.c + tot.n}</td></tr>
+              </tbody>
+            </table>
+          </div>
+        )}
+      </PostIt>
+    </div>
+  );
+}
+
 function BloqueProyeccion({ meses, sinCasos }) {
   var p = proyectar(meses);
   var caja = { marginTop: 30, padding: 18, background: '#f6f3ec', border: '1px solid #b6905a40', borderRadius: 12 };
@@ -627,6 +697,7 @@ export default function MapaCalor({ user, onIniciarProyecto, onImportar, seccion
   const heatLayer = useRef(null);
   const [puntos, setPuntos] = useState([]);
   const [pendientes, setPendientes] = useState([]); // muertes no constitutivas de delito: aún no cuentan como homicidio doloso
+  const [culposos, setCulposos] = useState([]);   // homicidios culposos: se llevan aparte, no son dolosos
   const [sinUbicar, setSinUbicar] = useState([]); // casos regionales sin coordenadas: no van al mapa, sí al panel de análisis
   const [loading, setLoading] = useState(true);
   const [leafletReady, setLeafletReady] = useState(false);
@@ -690,6 +761,7 @@ export default function MapaCalor({ user, onIniciarProyecto, onImportar, seccion
     const municipios = new Set();
     let listaSinUbicar = [];
     let listaPendientes = [];
+    let listaCulposos = [];
 
     for (const f of FUENTES) {
       const campos = f.lat + ', ' + f.lng + ', ' + f.fecha + ', ' + f.delito + ', ' + f.muni + ', ' + f.desc + (f.region ? ', ' + f.region : '');
@@ -707,8 +779,10 @@ export default function MapaCalor({ user, onIniciarProyecto, onImportar, seccion
 
       // Muerte no constitutiva de delito: se aparta (no cuenta como homicidio doloso hasta que el MP la reclasifique)
       const esPend = function(c) { return f.key === 'incidencia_regional' && clasificarDelito(c.delito).pendiente; };
-      const coords = coordsTodas.filter(function(c) { return !esPend(c); });
+      const esCulp = function(c) { return f.key === 'incidencia_regional' && clasificarDelito(c.delito).culposo; };
+      const coords = coordsTodas.filter(function(c) { return !esPend(c) && !esCulp(c); });
       listaPendientes.push.apply(listaPendientes, coordsTodas.filter(esPend));
+      listaCulposos.push.apply(listaCulposos, coordsTodas.filter(esCulp));
       coords.forEach(function(c) {
         if (c.delito) delitos.add(etiquetaDelito(c));
         if (c.municipio) municipios.add(c.municipio);
@@ -728,7 +802,8 @@ export default function MapaCalor({ user, onIniciarProyecto, onImportar, seccion
           };
         });
         listaPendientes.push.apply(listaPendientes, listaSinUbicar.filter(function(c) { return clasificarDelito(c.delito).pendiente; }));
-        listaSinUbicar = listaSinUbicar.filter(function(c) { return !clasificarDelito(c.delito).pendiente; });
+        listaCulposos.push.apply(listaCulposos, listaSinUbicar.filter(function(c) { return clasificarDelito(c.delito).culposo; }));
+        listaSinUbicar = listaSinUbicar.filter(function(c) { return !clasificarDelito(c.delito).pendiente && !clasificarDelito(c.delito).culposo; });
         listaSinUbicar.forEach(function(c) {
           if (c.delito) delitos.add(etiquetaDelito(c));
           if (c.municipio) municipios.add(c.municipio);
@@ -741,6 +816,7 @@ export default function MapaCalor({ user, onIniciarProyecto, onImportar, seccion
     setPuntos(todos);
     setSinUbicar(listaSinUbicar);
     setPendientes(listaPendientes);
+    setCulposos(listaCulposos);
     setStats({ total: todos.length, por_fuente: porFuente });
     setDelitosUnicos(Array.from(delitos).sort());
     setMunicipiosUnicos(Array.from(municipios).sort());
@@ -1293,6 +1369,7 @@ export default function MapaCalor({ user, onIniciarProyecto, onImportar, seccion
                         </PostIt>
                       )}
                     </div>
+                    <EstadisticaMes dolosos={puntos.concat(sinUbicar).filter(function(p) { return p.fuente === 'incidencia_regional' && filtros[p.fuente]; })} pendientes={pendientes.filter(function(p) { return filtros[p.fuente]; })} culposos={culposos.filter(function(p) { return filtros[p.fuente]; })} />
                     <div style={{ marginTop: 12, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 12 }}>
                       {topSectores.length > 0 && <PostIt titulo="Dónde" fondo={PIT_ARENA}><MiniBarras items={topSectores.slice(0, 5)} /></PostIt>}
                       {homicidios.length > 0 && <PostIt titulo="Cómo" fondo={PIT_GUINDA}><BarraApilada porMedio={porMedio} total={homicidios.length} /></PostIt>}
