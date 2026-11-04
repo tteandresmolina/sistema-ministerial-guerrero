@@ -89,9 +89,10 @@ export function filasExcel(registros) {
 
 export function libroDelMes(registros) {
   const anchos = [{ wch: 16 }, { wch: 12 }, { wch: 46 }, { wch: 26 }, { wch: 60 }, { wch: 12 }, { wch: 14 }, { wch: 12 }, { wch: 12 }, { wch: 8 }, { wch: 11 }, { wch: 11 }];
-  // Dos hojas: los homicidios dolosos y las muertes no constitutivas de delito (en espera de necropsia), como las lleva la estadística mensual
-  const dolosos = registros.filter((r) => !clasificarDelito(r.delito).pendiente);
+  // Tres hojas, como las lleva la estadística mensual: homicidios dolosos, no constitutivas de delito (en espera de necropsia) y culposos
+  const dolosos = registros.filter((r) => { const k = clasificarDelito(r.delito); return !k.pendiente && !k.culposo; });
   const noConst = registros.filter((r) => clasificarDelito(r.delito).pendiente);
+  const culp = registros.filter((r) => clasificarDelito(r.delito).culposo);
   const ws = XLSX.utils.json_to_sheet(filasExcel(dolosos), { header: ENCABEZADOS });
   ws['!cols'] = anchos;
   const wb = XLSX.utils.book_new();
@@ -99,6 +100,9 @@ export function libroDelMes(registros) {
   const wn = XLSX.utils.json_to_sheet(filasExcel(noConst), { header: ENCABEZADOS });
   wn['!cols'] = anchos;
   XLSX.utils.book_append_sheet(wb, wn, 'NO CONSTITUTIVAS');
+  const wc = XLSX.utils.json_to_sheet(filasExcel(culp), { header: ENCABEZADOS });
+  wc['!cols'] = anchos;
+  XLSX.utils.book_append_sheet(wb, wc, 'CULPOSOS');
   return wb;
 }
 
@@ -276,7 +280,8 @@ export default function PegarTarjeta({ perfil, onGuardado }) {
         : ub.precision === 'tarjeta' ? 'Ubicada con las coordenadas de la tarjeta.'
         : ub.precision === 'direccion' ? 'Ubicada por la dirección. Verifica el punto en Revisar ubicaciones.'
         : 'Ubicada de forma aproximada (por la colonia). Verifica el punto en Revisar ubicaciones.';
-      const pend = clasificarDelito(t.delito).pendiente ? ' Está en espera de necropsia: no cuenta como homicidio doloso hasta que el MP la reclasifique.' : '';
+      const kk = clasificarDelito(t.delito);
+      const pend = kk.pendiente ? ' Está en espera de necropsia: no cuenta como homicidio doloso hasta que el MP la reclasifique.' : kk.culposo ? ' Es homicidio culposo: se lleva aparte y no cuenta como homicidio doloso.' : '';
       setEstado((e) => ({ ...e, [t.id]: { tipo: 'ok', texto: 'Guardada. ' + donde + pend } }));
       if (onGuardado) onGuardado();
     } catch (err) {
@@ -310,7 +315,7 @@ export default function PegarTarjeta({ perfil, onGuardado }) {
           <div key={t.id} style={{ background: C.white, border: '1px solid #b6905466', borderLeft: '6px solid ' + (guardada ? C.verde : C.navy), borderRadius: 10, padding: 16, marginTop: 16 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 10 }}>
               <span style={{ fontSize: 18, fontWeight: 800, color: C.navy }}>Tarjeta informativa {i + 1}</span>
-              {t.delito && <span style={{ background: color.bg, color: color.tx, borderRadius: 14, padding: '4px 12px', fontSize: 15, fontWeight: 700 }}>{cls.pendiente ? 'En espera de necropsia' : cls.medio}</span>}
+              {t.delito && <span style={{ background: color.bg, color: color.tx, borderRadius: 14, padding: '4px 12px', fontSize: 15, fontWeight: 700 }}>{cls.pendiente ? 'En espera de necropsia' : cls.culposo ? 'Culposo: no cuenta como doloso' : cls.medio}</span>}
               {cls.calificado && <span style={{ background: '#eef1f6', color: C.navy, borderRadius: 14, padding: '4px 12px', fontSize: 15, fontWeight: 700 }}>Calificado</span>}
             </div>
 
