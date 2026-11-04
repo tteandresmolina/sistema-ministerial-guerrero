@@ -422,9 +422,208 @@ function RevisarGuardadas({ leafletListo, onCambio }) {
   );
 }
 
+// ---------------------------------------------------------------------------------------------------------
+// COMPLETAR UBICACIONES DESDE EXCEL
+// El sector regresa el Excel de "Descargar relación para el regional" con LATITUD y LONGITUD llenas. Aquí se revisa todo
+// (carpeta registrada, coordenadas legibles y dentro de la zona, cuánto se mueve el punto) y, solo con lo que se marque, se
+// actualizan los casos: coordenadas nuevas, ubicación confirmada y una nota en observaciones. Nada se guarda sin revisión.
+// ---------------------------------------------------------------------------------------------------------
+const quitarAcentos = (t) => String(t == null ? '' : t).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase().replace(/\s+/g, ' ').trim();
+const ZONA_LAT = [16.4, 17.5], ZONA_LNG = [-100.6, -99.0];   // Acapulco y Coyuca de Benítez
+const dentroZona = (la, lo) => la >= ZONA_LAT[0] && la <= ZONA_LAT[1] && lo >= ZONA_LNG[0] && lo <= ZONA_LNG[1];
+const distanciaEnM = (la1, lo1, la2, lo2) => {
+  const R = 6371000, rad = (x) => (x * Math.PI) / 180, dLa = rad(la2 - la1), dLo = rad(lo2 - lo1);
+  const a = Math.sin(dLa / 2) ** 2 + Math.cos(rad(la1)) * Math.cos(rad(la2)) * Math.sin(dLo / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(a));
+};
+
+// Un número de coordenada: decimal con punto o coma, o grados-minutos-segundos (16°52'15"N), con N/S/E/O/W
+function numeroCoord(t) {
+  if (t == null || t === '') return null;
+  if (typeof t === 'number') return isFinite(t) ? t : null;
+  let s = String(t).trim().toUpperCase();
+  if (!s) return null;
+  const neg = /(OESTE|SUR)/.test(s) || /(^|[\d°º'’′"”″\s])(S|W|O)\s*$/.test(s) || /^(S|W|O)\s/.test(s);
+  s = s.replace(/OESTE|NORTE|ESTE|SUR/g, ' ').replace(/(^|\s)[NSEOW](\s|$)/g, ' ').replace(/[NSEOW]\s*$/g, '').trim();
+  const dms = s.match(/^(-?\d{1,3})\s*[°º]\s*(\d{1,2}(?:[.,]\d+)?)?\s*['’′]?\s*(\d{1,2}(?:[.,]\d+)?)?\s*["”″]?$/);
+  let v;
+  if (dms) {
+    const g = Math.abs(parseFloat(dms[1])), m = dms[2] ? parseFloat(dms[2].replace(',', '.')) : 0, sg = dms[3] ? parseFloat(dms[3].replace(',', '.')) : 0;
+    v = g + m / 60 + sg / 3600; if (dms[1].startsWith('-')) v = -v;
+  } else {
+    const d = s.replace(/\s+/g, '').replace(',', '.');
+    if (!/^-?\d{1,3}(\.\d+)?$/.test(d)) return null;
+    v = parseFloat(d);
+  }
+  return neg && v > 0 ? -v : v;
+}
+
+// Lee latitud y longitud como las escriba el sector. Corrige solo lo que no deja duda (invertidas, longitud sin signo) y lo avisa.
+export function leerCoordenadas(latT, lngT) {
+  const vacio = (x) => x == null || String(x).trim() === '';
+  if (vacio(latT) && vacio(lngT)) return { estado: 'vacia', notas: [] };
+  const notas = [];
+  let a, b;
+  if (!vacio(latT) && vacio(lngT)) {            // las dos juntas en una celda: "16.87, -99.88"
+    const m = String(latT).match(/(-?\d{1,3}[.,]\d+)\s*[;,\s]\s*(-?\d{1,3}[.,]\d+)/) || String(latT).match(/(-?\d{1,3}\.\d{3,})\s*(-?\d{1,3}\.\d{3,})/);
+    if (!m) return { estado: 'ilegible', notas: ['Falta la longitud.'] };
+    a = numeroCoord(m[1]); b = numeroCoord(m[2]); notas.push('Las dos coordenadas venían en una sola celda.');
+  } else { a = numeroCoord(latT); b = numeroCoord(lngT); }
+  if (a == null || b == null) return { estado: 'ilegible', notas: ['No se entienden las coordenadas.'] };
+  if (dentroZona(b, a) || dentroZona(b, -a)) { const t = a; a = b; b = t; notas.push('Venían invertidas (longitud en lugar de latitud): se acomodaron.'); }
+  if (b > 0 && dentroZona(a, -b)) { b = -b; notas.push('La longitud venía sin signo: se tomó como oeste.'); }
+  const crudo = typeof latT === 'number' ? String(latT) : String(latT).replace(',', '.');
+  const dec = (crudo.split('.')[1] || '').replace(/\D/g, '');
+  if (crudo.indexOf('.') >= 0 && dec.length > 0 && dec.length < 4) notas.push('Pocos decimales: la ubicación es poco precisa.');
+  return dentroZona(a, b) ? { estado: 'ok', lat: a, lng: b, notas } : { estado: 'fuera', lat: a, lng: b, notas: notas.concat(['Cae fuera de Acapulco y Coyuca.']) };
+}
+
+// filas: [{ fila, carpeta, lat, lng, zona }] del Excel; existentes: { carpeta(20 dígitos) → renglón de la base }
+export function armarVistaPrevia(filas, existentes) {
+  const vistos = {};
+  return filas.map((f) => {
+    const ci = String(f.carpeta || '').replace(/\D/g, '');
+    const c = leerCoordenadas(f.lat, f.lng);
+    const ex = existentes[ci] || null;
+    const base = { fila: f.fila, carpeta: ci, zona: f.zona || (ex && ex.zona) || '', c, ex, notas: c.notas.slice(), mueve: null };
+    if (c.estado === 'vacia') return { ...base, estado: 'vacia', marcada: false };
+    if (!ci) return { ...base, estado: 'sin_carpeta', marcada: false };
+    if (!ex) return { ...base, estado: 'no_registrada', marcada: false };
+    if (c.estado === 'ilegible') return { ...base, estado: 'ilegible', marcada: false };
+    if (c.estado === 'fuera') return { ...base, estado: 'fuera', marcada: false };
+    if (vistos[ci]) return { ...base, estado: 'repetida', marcada: false };
+    vistos[ci] = true;
+    const tiene = ex.coordenadas_lat != null && ex.coordenadas_lng != null;
+    const mueve = tiene ? Math.round(distanciaEnM(Number(ex.coordenadas_lat), Number(ex.coordenadas_lng), c.lat, c.lng)) : null;
+    if (tiene && ex.ubicacion_confirmada && mueve <= 15) return { ...base, estado: 'igual', mueve, marcada: false };
+    if (tiene && ex.ubicacion_confirmada) return { ...base, estado: 'confirmada_otro_punto', mueve, marcada: false };
+    if (mueve != null && mueve > 3000) return { ...base, estado: 'mueve_mucho', mueve, marcada: false };
+    return { ...base, estado: 'lista', mueve, marcada: true };
+  });
+}
+
+const ESTADO_TEXTO = {
+  lista: ['Lista', '#2e7d32'], igual: ['Ya estaba así', '#5a6478'], vacia: ['Sin coordenadas', '#5a6478'],
+  confirmada_otro_punto: ['Ya estaba confirmada en otro punto', '#b8860b'], mueve_mucho: ['Se mueve mucho: revisa', '#b8860b'],
+  fuera: ['Fuera de Acapulco y Coyuca', '#c62828'], ilegible: ['No se entienden', '#c62828'], no_registrada: ['Carpeta no registrada', '#c62828'],
+  repetida: ['Repetida en el archivo', '#c62828'], sin_carpeta: ['Sin carpeta', '#c62828'], aplicada: ['Aplicada', '#2e7d32'], fallo: ['No se pudo guardar', '#c62828'],
+};
+const textoMueve = (m) => (m == null ? '' : m >= 1000 ? (m / 1000).toFixed(1).replace('.', ',') + ' km' : m + ' m');
+
+function CompletarUbicaciones({ onCambio }) {
+  const [filas, setFilas] = useState(null);      // vista previa
+  const [archivo, setArchivo] = useState('');
+  const [leyendo, setLeyendo] = useState(false);
+  const [aplicando, setAplicando] = useState(false);
+  const [msg, setMsg] = useState(null);
+
+  const leer = async (file) => {
+    if (!file) return;
+    setLeyendo(true); setMsg(null); setFilas(null); setArchivo(file.name || '');
+    try {
+      const wb = XLSX.read(await file.arrayBuffer(), { type: 'array' });
+      const hojas = wb.SheetNames.map((n) => ({ n, filas: XLSX.utils.sheet_to_json(wb.Sheets[n], { defval: '', raw: true }) }));
+      const tieneCarpeta = (h) => h.filas.length > 0 && Object.keys(h.filas[0]).some((k) => /CARPETA/.test(quitarAcentos(k)));
+      const hoja = hojas.find((h) => /PENDIENTES/.test(quitarAcentos(h.n)) && tieneCarpeta(h)) || hojas.find(tieneCarpeta);
+      if (!hoja) { setMsg({ ok: false, t: 'No encontré una hoja con la columna "CARPETA DE INVESTIGACIÓN". Usa el Excel de "Descargar relación para el regional".' }); setLeyendo(false); return; }
+      const claves = Object.keys(hoja.filas[0]);
+      const col = (re) => claves.find((k) => re.test(quitarAcentos(k)));
+      const kC = col(/CARPETA/), kLat = col(/^(LATITUD|LAT)$/) || col(/^COORDENADAS?$/), kLng = col(/^(LONGITUD|LONG|LNG|LON)$/), kZ = col(/COORDINACION|SECTOR|ZONA/);
+      if (!kLat) { setMsg({ ok: false, t: 'No encontré las columnas LATITUD y LONGITUD en la hoja "' + hoja.n + '".' }); setLeyendo(false); return; }
+      const crudas = hoja.filas.map((r, i) => ({ fila: i + 2, carpeta: r[kC], lat: r[kLat], lng: kLng ? r[kLng] : '', zona: kZ ? r[kZ] : '' }));
+      const cis = Array.from(new Set(crudas.map((f) => String(f.carpeta || '').replace(/\D/g, '')).filter((c) => c.length >= 10)));
+      const existentes = {};
+      for (let i = 0; i < cis.length; i += 150) {
+        const { data, error } = await supabase.from('incidencia_regional')
+          .select('carpeta_investigacion, zona, fecha, lugar_hechos, coordenadas_lat, coordenadas_lng, ubicacion_confirmada, observaciones')
+          .in('carpeta_investigacion', cis.slice(i, i + 150));
+        if (error) { setMsg({ ok: false, t: 'No se pudo consultar la base: ' + error.message }); setLeyendo(false); return; }
+        (data || []).forEach((r) => { existentes[String(r.carpeta_investigacion || '').replace(/\D/g, '')] = r; });
+      }
+      setFilas(armarVistaPrevia(crudas, existentes));
+    } catch (e) { setMsg({ ok: false, t: 'No se pudo leer el archivo: ' + (e && e.message ? e.message : e) }); }
+    setLeyendo(false);
+  };
+
+  const marcar = (i, v) => setFilas((fs) => fs.map((f, j) => (j === i ? { ...f, marcada: v } : f)));
+  const puedeMarcar = (f) => ['lista', 'mueve_mucho', 'confirmada_otro_punto'].includes(f.estado);
+  const marcadas = filas ? filas.filter((f) => f.marcada && puedeMarcar(f)) : [];
+
+  const aplicar = async () => {
+    setAplicando(true); setMsg(null);
+    const hoy = new Date(); const fecha = String(hoy.getDate()).padStart(2, '0') + '/' + String(hoy.getMonth() + 1).padStart(2, '0') + '/' + hoy.getFullYear();
+    let ok = 0, mal = 0; const nuevas = filas.slice();
+    for (let i = 0; i < nuevas.length; i++) {
+      const f = nuevas[i];
+      if (!(f.marcada && puedeMarcar(f))) continue;
+      const nota = 'Ubicación confirmada con las coordenadas que envió el sector (Excel del ' + fecha + ').';
+      const { data, error } = await supabase.from('incidencia_regional')
+        .update({ coordenadas_lat: f.c.lat, coordenadas_lng: f.c.lng, ubicacion_confirmada: true, observaciones: f.ex.observaciones ? f.ex.observaciones + ' | ' + nota : nota, updated_at: new Date().toISOString() })
+        .eq('carpeta_investigacion', f.ex.carpeta_investigacion).select('id');
+      if (error || !data || data.length === 0) { mal++; nuevas[i] = { ...f, estado: 'fallo', marcada: false, error: error ? error.message : 'sin permiso o la carpeta ya no existe' }; }
+      else { ok++; nuevas[i] = { ...f, estado: 'aplicada', marcada: false }; }
+    }
+    setFilas(nuevas); setAplicando(false);
+    setMsg({ ok: mal === 0, t: ok + (ok === 1 ? ' ubicación actualizada' : ' ubicaciones actualizadas') + (mal ? ' · ' + mal + ' no se pudieron guardar (revisa las marcadas en rojo).' : '. Ya cuentan en el mapa.') });
+    if (ok > 0 && onCambio) onCambio();
+  };
+
+  const cuenta = (est) => (filas ? filas.filter((f) => est.includes(f.estado)).length : 0);
+  const visibles = filas ? filas.filter((f) => f.estado !== 'vacia') : [];
+  return (
+    <div style={{ background: C.white, borderRadius: 10, padding: 16, boxShadow: '0 1px 4px rgba(0,0,0,0.08)' }}>
+      <div style={{ fontSize: 18, fontWeight: 800, color: C.guinda, marginBottom: 6 }}>Completar ubicaciones desde Excel</div>
+      <div style={{ fontSize: 16, color: C.gray, marginBottom: 12 }}>Sube el Excel que regresó el sector con LATITUD y LONGITUD llenas. Antes de guardar, aquí revisas todo.</div>
+      <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 12 }}>
+        <label style={{ ...btnPrimario, background: C.guinda, cursor: 'pointer' }}>
+          <Upload size={18} /> {leyendo ? 'Leyendo…' : 'Elegir el Excel del sector'}
+          <input type="file" accept=".xlsx,.xls,.csv" aria-label="Excel del sector" style={{ display: 'none' }} disabled={leyendo || aplicando}
+            onChange={(e) => { const f = e.target.files && e.target.files[0]; if (f) leer(f); e.target.value = ''; }} />
+        </label>
+        <button onClick={() => descargarRelacionPendientes()} style={{ ...btn, background: 'transparent', color: C.guinda, border: '2px solid ' + C.guinda }}>Descargar la relación para el sector</button>
+      </div>
+      {msg && <div role="status" style={{ fontSize: 16, fontWeight: 700, color: msg.ok ? C.verde : C.rojo, marginBottom: 10 }}>{msg.t}</div>}
+      {filas && (
+        <>
+          <div style={{ fontSize: 14, color: C.gray, marginBottom: 6 }}>{archivo}</div>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 10, fontSize: 15, fontWeight: 700 }}>
+            <span style={{ color: C.verde }}>{cuenta(['lista', 'aplicada'])} listas</span>
+            <span style={{ color: C.ambar }}>{cuenta(['mueve_mucho', 'confirmada_otro_punto'])} para revisar</span>
+            <span style={{ color: C.rojo }}>{cuenta(['fuera', 'ilegible', 'no_registrada', 'repetida', 'sin_carpeta', 'fallo'])} con problema</span>
+            <span style={{ color: C.gray }}>{cuenta(['vacia'])} sin coordenadas (se ignoran) · {cuenta(['igual'])} ya estaban así</span>
+          </div>
+          <div style={{ overflowX: 'auto', maxHeight: 420, overflowY: 'auto', border: '1px solid #e6e2d6', borderRadius: 8 }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 720 }}>
+              <thead><tr style={{ fontSize: 14, color: C.gray, textAlign: 'left', background: '#faf7ef', position: 'sticky', top: 0 }}>
+                <th style={{ padding: 8 }}></th><th style={{ padding: 8 }}>Coordinación</th><th style={{ padding: 8 }}>Carpeta</th><th style={{ padding: 8 }}>Nuevo punto</th><th style={{ padding: 8 }}>Antes</th><th style={{ padding: 8 }}>Estado</th>
+              </tr></thead>
+              <tbody>
+                {visibles.map((f) => { const i = filas.indexOf(f); const [txt, color] = ESTADO_TEXTO[f.estado] || [f.estado, C.gray]; return (
+                  <tr key={i} style={{ borderTop: '1px solid #eee8d8', fontSize: 15, verticalAlign: 'top' }}>
+                    <td style={{ padding: 8 }}><input type="checkbox" aria-label={'Aplicar ' + f.carpeta} checked={!!f.marcada} disabled={!puedeMarcar(f) || aplicando} onChange={(e) => marcar(i, e.target.checked)} style={{ width: 20, height: 20 }} /></td>
+                    <td style={{ padding: 8 }}>{f.zona}</td>
+                    <td style={{ padding: 8, fontFamily: 'monospace', fontSize: 14 }}>{f.carpeta || '—'}</td>
+                    <td style={{ padding: 8 }}>{f.c.lat != null ? f.c.lat.toFixed(6) + ', ' + f.c.lng.toFixed(6) : '—'}</td>
+                    <td style={{ padding: 8, fontSize: 14 }}>{!f.ex ? '' : f.ex.coordenadas_lat == null ? 'Sin ubicar' : (f.ex.ubicacion_confirmada ? 'Confirmada' : 'Aproximada') + (f.mueve != null ? ' · se mueve ' + textoMueve(f.mueve) : '')}</td>
+                    <td style={{ padding: 8, fontWeight: 700, color }}>{txt}{f.error ? <div style={{ fontWeight: 400, fontSize: 13 }}>{f.error}</div> : null}{f.notas.length > 0 && <div style={{ fontWeight: 400, fontSize: 13, color: C.gray }}>{f.notas.join(' ')}</div>}</td>
+                  </tr>
+                ); })}
+              </tbody>
+            </table>
+          </div>
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 12, alignItems: 'center' }}>
+            <button onClick={aplicar} disabled={aplicando || marcadas.length === 0} style={{ ...btnPrimario, background: C.guinda, opacity: aplicando || marcadas.length === 0 ? 0.5 : 1 }}>{aplicando ? 'Guardando…' : 'Aplicar ' + marcadas.length + (marcadas.length === 1 ? ' ubicación' : ' ubicaciones')}</button>
+            <span style={{ fontSize: 14, color: C.gray }}>Solo se actualizan las marcadas. Cada caso queda con una nota en observaciones.</span>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
 export default function ImportarIncidenciaRegional({ perfil, onImportado, leafletListo, enPestana = false }) {
   const [abierto, setAbierto] = useState(false);
-  const [modo, setModo] = useState('importar'); // 'importar' | 'tarjeta' (pegar tarjeta informativa) | 'revisar'
+  const [modo, setModo] = useState('importar'); // 'importar' | 'tarjeta' (pegar tarjeta informativa) | 'revisar' | 'completar' (ubicaciones desde Excel)
   const [fase, setFase] = useState('inicio'); // 'inicio' | 'revision'
   const [region, setRegion] = useState(REGIONES_LISTAS[0]);
   const [resumen, setResumen] = useState(null);
@@ -645,9 +844,11 @@ export default function ImportarIncidenciaRegional({ perfil, onImportado, leafle
         <button onClick={() => setModo('importar')} style={{ ...btn, padding: '8px 16px', minHeight: 44, fontSize: 16, background: modo === 'importar' ? C.navy : 'transparent', color: modo === 'importar' ? '#fff' : C.navy, border: '2px solid ' + C.navy }}>Importar Excel (histórico)</button>
         <button onClick={() => setModo('tarjeta')} style={{ ...btn, padding: '8px 16px', minHeight: 44, fontSize: 16, background: modo === 'tarjeta' ? C.navy : 'transparent', color: modo === 'tarjeta' ? '#fff' : C.navy, border: '2px solid ' + C.navy }}>Pegar tarjeta informativa</button>
         <button onClick={() => setModo('revisar')} style={{ ...btn, padding: '8px 16px', minHeight: 44, fontSize: 16, background: modo === 'revisar' ? C.navy : 'transparent', color: modo === 'revisar' ? '#fff' : C.navy, border: '2px solid ' + C.navy }}>Revisar ubicaciones</button>
+        <button onClick={() => setModo('completar')} style={{ ...btn, padding: '8px 16px', minHeight: 44, fontSize: 16, background: modo === 'completar' ? C.navy : 'transparent', color: modo === 'completar' ? '#fff' : C.navy, border: '2px solid ' + C.navy }}>Completar ubicaciones desde Excel</button>
       </div>
 
       {modo === 'revisar' && <RevisarGuardadas leafletListo={leafletListo} onCambio={onImportado} />}
+      {modo === 'completar' && <CompletarUbicaciones onCambio={onImportado} />}
       {modo === 'tarjeta' && (
         <>
           <PegarTarjeta perfil={perfil} onGuardado={onImportado} />
