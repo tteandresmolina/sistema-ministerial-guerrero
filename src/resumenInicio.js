@@ -35,7 +35,8 @@ const etiquetaSemana = (a, b) => { const pa = a.split('-'), pb = b.split('-'); r
 export function analizarCasos(casos, hoy = new Date()) {
   const hoyD = diaDeHoy(hoy);
   const validos = [], pendientes = [];
-  (casos || []).forEach((c) => { (clasificarDelito(c.delito).pendiente ? pendientes : validos).push(c); });
+  const culposos = [];
+  (casos || []).forEach((c) => { const k = clasificarDelito(c.delito); (k.pendiente ? pendientes : k.culposo ? culposos : validos).push(c); });
 
   let n30 = 0, nPrev = 0, nAnio = 0, ultima = '';
   const porZona = {}, medios = {};
@@ -101,7 +102,7 @@ export function analizarCasos(casos, hoy = new Date()) {
     semanas: semanas.map((s) => ({ ...s, etiqueta: etiquetaSemana(s.ini, s.fin) })),
     promSemana: prom, repunte, zonas, topZona, medioTop,
     sinUbicar, sinConfirmar, pctUbicados: total > 0 ? Math.round((total - sinUbicar) / total * 100) : null,
-    pendientesNecropsia: pendientes.length, pendientes30, pendientesViejos, porMes,
+    pendientesNecropsia: pendientes.length, pendientes30, pendientesViejos, culposos: culposos.length, porMes,
     hallazgos30, hallazgos7, hallazgosTotal, ultimoHallazgo,
   };
 }
