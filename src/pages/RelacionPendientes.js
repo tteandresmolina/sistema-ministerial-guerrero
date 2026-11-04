@@ -7,6 +7,7 @@
 
 import * as XLSX from 'xlsx';
 import { supabase } from '../supabaseClient';
+import { clasificarDelito } from './clasificarDelito';
 
 const pad = (n) => String(n).padStart(2, '0');
 const fechaCorta = (iso) => { const p = String(iso || '').slice(0, 10).split('-'); return p.length === 3 ? p[2] + '/' + p[1] + '/' + p[0] : ''; };
@@ -122,12 +123,14 @@ export function libroRelacion(registros, hoy) {
 
 // Consulta la base y descarga el Excel
 export async function descargarRelacionPendientes() {
-  const cols = 'zona, fecha, carpeta_investigacion, lugar_hechos, coordenadas_lat, coordenadas_lng, ubicacion_confirmada, lugar_es_hospital';
+  const cols = 'zona, fecha, carpeta_investigacion, delito, lugar_hechos, coordenadas_lat, coordenadas_lng, ubicacion_confirmada, lugar_es_hospital';
   let { data, error } = await supabase.from('incidencia_regional').select(cols + ', hora_conocimiento').order('fecha', { ascending: true });
   if (error && /hora_conocimiento/i.test(error.message || '')) ({ data, error } = await supabase.from('incidencia_regional').select(cols).order('fecha', { ascending: true }));
   if (error) throw error;
   const hoy = new Date();
-  const { wb, resumen } = libroRelacion(data || [], hoy);
+  // Solo homicidios dolosos: las muertes no constitutivas y los culposos no se dibujan en el mapa, así que no se pide confirmar su ubicación
+  const dolosos = (data || []).filter((r) => { const k = clasificarDelito(r.delito); return !k.pendiente && !k.culposo; });
+  const { wb, resumen } = libroRelacion(dolosos, hoy);
   XLSX.writeFile(wb, 'RELACION_PENDIENTES_REGION_ACAPULCO_' + hoy.getFullYear() + pad(hoy.getMonth() + 1) + pad(hoy.getDate()) + '.xlsx');
   return resumen;
 }
