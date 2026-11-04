@@ -81,6 +81,9 @@ export function analizarCasos(casos, hoy = new Date()) {
     if (edad >= 0 && edad < 30) pendientes30++; else if (edad >= 30) pendientesViejos++;
   });
 
+  let culposos30 = 0;
+  culposos.forEach((c) => { if (!c.fecha) return; const edad = hoyD - aDia(String(c.fecha).slice(0, 10)); if (edad >= 0 && edad < 30) culposos30++; });
+
   const zonas = Object.entries(porZona).sort((a, b) => b[1] - a[1]);
   const topZona = zonas[0] ? { zona: zonas[0][0], n: zonas[0][1], pct: Math.round(zonas[0][1] / n30 * 100) } : null;
   const mediosOrden = Object.entries(medios).filter((e) => e[0] !== 'Por determinar').sort((a, b) => b[1] - a[1]);
@@ -102,7 +105,7 @@ export function analizarCasos(casos, hoy = new Date()) {
     semanas: semanas.map((s) => ({ ...s, etiqueta: etiquetaSemana(s.ini, s.fin) })),
     promSemana: prom, repunte, zonas, topZona, medioTop,
     sinUbicar, sinConfirmar, pctUbicados: total > 0 ? Math.round((total - sinUbicar) / total * 100) : null,
-    pendientesNecropsia: pendientes.length, pendientes30, pendientesViejos, culposos: culposos.length, porMes,
+    pendientesNecropsia: pendientes.length, pendientes30, pendientesViejos, culposos: culposos.length, culposos30, porMes,
     hallazgos30, hallazgos7, hallazgosTotal, ultimoHallazgo,
   };
 }
