@@ -6,6 +6,7 @@
 // Fuentes: registros_911, escenas_crimen, detenidos, oficios_investigacion
 
 import { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { supabase } from '../supabaseClient';
 import { RefreshCw, MapPin, Filter, X, Clock, BarChart3, ChevronDown, ChevronUp, Upload, Maximize2, Target, Flag } from 'lucide-react';
 import { TarjetaResumen, BarraSuperior, CapasPantalla } from './PantallaMapa';
@@ -296,6 +297,7 @@ function MedidorMeses({ n, meta }) {
 // No usa estacionalidad: con menos de 2 años de historia sería una suposición.
 // ---------------------------------------------------------------------------------------------------------
 var MESES_MIN_PROYECCION = 12;
+var SECTORES_LISTA = ['Renacimiento', 'Zapata', 'Costa Azul', 'Central', 'Mozimba', 'Coloso', 'Coyuca de Benítez', 'Barrios Históricos', 'Garita', 'Jardín', 'San Marcos'];
 var ABR_MES = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
 var MES_LARGO = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
 function diasDelMes(clave) { return new Date(Date.UTC(Number(clave.slice(0, 4)), Number(clave.slice(5, 7)), 0)).getUTCDate(); }
@@ -368,7 +370,8 @@ export function sectoresSinCasosRecientes(listaPuntos, finISO) {
     .sort(function(a, b) { return b.dias - a.dias; });
 }
 
-function GraficaProyeccion({ reales, parcial, futuros }) {
+function GraficaProyeccion({ reales, parcial, futuros, uid }) {
+  var idRayado = 'rayado-' + (uid || 'a');
   var cols = reales.map(function(r) { return { tipo: 'real', clave: r.clave, n: r.n }; });
   if (parcial) cols.push({ tipo: 'parcial', clave: parcial.clave, n: parcial.nActual, cierre: parcial.cierre, lo: parcial.lo, hi: parcial.hi });
   futuros.forEach(function(f) { cols.push({ tipo: 'futuro', clave: f.clave, mu: f.mu, lo: f.lo, hi: f.hi }); });
@@ -380,6 +383,11 @@ function GraficaProyeccion({ reales, parcial, futuros }) {
   var grupos = cols.reduce(function(g, c, i) { var a = c.clave.slice(0, 4), u = g[g.length - 1]; if (u && u.a === a) u.n++; else g.push({ a: a, n: 1, i: i }); return g; }, []);
   return (
     <svg viewBox={'0 0 ' + W + ' ' + H} style={{ width: '100%', display: 'block' }} role="img" aria-label="Casos por mes reales y proyección de los próximos meses">
+      <defs>
+        <pattern id={idRayado} patternUnits="userSpaceOnUse" width="7" height="7" patternTransform="rotate(45)">
+          <rect width="7" height="7" fill="#f6edcf" /><line x1="0" y1="0" x2="0" y2="7" stroke="#b6905a" strokeWidth="2.4" />
+        </pattern>
+      </defs>
       <line x1={pl} y1={base} x2={W - pr} y2={base} stroke="#d9dee5" strokeWidth="1.5" />
       {iFut > 0 && <line x1={pl + iFut * paso} y1={pt - 22} x2={pl + iFut * paso} y2={base + 44} stroke="#b6905a" strokeWidth="2" strokeDasharray="6 5" />}
       {iFut > 0 && <text x={pl + iFut * paso + 8} y={pt - 8} fontSize="15" fontWeight="800" fill="#7a5a14">Estimado</text>}
@@ -388,8 +396,8 @@ function GraficaProyeccion({ reales, parcial, futuros }) {
         var val = c.tipo === 'futuro' ? c.mu : c.n;
         return (
           <g key={i}>
-            {c.tipo === 'parcial' && <rect x={cx - bw / 2} y={y(c.cierre)} width={bw} height={Math.max(0, base - y(c.cierre))} fill="#f1e3e4" stroke="#b98386" strokeWidth="2" strokeDasharray="5 4" rx="4" />}
-            <rect x={cx - bw / 2} y={y(val)} width={bw} height={Math.max(3, base - y(val))} fill={c.tipo === 'futuro' ? '#e2cf9c' : c.tipo === 'parcial' ? '#8e4f54' : '#b98386'} stroke={c.tipo === 'futuro' ? '#b6905a' : 'none'} strokeWidth="2" rx="4" />
+            {c.tipo === 'parcial' && <rect x={cx - bw / 2} y={y(c.cierre)} width={bw} height={Math.max(0, base - y(c.cierre))} fill={'url(#' + idRayado + ')'} stroke="#b98386" strokeWidth="2" strokeDasharray="5 4" rx="4" />}
+            <rect x={cx - bw / 2} y={y(val)} width={bw} height={Math.max(3, base - y(val))} fill={c.tipo === 'futuro' ? 'url(#' + idRayado + ')' : c.tipo === 'parcial' ? '#8e4f54' : '#b98386'} stroke={c.tipo === 'futuro' ? '#b6905a' : 'none'} strokeWidth="2" rx="4" />
             {c.hi != null && (
               <g stroke="#5a4a1e" strokeWidth="2.5" strokeLinecap="round">
                 <line x1={cx + bw / 2 + 9} y1={y(c.hi)} x2={cx + bw / 2 + 9} y2={y(c.lo)} />
@@ -416,24 +424,66 @@ function GraficaProyeccion({ reales, parcial, futuros }) {
 // Estadística del mes: las tres categorías por separado, como las lleva la estadística mensual del regional
 // (homicidios dolosos · homicidios culposos · muertes no constitutivas de delito), por sector y con totales.
 // ---------------------------------------------------------------------------------------------------------
-function EstadisticaMes({ dolosos, pendientes, culposos }) {
+function EstadisticaMes({ dolosos, pendientes, culposos, rol, usuarioId, onCorte }) {
   var [mes, setMes] = useState(null);
   var [verSector, setVerSector] = useState(false);
   var [bajando, setBajando] = useState(false);
   var [errExcel, setErrExcel] = useState('');
+  var [planilla, setPlanilla] = useState(null);      // { sector: { d, c, n } } de la planilla del coordinador (si ya se capturó)
+  var [editando, setEditando] = useState(false);
+  var [borrador, setBorrador] = useState({});
+  var [msgP, setMsgP] = useState(null);
+  var [guardandoP, setGuardandoP] = useState(false);
   var base = [];
   dolosos.forEach(function(p) { base.push({ f: String(p.fecha || '').slice(0, 7), s: p.sector || 'Sin sector', c: 'd' }); });
   culposos.forEach(function(p) { base.push({ f: String(p.fecha || '').slice(0, 7), s: p.sector || 'Sin sector', c: 'c' }); });
   pendientes.forEach(function(p) { base.push({ f: String(p.fecha || '').slice(0, 7), s: p.sector || 'Sin sector', c: 'n' }); });
   var claves = Array.from(new Set(base.map(function(x) { return x.f; }).filter(Boolean))).sort().slice(-6);
-  if (!claves.length) return null;
-  var m = mes && claves.indexOf(mes) >= 0 ? mes : claves[claves.length - 1];
+  var m = claves.length ? (mes && claves.indexOf(mes) >= 0 ? mes : claves[claves.length - 1]) : null;
+  var puedeEditar = rol === 'mando' || rol === 'regional';
+
+  useEffect(function() {
+    var vivo = true;
+    setPlanilla(null); setEditando(false); setMsgP(null);
+    if (!m || !puedeEditar) return function() { vivo = false; };
+    supabase.from('planilla_mensual').select('sector, dolosos, culposos, no_constitutivas').eq('mes', m).then(function(r) {
+      if (!vivo || !r || r.error || !r.data || !r.data.length) return;
+      var o = {}; r.data.forEach(function(x) { o[x.sector] = { d: x.dolosos, c: x.culposos, n: x.no_constitutivas }; });
+      setPlanilla(o);
+    }, function() {});
+    return function() { vivo = false; };
+  }, [m, puedeEditar]);
+
+  if (!m) return null;
   var cuenta = {}, tot = { d: 0, c: 0, n: 0 };
   base.forEach(function(x) { if (x.f !== m) return; var r = cuenta[x.s] || (cuenta[x.s] = { d: 0, c: 0, n: 0 }); r[x.c]++; tot[x.c]++; });
-  var filas = Object.keys(cuenta).map(function(s) { return [s, cuenta[s]]; }).sort(function(a, b) { return (b[1].d + b[1].c + b[1].n) - (a[1].d + a[1].c + a[1].n) || (a[0] < b[0] ? -1 : 1); });
+  var sectores = Object.keys(cuenta);
+  if (planilla) Object.keys(planilla).forEach(function(s) { if (sectores.indexOf(s) < 0) sectores.push(s); });
+  var suma = function(s) { var r = cuenta[s] || { d: 0, c: 0, n: 0 }; return r.d + r.c + r.n; };
+  var filas = sectores.sort(function(a, b) { return suma(b) - suma(a) || (a < b ? -1 : 1); });
+  var totP = null;
+  if (planilla) { totP = { d: 0, c: 0, n: 0 }; Object.keys(planilla).forEach(function(s) { totP.d += planilla[s].d || 0; totP.c += planilla[s].c || 0; totP.n += planilla[s].n || 0; }); }
   var bajar = function() {
     setBajando(true); setErrExcel('');
     Promise.resolve(descargarMes('Región Acapulco', m)).catch(function(e) { setErrExcel('No se pudo generar el Excel: ' + (e && e.message ? e.message : e)); }).then(function() { setBajando(false); });
+  };
+  var abrirCaptura = function() {
+    var b = {};
+    SECTORES_LISTA.concat(sectores.filter(function(s) { return SECTORES_LISTA.indexOf(s) < 0; })).forEach(function(s) { var p = planilla && planilla[s]; b[s] = { d: p && p.d != null ? String(p.d) : '', c: p && p.c != null ? String(p.c) : '', n: p && p.n != null ? String(p.n) : '' }; });
+    setBorrador(b); setEditando(true); setVerSector(true); setMsgP(null);
+  };
+  var guardarPlanilla = function() {
+    var num = function(x) { return x === '' || x == null ? null : Math.max(0, parseInt(x, 10) || 0); };
+    var filasP = Object.keys(borrador).filter(function(s) { var b = borrador[s]; return b.d !== '' || b.c !== '' || b.n !== ''; })
+      .map(function(s) { var b = borrador[s]; var f = { mes: m, sector: s, dolosos: num(b.d), culposos: num(b.c), no_constitutivas: num(b.n), updated_at: new Date().toISOString() }; if (usuarioId) f.capturado_por = usuarioId; return f; });
+    if (!filasP.length) { setMsgP({ ok: false, t: 'Escribe al menos un número de la planilla.' }); return; }
+    setGuardandoP(true);
+    supabase.from('planilla_mensual').upsert(filasP, { onConflict: 'mes,sector' }).then(function(r) {
+      setGuardandoP(false);
+      if (r && r.error) { setMsgP({ ok: false, t: /does not exist|no existe/i.test(r.error.message) ? 'Falta crear la tabla: corre planilla_mensual.sql en Supabase.' : 'No se pudo guardar: ' + r.error.message }); return; }
+      var o = {}; filasP.forEach(function(f) { o[f.sector] = { d: f.dolosos, c: f.culposos, n: f.no_constitutivas }; });
+      setPlanilla(o); setEditando(false); setMsgP({ ok: true, t: 'Planilla guardada. Las diferencias aparecen en rojo.' });
+    }, function(e) { setGuardandoP(false); setMsgP({ ok: false, t: 'No se pudo guardar: ' + (e && e.message ? e.message : e) }); });
   };
   var col = function(n, etq, color) { return (
     <div style={{ flex: '1 1 110px', minWidth: 100, textAlign: 'center' }}>
@@ -441,7 +491,26 @@ function EstadisticaMes({ dolosos, pendientes, culposos }) {
       <div style={{ fontSize: 15, color: '#374151', marginTop: 2 }}>{etq}</div>
     </div>
   ); };
-  var celda = { padding: '6px 8px', textAlign: 'right', fontSize: 16, borderTop: '1px solid #e6dcc3' };
+  var celda = { padding: '6px 8px', textAlign: 'right', fontSize: 16, borderTop: '1px solid #e6dcc3', verticalAlign: 'top' };
+  // Una celda del sistema; si hay planilla, debajo va su cifra y la diferencia (verde ✓ si cuadra, rojo si no)
+  var cel = function(s, p) {
+    if (p == null || !planilla) return <td style={celda}>{s || ''}</td>;
+    var dif = s - p;
+    return (
+      <td style={celda}>
+        <div>{s}</div>
+        {dif === 0 ? <div style={{ fontSize: 13, fontWeight: 800, color: '#2f6b4f' }}>✓ planilla {p}</div> : <div style={{ fontSize: 13, fontWeight: 800, color: '#8b1e1e' }}>planilla {p} · {dif > 0 ? '+' : '−'}{Math.abs(dif)}</div>}
+      </td>
+    );
+  };
+  var campoP = function(s, k) { return (
+    <td style={{ ...celda, padding: '4px 6px' }}>
+      <input type="number" min="0" inputMode="numeric" aria-label={'Planilla ' + s + ' ' + k} value={borrador[s] ? borrador[s][k] : ''}
+        onChange={function(e) { var v = e.target.value; setBorrador(function(b) { var n = Object.assign({}, b); n[s] = Object.assign({}, n[s]); n[s][k] = v; return n; }); }}
+        style={{ width: 62, padding: '6px 8px', fontSize: 16, border: '1.5px solid #c9a24b', borderRadius: 6, textAlign: 'right', boxSizing: 'border-box' }} />
+    </td>
+  ); };
+  var filasEdicion = editando ? Object.keys(borrador) : [];
   return (
     <div style={{ marginTop: 12 }}>
       <PostIt titulo={'Estadística de ' + mesLargo(m)} fondo={PIT_ORO}>
@@ -459,26 +528,224 @@ function EstadisticaMes({ dolosos, pendientes, culposos }) {
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center', marginTop: 12 }}>
           <button onClick={function() { setVerSector(!verSector); }} aria-expanded={verSector} style={{ background: 'none', border: '2px solid #7b1e3a', color: '#7b1e3a', borderRadius: 8, padding: '6px 16px', fontSize: 15, fontWeight: 800, cursor: 'pointer', minHeight: 40 }}>{verSector ? 'Ocultar por sector ▲' : 'Ver por sector ▼'}</button>
           <button onClick={bajar} disabled={bajando} style={{ background: '#7b1e3a', border: '2px solid #7b1e3a', color: '#fff', borderRadius: 8, padding: '6px 16px', fontSize: 15, fontWeight: 800, cursor: 'pointer', minHeight: 40, opacity: bajando ? 0.6 : 1 }}>{bajando ? 'Generando…' : 'Descargar Excel del mes'}</button>
+          {onCorte && <button onClick={function() { onCorte(m); }} style={{ background: 'none', border: '2px solid #5a4a1e', color: '#5a4a1e', borderRadius: 8, padding: '6px 16px', fontSize: 15, fontWeight: 800, cursor: 'pointer', minHeight: 40 }}>Corte de una página</button>}
+          {puedeEditar && !editando && <button onClick={abrirCaptura} style={{ background: 'none', border: '2px solid #b6905a', color: '#7a5a14', borderRadius: 8, padding: '6px 16px', fontSize: 15, fontWeight: 800, cursor: 'pointer', minHeight: 40 }}>{planilla ? 'Editar planilla' : 'Comparar con la planilla'}</button>}
         </div>
         {errExcel && <div style={{ fontSize: 14, color: '#8b1e1e', marginTop: 6 }}>{errExcel}</div>}
-        {verSector && (
+        {msgP && <div role="status" style={{ fontSize: 14, fontWeight: 700, marginTop: 8, color: msgP.ok ? '#2f6b4f' : '#8b1e1e' }}>{msgP.t}</div>}
+        {planilla && !editando && <div style={{ fontSize: 13, color: '#5a4a1e', marginTop: 6 }}>Comparado con la planilla del coordinador: debajo de cada cifra va la de la planilla y la diferencia.</div>}
+        {verSector && !editando && (
           <div style={{ overflowX: 'auto', marginTop: 10 }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 360 }}>
               <thead><tr style={{ fontSize: 14, color: '#5a4a1e' }}>
-                <th style={{ textAlign: 'left', padding: '4px 8px' }}>Sector</th><th style={{ padding: '4px 8px', textAlign: 'right' }}>Dolosos</th><th style={{ padding: '4px 8px', textAlign: 'right' }}>Culposos</th><th style={{ padding: '4px 8px', textAlign: 'right' }}>No const.</th><th style={{ padding: '4px 8px', textAlign: 'right' }}>Total</th>
+                <th style={{ textAlign: 'left', padding: '4px 8px' }}>Sector</th><th style={{ padding: '4px 8px', textAlign: 'right' }}>Dolosos</th><th style={{ padding: '4px 8px', textAlign: 'right' }}>Culposos</th><th style={{ padding: '4px 8px', textAlign: 'right' }}>No const.</th>
               </tr></thead>
               <tbody>
-                {filas.map(function(f) { var r = f[1]; return (
-                  <tr key={f[0]}><td style={{ ...celda, textAlign: 'left', fontWeight: 700 }}>{f[0]}</td><td style={celda}>{r.d || ''}</td><td style={celda}>{r.c || ''}</td><td style={celda}>{r.n || ''}</td><td style={{ ...celda, fontWeight: 800 }}>{r.d + r.c + r.n}</td></tr>
+                {filas.map(function(s) { var r = cuenta[s] || { d: 0, c: 0, n: 0 }, p = planilla && planilla[s]; return (
+                  <tr key={s}><td style={{ ...celda, textAlign: 'left', fontWeight: 700 }}>{s}</td>{cel(r.d, p ? p.d : null)}{cel(r.c, p ? p.c : null)}{cel(r.n, p ? p.n : null)}</tr>
                 ); })}
-                <tr><td style={{ ...celda, textAlign: 'left', fontWeight: 800 }}>Total</td><td style={{ ...celda, fontWeight: 800 }}>{tot.d}</td><td style={{ ...celda, fontWeight: 800 }}>{tot.c}</td><td style={{ ...celda, fontWeight: 800 }}>{tot.n}</td><td style={{ ...celda, fontWeight: 800 }}>{tot.d + tot.c + tot.n}</td></tr>
+                <tr><td style={{ ...celda, textAlign: 'left', fontWeight: 800 }}>Total</td>{[['d'], ['c'], ['n']].map(function(k) { var s = tot[k[0]], p = totP ? totP[k[0]] : null; return <td key={k[0]} style={{ ...celda, fontWeight: 800 }}><div>{s}</div>{p != null && (s === p ? <div style={{ fontSize: 13, color: '#2f6b4f' }}>✓ planilla {p}</div> : <div style={{ fontSize: 13, color: '#8b1e1e' }}>planilla {p} · {s - p > 0 ? '+' : '−'}{Math.abs(s - p)}</div>)}</td>; })}</tr>
               </tbody>
             </table>
+          </div>
+        )}
+        {editando && (
+          <div style={{ marginTop: 10 }}>
+            <div style={{ fontSize: 15, fontWeight: 700, color: '#5a4a1e', marginBottom: 6 }}>Captura los números de la planilla del coordinador ({mesLargo(m)}). Deja en blanco lo que no traiga.</div>
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 360 }}>
+                <thead><tr style={{ fontSize: 14, color: '#5a4a1e' }}>
+                  <th style={{ textAlign: 'left', padding: '4px 8px' }}>Sector</th><th style={{ padding: '4px 8px', textAlign: 'right' }}>Dolosos</th><th style={{ padding: '4px 8px', textAlign: 'right' }}>Culposos</th><th style={{ padding: '4px 8px', textAlign: 'right' }}>No const.</th>
+                </tr></thead>
+                <tbody>
+                  {filasEdicion.map(function(s) { return <tr key={s}><td style={{ ...celda, textAlign: 'left', fontWeight: 700 }}>{s}</td>{campoP(s, 'd')}{campoP(s, 'c')}{campoP(s, 'n')}</tr>; })}
+                </tbody>
+              </table>
+            </div>
+            <div style={{ display: 'flex', gap: 10, marginTop: 10, flexWrap: 'wrap' }}>
+              <button onClick={guardarPlanilla} disabled={guardandoP} style={{ background: '#7b1e3a', border: '2px solid #7b1e3a', color: '#fff', borderRadius: 8, padding: '6px 18px', fontSize: 15, fontWeight: 800, cursor: 'pointer', minHeight: 40, opacity: guardandoP ? 0.6 : 1 }}>{guardandoP ? 'Guardando…' : 'Guardar planilla'}</button>
+              <button onClick={function() { setEditando(false); setMsgP(null); }} style={{ background: 'none', border: '2px solid #d9d2c3', color: '#5a6478', borderRadius: 8, padding: '6px 18px', fontSize: 15, fontWeight: 700, cursor: 'pointer', minHeight: 40 }}>Cancelar</button>
+            </div>
           </div>
         )}
       </PostIt>
     </div>
   );
+}
+
+// "Dónde": mosaico por sector (más oscuro = más casos) con el cambio de lo que va del año contra el mismo periodo del año anterior
+var NOMBRE_CORTO = { 'Coyuca de Benítez': 'Coyuca', 'Barrios Históricos': 'Barrios', 'Costa Azul': 'C. Azul', 'Renacimiento': 'Renac.' };
+function MosaicoSectores({ items, ytd, sinCasos, anioAct, hastaMes }) {
+  var max = Math.max.apply(null, items.map(function(i) { return i[1]; }).concat([1]));
+  var color = function(n) { var r = n / max; return r < 0.2 ? ['#f4e3e5', '#3b2f0b'] : r < 0.4 ? ['#e6c4c8', '#3b2f0b'] : r < 0.6 ? ['#cf9aa0', '#3b2f0b'] : r < 0.8 ? ['#a85a63', '#ffffff'] : ['#7b1e3a', '#ffffff']; };
+  return (
+    <div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(92px, 1fr))', gap: 6 }}>
+        {items.map(function(it) {
+          var c = color(it[1]), y = ytd[it[0]], aviso = sinCasos.some(function(s) { return s.sector === it[0]; });
+          var pct = y && y.a0 > 0 ? Math.round((y.a1 / y.a0 - 1) * 100) : null;
+          return (
+            <div key={it[0]} title={it[0] + (pct !== null ? ': ' + y.a1 + ' en lo que va de ' + anioAct + ' contra ' + y.a0 + ' del mismo periodo de ' + (anioAct - 1) : '') + (aviso ? ' (sin casos recientes: revisar la captura)' : '')}
+              style={{ background: c[0], color: c[1], borderRadius: 8, padding: '8px 4px', textAlign: 'center', minWidth: 0 }}>
+              <div style={{ fontSize: 12, fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{NOMBRE_CORTO[it[0]] || it[0]}{aviso ? ' ⚠' : ''}</div>
+              <div style={{ fontSize: 24, fontWeight: 800, lineHeight: 1.1 }}>{it[1]}</div>
+              {pct !== null && <div style={{ fontSize: 12, fontWeight: 700 }}>{pct >= 0 ? '▲' : '▼'} {Math.abs(pct)}% vs {anioAct - 1}</div>}
+            </div>
+          );
+        })}
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 8, fontSize: 12, color: '#5a4a1e', flexWrap: 'wrap' }}>
+        <span>menos</span>
+        {['#f4e3e5', '#e6c4c8', '#cf9aa0', '#a85a63', '#7b1e3a'].map(function(c) { return <span key={c} style={{ width: 18, height: 10, background: c, borderRadius: 2, display: 'inline-block' }} />; })}
+        <span>más</span>
+        {hastaMes > 0 && <span style={{ marginLeft: 8 }}>· el % compara enero–{ABR_MES[hastaMes - 1].toLowerCase()} {anioAct} con {anioAct - 1}</span>}
+      </div>
+    </div>
+  );
+}
+
+// "Por sector": una mini gráfica de los últimos 12 meses de cada sector, todas con la misma escala vertical para poder compararlas
+function TendenciaSectores({ series }) {
+  var max = Math.max.apply(null, series.map(function(s) { return Math.max.apply(null, s[1]); }).concat([1]));
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: 8 }}>
+      {series.map(function(s) { var total = s[1].reduce(function(a, b) { return a + b; }, 0); return (
+        <div key={s[0]} style={{ background: '#ffffffaa', borderRadius: 8, padding: '8px 10px', minWidth: 0 }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: '#3b2f0b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s[0]}</div>
+          <div style={{ fontSize: 22, fontWeight: 800, color: '#7b1e3a', lineHeight: 1.1 }}>{total}</div>
+          <MiniLinea valores={s[1].concat([max]).slice(0, s[1].length)} techo={max} />
+        </div>
+      ); })}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------------------------------------
+// Corte mensual de una página (para el Fiscal): se imprime o se guarda como PDF desde el navegador.
+// Se dibuja como una capa aparte para que, al imprimir, solo salga esta hoja.
+// ---------------------------------------------------------------------------------------------------------
+var CSS_CORTE = '@media print { body > *:not(.corte-overlay) { display: none !important; } .corte-overlay { position: static !important; background: #fff !important; padding: 0 !important; overflow: visible !important; } .corte-pantalla { display: none !important; } .corte-pagina { width: 100% !important; max-width: none !important; box-shadow: none !important; padding: 0 !important; } @page { size: A4 portrait; margin: 12mm; } * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; } }';
+function CorteMensual({ mes, dolosos, pendientes, culposos, mesesHist, proyeccion, sinCasos, pendViejos, ahora, onCerrar }) {
+  useEffect(function() {
+    var f = function(e) { if (e.key === 'Escape') onCerrar(); };
+    document.addEventListener('keydown', f);
+    return function() { document.removeEventListener('keydown', f); };
+  }, [onCerrar]);
+  var delMes = function(l) { return l.filter(function(p) { return String(p.fecha || '').slice(0, 7) === mes; }); };
+  var d = delMes(dolosos), c = delMes(culposos), n = delMes(pendientes);
+  var cuenta = {};
+  [[d, 'd'], [c, 'c'], [n, 'n']].forEach(function(par) { par[0].forEach(function(p) { var s = p.sector || 'Sin sector'; var r = cuenta[s] || (cuenta[s] = { d: 0, c: 0, n: 0 }); r[par[1]]++; }); });
+  var filas = Object.keys(cuenta).sort(function(a, b) { var A = cuenta[a], B = cuenta[b]; return (B.d + B.c + B.n) - (A.d + A.c + A.n) || (a < b ? -1 : 1); });
+  var buscar = function(k) { return mesesHist.filter(function(m) { return m.clave === k; })[0] || null; };
+  var mm = buscar(mes), prev = buscar(sumarMes(mes, -1)), ant = buscar(sumarMes(mes, -12));
+  var tasa = function(x) { return x && x.dias ? x.n / x.dias : null; };
+  var cambio = function(a, b) { return a !== null && b !== null && b > 0 ? Math.round((a / b - 1) * 100) : null; };
+  var vsPrev = mm && prev ? cambio(tasa(mm), tasa(prev)) : null;
+  var vsAnio = mm && ant ? cambio(tasa(mm), tasa(ant)) : null;
+  var flecha = function(p) { return (p >= 0 ? '▲ ' : '▼ ') + Math.abs(p) + '%'; };
+  var medios = {};
+  d.forEach(function(p) { var k = p.medio || clasificarDelito(p.delito).medio; medios[k] = (medios[k] || 0) + 1; });
+  var topMedios = Object.keys(medios).map(function(k) { return [k, medios[k]]; }).sort(function(a, b) { return b[1] - a[1]; }).slice(0, 4);
+  var sem = [0, 0, 0, 0, 0];
+  d.forEach(function(p) { var dia = Number(String(p.fecha).slice(8, 10)); sem[Math.min(4, Math.floor((dia - 1) / 7))]++; });
+  var semMax = Math.max.apply(null, sem.concat([1]));
+  var sig = sumarMes(mes, 1), pr = null;
+  if (proyeccion && proyeccion.listo) {
+    if (proyeccion.parcial && proyeccion.parcial.clave === sig) pr = { t: 'cierre', lo: proyeccion.parcial.lo, hi: proyeccion.parcial.hi, mu: proyeccion.parcial.cierre, lleva: proyeccion.parcial.nActual, dias: proyeccion.parcial.dias };
+    else { var f = proyeccion.futuros.filter(function(x) { return x.clave === sig; })[0]; if (f) pr = { t: 'estimado', lo: f.lo, hi: f.hi, mu: f.mu }; }
+  }
+  var dos = function(x) { return String(x).padStart(2, '0'); };
+  var generado = dos(ahora.getDate()) + '/' + dos(ahora.getMonth() + 1) + '/' + ahora.getFullYear() + ' a las ' + dos(ahora.getHours()) + ':' + dos(ahora.getMinutes());
+  var tdn = { padding: '3px 6px', textAlign: 'right', fontSize: 12, borderTop: '1px solid #e6dcc3' };
+  var cifra = function(num, etq, color, extra) { return (
+    <div style={{ flex: 1, textAlign: 'center', padding: '8px 4px', border: '1px solid #e6dcc3', borderRadius: 6 }}>
+      <div style={{ fontSize: 34, fontWeight: 800, lineHeight: 1.05, color: color }}>{num}</div>
+      <div style={{ fontSize: 12, fontWeight: 700, color: '#374151' }}>{etq}</div>
+      {extra}
+    </div>
+  ); };
+  var titulo = function(t) { return <div style={{ fontSize: 12, fontWeight: 800, letterSpacing: 0.6, textTransform: 'uppercase', color: '#7b1e3a', borderBottom: '2px solid #b6905a', paddingBottom: 2, margin: '14px 0 6px' }}>{t}</div>; };
+  return createPortal(
+    <div className="corte-overlay" role="dialog" aria-modal="true" aria-label={'Corte mensual de ' + mesLargo(mes)} style={{ position: 'fixed', top: 0, right: 0, bottom: 0, left: 0, background: '#e9e4d6', zIndex: 5000, overflowY: 'auto', padding: 16 }}>
+      <style>{CSS_CORTE}</style>
+      <div className="corte-pantalla" style={{ maxWidth: 794, margin: '0 auto 10px', display: 'flex', gap: 10, justifyContent: 'flex-end', alignItems: 'center' }}>
+        <span style={{ flex: 1, fontSize: 14, color: '#5a4a1e' }}>Vista previa de la hoja. Al imprimir solo sale esta página.</span>
+        <button onClick={function() { window.print(); }} style={{ background: '#7b1e3a', border: '2px solid #7b1e3a', color: '#fff', borderRadius: 8, padding: '8px 18px', fontSize: 15, fontWeight: 800, cursor: 'pointer', minHeight: 44 }}>Imprimir o guardar como PDF</button>
+        <button onClick={onCerrar} style={{ background: '#fff', border: '2px solid #7b1e3a', color: '#7b1e3a', borderRadius: 8, padding: '8px 18px', fontSize: 15, fontWeight: 800, cursor: 'pointer', minHeight: 44 }}>Cerrar</button>
+      </div>
+      <div className="corte-pagina" style={{ width: 794, maxWidth: '100%', margin: '0 auto', background: '#fff', padding: '26px 30px', fontFamily: 'Arial, Helvetica, sans-serif', fontSize: 12, color: '#1f2430', boxSizing: 'border-box', boxShadow: '0 2px 10px rgba(0,0,0,0.18)' }}>
+        <div style={{ background: '#7b1e3a', color: '#fff', padding: '12px 16px', borderBottom: '4px solid #b6905a', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: 10 }}>
+          <div>
+            <div style={{ fontSize: 10.5, letterSpacing: 1, color: '#ecd9a4' }}>FISCALÍA GENERAL DEL ESTADO DE GUERRERO</div>
+            <div style={{ fontSize: 21, fontWeight: 800 }}>Corte mensual de homicidios</div>
+          </div>
+          <div style={{ textAlign: 'right' }}>
+            <div style={{ fontSize: 19, fontWeight: 800, color: '#f3e3b0' }}>{mesLargo(mes)}</div>
+            <div style={{ fontSize: 11 }}>Región Acapulco</div>
+          </div>
+        </div>
+        <div style={{ display: 'flex', gap: 10, marginTop: 14 }}>
+          {cifra(d.length, 'Homicidios dolosos', '#7b1e3a', (vsPrev !== null || vsAnio !== null) && (
+            <div style={{ fontSize: 11, color: '#374151', marginTop: 3 }}>
+              {vsPrev !== null && <div>{flecha(vsPrev)} vs {nombreMes(sumarMes(mes, -1)).split(' ')[0].toLowerCase()}</div>}
+              {vsAnio !== null && <div>{flecha(vsAnio)} vs {nombreMes(sumarMes(mes, -12)).toLowerCase()} ({ant.n})</div>}
+              <div style={{ color: '#6b7280' }}>(por día)</div>
+            </div>
+          ))}
+          {cifra(c.length, 'Homicidios culposos', '#5a4a1e')}
+          {cifra(n.length, 'No constitutivas de delito', '#6b7280')}
+        </div>
+        {titulo('Por sector')}
+        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <thead><tr style={{ fontSize: 11, color: '#5a4a1e' }}>
+            <th style={{ textAlign: 'left', padding: '2px 6px' }}>Sector</th><th style={{ textAlign: 'right', padding: '2px 6px' }}>Dolosos</th><th style={{ textAlign: 'right', padding: '2px 6px' }}>Culposos</th><th style={{ textAlign: 'right', padding: '2px 6px' }}>No constitutivas</th>
+          </tr></thead>
+          <tbody>
+            {filas.map(function(s) { var r = cuenta[s]; return <tr key={s}><td style={{ ...tdn, textAlign: 'left', fontWeight: 700 }}>{s}</td><td style={{ ...tdn, fontWeight: 700 }}>{r.d || ''}</td><td style={tdn}>{r.c || ''}</td><td style={tdn}>{r.n || ''}</td></tr>; })}
+            <tr><td style={{ ...tdn, textAlign: 'left', fontWeight: 800, borderTop: '2px solid #b6905a' }}>Total</td><td style={{ ...tdn, fontWeight: 800, borderTop: '2px solid #b6905a' }}>{d.length}</td><td style={{ ...tdn, fontWeight: 800, borderTop: '2px solid #b6905a' }}>{c.length}</td><td style={{ ...tdn, fontWeight: 800, borderTop: '2px solid #b6905a' }}>{n.length}</td></tr>
+          </tbody>
+        </table>
+        <div style={{ display: 'flex', gap: 18, alignItems: 'flex-start' }}>
+          <div style={{ flex: 1 }}>
+            {titulo('Cómo')}
+            {topMedios.length === 0 ? <div style={{ color: '#6b7280' }}>Sin homicidios dolosos en el mes.</div> : topMedios.map(function(m) { return (
+              <div key={m[0]} style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 0', fontSize: 12 }}><span>{m[0]}</span><strong>{m[1]} · {Math.round(m[1] / d.length * 100)}%</strong></div>
+            ); })}
+          </div>
+          <div style={{ flex: 1 }}>
+            {titulo('Semana a semana')}
+            <div style={{ display: 'flex', gap: 6, alignItems: 'flex-end', height: 70 }}>
+              {sem.map(function(x, i) { return (
+                <div key={i} style={{ flex: 1, textAlign: 'center', fontSize: 11 }}>
+                  <div style={{ fontWeight: 800 }}>{x}</div>
+                  <div style={{ background: '#7b1e3a', height: Math.max(2, Math.round(x / semMax * 48)), borderRadius: '3px 3px 0 0' }} />
+                  <div style={{ color: '#6b7280', fontSize: 10 }}>{['1–7', '8–14', '15–21', '22–28', '29–31'][i]}</div>
+                </div>
+              ); })}
+            </div>
+          </div>
+        </div>
+        {pr && (<div>
+          {titulo('Proyección')}
+          <div style={{ fontSize: 12.5 }}>
+            {pr.t === 'cierre'
+              ? <span><strong>{mesLargo(sig)}</strong> cerraría con entre <strong>{pr.lo}</strong> y <strong>{pr.hi}</strong> homicidios dolosos (probable <strong>{pr.mu}</strong>); lleva {pr.lleva} en {pr.dias} días.</span>
+              : <span><strong>{mesLargo(sig)}</strong>: entre <strong>{pr.lo}</strong> y <strong>{pr.hi}</strong> homicidios dolosos (probable <strong>{pr.mu}</strong>).</span>}
+            <div style={{ color: '#6b7280', fontSize: 11, marginTop: 2 }}>Referencia estadística con el ritmo de los meses anteriores, no una meta.</div>
+          </div>
+        </div>)}
+        {titulo('Para tener en cuenta')}
+        <ul style={{ margin: 0, paddingLeft: 18, lineHeight: 1.45 }}>
+          <li>Los homicidios culposos y las muertes no constitutivas de delito se cuentan aparte: no entran a la cifra de dolosos ni a los comparativos.</li>
+          {pendViejos > 0 && <li>{pendViejos} {pendViejos === 1 ? 'muerte no constitutiva lleva' : 'muertes no constitutivas llevan'} más de 30 días en espera de necropsia.</li>}
+          {sinCasos.length > 0 && <li>Sin casos recientes (conviene revisar la captura): {sinCasos.map(function(s) { return s.sector; }).join(', ')}.</li>}
+        </ul>
+        <div style={{ marginTop: 16, paddingTop: 6, borderTop: '1px solid #e6dcc3', fontSize: 10, color: '#6b7280', display: 'flex', justifyContent: 'space-between', gap: 10 }}>
+          <span>Generado el {generado} · Sistema Ministerial FGE Guerrero</span>
+          <span>Cifras con base en lo capturado por los sectores</span>
+        </div>
+      </div>
+    </div>, document.body);
 }
 
 function BloqueProyeccion({ meses, sinCasos }) {
@@ -522,10 +789,10 @@ function BloqueProyeccion({ meses, sinCasos }) {
           Frente a {t.previo}: de {nombreMes(t.desde).split(' ')[0].toLowerCase()} a {nombreMes(t.hasta).split(' ')[0].toLowerCase()} de {t.anio} hay <strong>{Math.abs(t.pct)}% {t.pct <= 0 ? 'menos' : 'más'}</strong> casos por día que en el mismo periodo ({t.casos} frente a {t.casosPrevio}).
         </div>
       )}
-      <div style={{ marginTop: 14 }}><GraficaProyeccion reales={reales} parcial={p.parcial} futuros={p.futuros} /></div>
+      <div style={{ marginTop: 14 }}><GraficaProyeccion uid="b" reales={reales} parcial={p.parcial} futuros={p.futuros} /></div>
       <div style={{ display: 'flex', gap: 18, flexWrap: 'wrap', fontSize: 15, color: '#374151', marginTop: 6 }}>
         <span><span style={{ display: 'inline-block', width: 14, height: 14, background: '#b98386', borderRadius: 3, verticalAlign: -2, marginRight: 6 }} />Casos reales</span>
-        <span><span style={{ display: 'inline-block', width: 14, height: 14, background: '#e2cf9c', border: '2px solid #b6905a', borderRadius: 3, verticalAlign: -2, marginRight: 6 }} />Estimado</span>
+        <span><span style={{ display: 'inline-block', width: 14, height: 14, background: 'repeating-linear-gradient(45deg, #b6905a 0 2px, #f6edcf 2px 6px)', border: '2px solid #b6905a', borderRadius: 3, verticalAlign: -2, marginRight: 6 }} />Estimado (rayado)</span>
         <span><span style={{ display: 'inline-block', width: 3, height: 16, background: '#5a4a1e', verticalAlign: -3, marginRight: 8 }} />Rango probable (8 de cada 10 veces)</span>
       </div>
       <div style={{ fontSize: 16, color: '#374151', marginTop: 12, lineHeight: 1.5 }}>
@@ -547,7 +814,7 @@ function BloqueProyeccion({ meses, sinCasos }) {
 // Tablero ejecutivo: "post-its" con un número grande y casi nada de texto (estilo observatorio). Lo demás queda en "Ver análisis completo".
 // ---------------------------------------------------------------------------------------------------------
 // Marca de versión (chica, al final del panel): sirve para saber de un vistazo qué versión está publicada
-var VERSION_PANEL = 'Panel 5 nov 2026 · estadística del mes';
+var VERSION_PANEL = 'Panel 5 nov 2026 · planilla, corte y sectores';
 var PIT_ORO = '#fbf3d9', PIT_GUINDA = '#f6e4e6', PIT_ARENA = '#f1ece0';
 var NUM_GRANDE = { fontSize: 46, fontWeight: 800, color: '#7b1e3a', lineHeight: 1.05 };
 var NUM_MEDIO = { fontSize: 34, fontWeight: 800, color: '#7b1e3a', lineHeight: 1.1 };
@@ -555,12 +822,12 @@ var SUB_TABLERO = { fontSize: 16, color: '#374151' };
 
 // Mini línea de tendencia (sparkline): forma de la serie, sin ejes ni números. Base en cero para no exagerar los cambios.
 // parcial: el último valor real es de un mes en curso (se dibuja punteado y hueco). extra: valores estimados (punteado dorado).
-function MiniLinea({ valores, extra, parcial }) {
+function MiniLinea({ valores, extra, parcial, techo }) {
   var W = 160, H = 38, p = 4;
   var ext = extra || [];
   var todos = valores.concat(ext);
   if (todos.length < 2) return null;
-  var max = Math.max.apply(null, todos.concat([1]));
+  var max = Math.max.apply(null, todos.concat([1, techo || 0]));
   var x = function(i) { return p + i * (W - 2 * p) / (todos.length - 1); };
   var y = function(v) { return H - p - (H - 2 * p) * (v / max); };
   var n = valores.length;
@@ -714,6 +981,7 @@ export default function MapaCalor({ user, onIniciarProyecto, onImportar, seccion
   const [reproDia, setReproDia] = useState(null); // reproducción del periodo: muestra los casos hasta este día (null = todos)
   const [filtrosAbiertos, setFiltrosAbiertos] = useState(false); // los filtros se muestran como una línea resumen y se abren si se piden
   const [capasAbiertas, setCapasAbiertas] = useState(false); // las capas del mapa se muestran solo si se piden
+  const [corteMes, setCorteMes] = useState(null);   // mes (AAAA-MM) del corte de una página que está abierto
   const [verPendientes, setVerPendientes] = useState(true);   // capa aparte (gris): muertes no constitutivas de delito en espera de necropsia
   const [verCompleto, setVerCompleto] = useState(false);   // el panel abre en el tablero ejecutivo; el análisis detallado se pide
   const [chipAbierto, setChipAbierto] = useState(null);
@@ -900,12 +1168,21 @@ export default function MapaCalor({ user, onIniciarProyecto, onImportar, seccion
   const DIAH = 86400000;
   const porMesHist = {};
   histFechas.forEach(function(d) { var k = d.slice(0, 7); porMesHist[k] = (porMesHist[k] || 0) + 1; });
-  const mesesHist = Object.keys(porMesHist).sort().map(function(k, i, arr) {
+  // El mes "en curso" es el de HOY (no el del último caso capturado): un mes que ya terminó se trata como completo
+  // aunque su último caso sea del día 27. (__AHORA__ solo lo usan las pruebas para fijar la fecha.)
+  const reloj = (typeof globalThis !== 'undefined' && globalThis.__AHORA__) ? new Date(globalThis.__AHORA__) : new Date();
+  const hoyClave = reloj.getFullYear() + '-' + String(reloj.getMonth() + 1).padStart(2, '0');
+  const diaHoy = reloj.getDate();
+  const mesesHist = Object.keys(porMesHist).sort().map(function(k) {
     var diasMes = new Date(Date.UTC(Number(k.slice(0, 4)), Number(k.slice(5, 7)), 0)).getUTCDate();
-    var ultimo = i === arr.length - 1;
-    var dias = ultimo ? Math.min(diasMes, Number(histFin.slice(8, 10))) : diasMes;
-    return { clave: k, nombre: nombreMes(k).split(' ')[0], n: porMesHist[k], dias: dias, parcial: ultimo && dias < diasMes };
+    var enCurso = k === hoyClave;
+    var dias = enCurso ? Math.min(diasMes, diaHoy) : diasMes;
+    return { clave: k, nombre: nombreMes(k).split(' ')[0], n: porMesHist[k], dias: dias, parcial: enCurso && dias < diasMes };
   });
+  // Para proyectar: si el mes de hoy es el que sigue al último con casos y todavía no tiene ninguno, cuenta como mes en curso con 0 casos
+  const ultMes = mesesHist[mesesHist.length - 1];
+  const mesesProy = (ultMes && ultMes.clave < hoyClave && sumarMes(ultMes.clave, 1) === hoyClave)
+    ? mesesHist.concat([{ clave: hoyClave, nombre: nombreMes(hoyClave).split(' ')[0], n: 0, dias: diaHoy, parcial: true }]) : mesesHist;
   const cambioRitmo = mesesHist.length >= 2 ? (function() {
     var a = mesesHist[mesesHist.length - 2], b = mesesHist[mesesHist.length - 1];
     return { pct: Math.round(((b.n / b.dias) / (a.n / a.dias) - 1) * 100), contra: a.nombre, actual: b };
@@ -947,10 +1224,11 @@ export default function MapaCalor({ user, onIniciarProyecto, onImportar, seccion
   const mesesResaltados = hayFechas ? mesesHist.map(function(m) { return m.clave >= (fechaDesde || '0000-00').slice(0, 7) && m.clave <= (fechaHasta || '9999-99').slice(0, 7); }) : null;
 
   // Periodo, ritmo y serie en el tiempo
-  const proyeccion = proyectar(mesesHist);
+  const proyeccion = proyectar(mesesProy);
   // "ene 2025 – oct 2026": lo que abarca el historial, en pocas palabras
   const resumenHistoria = mesesHist.length ? (mesesHist[0].clave.slice(0, 4) === mesesHist[mesesHist.length - 1].clave.slice(0, 4) ? ABR_MES[Number(mesesHist[0].clave.slice(5, 7)) - 1].toLowerCase() + ' – ' + ABR_MES[Number(mesesHist[mesesHist.length - 1].clave.slice(5, 7)) - 1].toLowerCase() + ' ' + mesesHist[0].clave.slice(0, 4) : ABR_MES[Number(mesesHist[0].clave.slice(5, 7)) - 1].toLowerCase() + ' ' + mesesHist[0].clave.slice(0, 4) + ' – ' + ABR_MES[Number(mesesHist[mesesHist.length - 1].clave.slice(5, 7)) - 1].toLowerCase() + ' ' + mesesHist[mesesHist.length - 1].clave.slice(0, 4)) : '';
   // Sectores que dejaron de reportar: advertencia para la proyección
+  const dolososTodos = puntos.concat(sinUbicar).filter(function(p) { return p.fuente === 'incidencia_regional' && filtros[p.fuente] && p.fecha; });
   const sectoresSinCasos = sectoresSinCasosRecientes(puntos.concat(sinUbicar).filter(function(p) { return p.fuente === 'incidencia_regional' && filtros[p.fuente] && pasaDemas(p); }), histFin);
   const fechasAn = puntosAnalisis.map(function(p) { return p.fecha ? String(p.fecha).slice(0, 10) : ''; }).filter(Boolean).sort();
   const iniPeriodo = fechaDesde || fechasAn[0] || '';
@@ -1323,8 +1601,23 @@ export default function MapaCalor({ user, onIniciarProyecto, onImportar, seccion
               {(function() {
                 var act = cambioRitmo ? cambioRitmo.actual : null;
                 var f1 = proyeccion.listo ? proyeccion.futuros[0] : null;
+                // En los primeros 15 días del mes importa más cómo va a cerrar el mes en curso que el mes siguiente
+                var cierreActual = proyeccion.listo && proyeccion.parcial && diaHoy <= 15 ? proyeccion.parcial : null;
                 var mejorZona = zonas && zonas.length ? zonas[0] : null;
                 var dia = act ? act.n / act.dias : null;
+                // Lo que va del año contra el mismo periodo del año anterior, por sector (solo meses completos)
+                var anioAct = act ? Number(act.clave.slice(0, 4)) : 0, hastaMes = act ? (act.parcial ? Number(act.clave.slice(5, 7)) - 1 : Number(act.clave.slice(5, 7))) : 0;
+                var ytd = {};
+                if (hastaMes > 0) dolososTodos.forEach(function(p) {
+                  var f = String(p.fecha).slice(0, 10), a = Number(f.slice(0, 4)), mm = Number(f.slice(5, 7));
+                  if (mm < 1 || mm > hastaMes || (a !== anioAct && a !== anioAct - 1)) return;
+                  var y = ytd[p.sector] || (ytd[p.sector] = { a1: 0, a0: 0 }); if (a === anioAct) y.a1++; else y.a0++;
+                });
+                // Serie de los últimos 12 meses por sector (los meses sin casos cuentan 0)
+                var claves12 = mesesHist.slice(-12).map(function(m) { return m.clave; });
+                var porSec = {};
+                dolososTodos.forEach(function(p) { var k = String(p.fecha).slice(0, 7), i = claves12.indexOf(k); if (i < 0 || !p.sector) return; var a = porSec[p.sector] || (porSec[p.sector] = claves12.map(function() { return 0; })); a[i]++; });
+                var seriesSec = Object.keys(porSec).map(function(s) { return [s, porSec[s]]; }).filter(function(s) { return s[1].reduce(function(a, b) { return a + b; }, 0) >= 3; }).sort(function(a, b) { return b[1].reduce(function(x, y) { return x + y; }, 0) - a[1].reduce(function(x, y) { return x + y; }, 0); }).slice(0, 8);
                 var claveAnt = act ? (Number(act.clave.slice(0, 4)) - 1) + act.clave.slice(4) : null;
                 var mesAnt = claveAnt ? mesesHist.filter(function(m) { return m.clave === claveAnt; })[0] : null;
                 var pctAnio = act && mesAnt && mesAnt.n > 0 ? Math.round(((act.n / act.dias) / (mesAnt.n / mesAnt.dias) - 1) * 100) : null;
@@ -1336,7 +1629,7 @@ export default function MapaCalor({ user, onIniciarProyecto, onImportar, seccion
                   <div>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: 12 }}>
                       {act && (
-                        <PostIt titulo={act.nombre + (act.parcial ? ' · al ' + Number(histFin.slice(8, 10)) : '')} fondo={PIT_ORO}>
+                        <PostIt titulo={act.nombre + (act.parcial ? ' · al ' + act.dias : '')} fondo={PIT_ORO}>
                           <div style={NUM_GRANDE}>{act.n}</div>
                           <div style={{ fontSize: 16, color: '#374151' }}>homicidios</div>
                           {cambioRitmo && <ChipCambio pct={cambioRitmo.pct} contra={cambioRitmo.contra} />}
@@ -1344,10 +1637,11 @@ export default function MapaCalor({ user, onIniciarProyecto, onImportar, seccion
                           <div style={{ marginTop: 6 }}><MiniLinea valores={serie12} parcial={act.parcial} /></div>
                         </PostIt>
                       )}
-                      <PostIt titulo={f1 ? mesLargo(f1.clave).split(' ')[0] + ' · estimado' : 'Proyección'} fondo={PIT_GUINDA}>
-                        {f1 ? <div><div style={NUM_GRANDE}>{f1.lo}–{f1.hi}</div><div style={{ fontSize: 16, color: '#374151' }}>probable <strong>{f1.mu}</strong></div></div>
+                      <PostIt titulo={cierreActual ? mesLargo(cierreActual.clave).split(' ')[0] + ' · cierre estimado' : f1 ? mesLargo(f1.clave).split(' ')[0] + ' · estimado' : 'Proyección'} fondo={PIT_GUINDA}>
+                        {cierreActual ? <div><div style={NUM_GRANDE}>{cierreActual.lo}–{cierreActual.hi}</div><div style={{ fontSize: 16, color: '#374151' }}>probable <strong>{cierreActual.cierre}</strong> · lleva {cierreActual.nActual} en {cierreActual.dias} días</div></div>
+                          : f1 ? <div><div style={NUM_GRANDE}>{f1.lo}–{f1.hi}</div><div style={{ fontSize: 16, color: '#374151' }}>probable <strong>{f1.mu}</strong></div></div>
                           : <div><div style={NUM_GRANDE}>—</div><div style={{ fontSize: 16, color: '#374151' }}>faltan {proyeccion.faltan} meses</div></div>}
-                        {f1 && <div style={{ marginTop: 6 }}><MiniLinea valores={realesProy} extra={extraProy} /></div>}
+                        {f1 && <div style={{ marginTop: 6 }}><MiniLinea valores={realesProy} extra={cierreActual ? [cierreActual.cierre] : extraProy} /></div>}
                       </PostIt>
                       {pendientesFiltrados.length > 0 && (function() {
                         var pendMes = act ? pendientesFiltrados.filter(function(p) { return String(p.fecha || '').slice(0, 7) === act.clave; }).length : 0;
@@ -1371,15 +1665,17 @@ export default function MapaCalor({ user, onIniciarProyecto, onImportar, seccion
                         </PostIt>
                       )}
                     </div>
-                    <EstadisticaMes dolosos={puntos.concat(sinUbicar).filter(function(p) { return p.fuente === 'incidencia_regional' && filtros[p.fuente]; })} pendientes={pendientes.filter(function(p) { return filtros[p.fuente]; })} culposos={culposos.filter(function(p) { return filtros[p.fuente]; })} />
+                    <EstadisticaMes dolosos={puntos.concat(sinUbicar).filter(function(p) { return p.fuente === 'incidencia_regional' && filtros[p.fuente]; })} pendientes={pendientes.filter(function(p) { return filtros[p.fuente]; })} culposos={culposos.filter(function(p) { return filtros[p.fuente]; })} rol={user && user.rol} usuarioId={user && user.id} onCorte={setCorteMes} />
+                    {corteMes && <CorteMensual mes={corteMes} dolosos={puntos.concat(sinUbicar).filter(function(p) { return p.fuente === 'incidencia_regional' && filtros[p.fuente]; })} pendientes={pendientes.filter(function(p) { return filtros[p.fuente]; })} culposos={culposos.filter(function(p) { return filtros[p.fuente]; })} mesesHist={mesesHist} proyeccion={proyeccion} sinCasos={sectoresSinCasos} pendViejos={pendientes.filter(function(p) { return p.fecha && (reloj.getTime() - Date.parse(String(p.fecha).slice(0, 10))) / 86400000 >= 30; }).length} ahora={reloj} onCerrar={function() { setCorteMes(null); }} />}
                     <div style={{ marginTop: 12, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 12 }}>
-                      {topSectores.length > 0 && <PostIt titulo="Dónde" fondo={PIT_ARENA}><MiniBarras items={topSectores.slice(0, 5)} /></PostIt>}
+                      {topSectores.length > 0 && <PostIt titulo="Dónde" fondo={PIT_ARENA}><MosaicoSectores items={topSectores} ytd={ytd} sinCasos={sectoresSinCasos} anioAct={anioAct} hastaMes={hastaMes} /></PostIt>}
                       {homicidios.length > 0 && <PostIt titulo="Cómo" fondo={PIT_GUINDA}><BarraApilada porMedio={porMedio} total={homicidios.length} /></PostIt>}
+                      {seriesSec.length > 1 && <PostIt titulo="Por sector · 12 meses" fondo={PIT_ORO} ancho><TendenciaSectores series={seriesSec} /></PostIt>}
                       {semHist.length > 1 && <PostIt titulo={semRecortada ? 'Cuándo · últimas 26 semanas' : 'Cuándo · por semana'} fondo={PIT_ORO}><LineaSemanas items={semHist} parcial={ultimaSemanaParcial} />{ultimaSemanaParcial && <div style={{ fontSize: 14, color: '#6b5a2a', marginTop: 2 }}>* semana en curso, incompleta</div>}</PostIt>}
                       {proyeccion.listo && (
                         <PostIt titulo="Proyección" fondo={PIT_ARENA} ancho>
-                          <GraficaProyeccion reales={mesesHist.filter(function(m) { return !m.parcial; }).slice(-8).map(function(m) { return { clave: m.clave, n: m.n }; })} parcial={proyeccion.parcial} futuros={proyeccion.futuros} />
-                          <div style={{ fontSize: 15, color: '#374151', marginTop: 6 }}>Barras doradas: estimado · línea: rango probable (8 de cada 10 veces) · acertó en <strong>{proyeccion.respaldo.cubiertos} de {proyeccion.respaldo.de}</strong> de los últimos meses</div>
+                          <GraficaProyeccion uid="t" reales={mesesHist.filter(function(m) { return !m.parcial; }).slice(-8).map(function(m) { return { clave: m.clave, n: m.n }; })} parcial={proyeccion.parcial} futuros={proyeccion.futuros} />
+                          <div style={{ fontSize: 15, color: '#374151', marginTop: 6 }}>Barras rayadas: estimado · línea: rango probable (8 de cada 10 veces) · acertó en <strong>{proyeccion.respaldo.cubiertos} de {proyeccion.respaldo.de}</strong> de los últimos meses</div>
                         </PostIt>
                       )}
                     </div>
@@ -1474,7 +1770,7 @@ export default function MapaCalor({ user, onIniciarProyecto, onImportar, seccion
                 </div>
               </div>
 
-              <BloqueProyeccion meses={mesesHist} sinCasos={sectoresSinCasos} />
+              <BloqueProyeccion meses={mesesProy} sinCasos={sectoresSinCasos} />
 
               <div className="sin-corte" style={{ marginTop: 28, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 28 }}>
                 <RankingBarras titulo="Colonias con más casos" icono={<MapPin size={20} color={C.gold} />} items={topSectores.slice(0, 8)} />
