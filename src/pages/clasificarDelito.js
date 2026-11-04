@@ -40,5 +40,7 @@ export function clasificarDelito(texto) {
   // "Muerte no constitutiva de delito": mientras no haya resultado de necropsia NO es homicidio doloso; el MP reclasifica después
   // "no constitutiva" o "no constitutivo" (femenino o masculino): "Muerte no constitutiva de delito", "Homicidio no constitutivo de delito"…
   const pendiente = /NO CONSTITUTIV[OA]/.test(n);
-  return { medio, pendiente, calificado: n.includes('CALIFICADO'), hallazgo: /\bFOSAS?\b|CLANDESTIN|INHUMAD/.test(n) ? 'Hallazgo en fosa' : null };
+  // Homicidio culposo (sin intención): se lleva aparte; no es homicidio doloso. Si dice a la vez "no constitutiva", manda esa.
+  const culposo = !pendiente && /CULPOS|IMPRUDENCIAL/.test(n);
+  return { medio, pendiente, culposo, calificado: n.includes('CALIFICADO'), hallazgo: /\bFOSAS?\b|CLANDESTIN|INHUMAD/.test(n) ? 'Hallazgo en fosa' : null };
 }
