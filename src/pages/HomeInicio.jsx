@@ -14,7 +14,7 @@ import Entorno from './Entorno';
 import { analizarCasos, construirResumen, construirAtencion, fechaLarga } from './resumenInicio';
 
 // Marca de versión: aparece chica al final del Inicio para saber de un vistazo qué versión está publicada
-const VERSION = 'Inicio 4 nov 2026 · tablero + necropsia';
+const VERSION = 'Inicio 5 nov 2026 · culposos';
 
 // "1 cada 19 h": el ritmo dicho en frecuencia, como lo dicen los observatorios.
 // Vive aquí (y no se importa) para que el Inicio compile aunque resumenInicio.js todavía no se haya actualizado.
@@ -159,6 +159,13 @@ export default function HomeInicio({ perfil, grupos, onIr }) {
                 <div style={NUM}>{a.pendientes30 || 0}</div>
                 <div style={SUB}>en 30 días</div>
                 <div style={{ fontSize: 14, color: P.gris, marginTop: 5 }}>{a.pendientesNecropsia} en total{a.pendientesViejos > 0 ? ' · ' + a.pendientesViejos + ' con más de 30 días' : ''}</div>
+              </PostIt>
+            )}
+            {(a.culposos || 0) > 0 && (
+              <PostIt titulo="Homicidios culposos" fondo={PIT.arena} ayuda="Se llevan aparte: no cuentan como homicidio doloso.">
+                <div style={NUM}>{a.culposos30 || 0}</div>
+                <div style={SUB}>en 30 días</div>
+                <div style={{ fontSize: 14, color: P.gris, marginTop: 5 }}>{a.culposos} en total</div>
               </PostIt>
             )}
             <PostIt titulo="En el mapa" fondo={PIT.oro}>
