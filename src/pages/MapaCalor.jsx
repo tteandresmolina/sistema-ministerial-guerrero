@@ -371,6 +371,72 @@ export function sectoresSinCasosRecientes(listaPuntos, finISO) {
     .sort(function(a, b) { return b.dias - a.dias; });
 }
 
+// Proyección en lenguaje llano: una fila por mes, con mínimo, más probable y máximo escritos en la propia gráfica
+function ProyeccionClara({ reales, parcial, futuros, metodo }) {
+  var [verMetodo, setVerMetodo] = useState(false);
+  var cap = function(t) { return t.replace(/^./, function(c) { return c.toUpperCase(); }); };
+  var nom = function(k) { return cap(mesLargo(k).split(' ')[0]); };
+  var filas = [];
+  var ult = reales.length ? reales[reales.length - 1] : null;
+  if (ult) filas.push({ tipo: 'real', nombre: nom(ult.clave), sub: 'ya ocurrió', mu: ult.n });
+  if (parcial) filas.push({ tipo: 'est', nombre: nom(parcial.clave), sub: 'cierre · lleva ' + parcial.nActual + ' en ' + parcial.dias + ' días', lo: parcial.lo, hi: parcial.hi, mu: parcial.cierre });
+  futuros.forEach(function(f) { filas.push({ tipo: 'est', nombre: nom(f.clave) + ' ' + f.clave.slice(0, 4), sub: 'estimado', lo: f.lo, hi: f.hi, mu: f.mu }); });
+  var base = reales.slice(-8), prom = base.length ? Math.round(base.reduce(function(a, r) { return a + r.n; }, 0) / base.length) : null;
+  var max = Math.max.apply(null, filas.map(function(f) { return f.hi != null ? f.hi : f.mu; }).concat([prom || 1])) * 1.08;
+  var pc = function(v) { return (v / max * 100) + '%'; };
+  var G = '#8a4455', D = '#b6905a';
+  return (
+    <div style={{ fontFamily: 'Arial, Helvetica, sans-serif', color: '#1f2430' }}>
+      <div style={{ fontSize: 19, fontWeight: 800, marginBottom: 4 }}>Homicidios dolosos esperados por mes</div>
+      <div style={{ fontSize: 16, color: '#4b5563', lineHeight: 1.5, marginBottom: 10 }}>
+        <strong style={{ color: G }}>● Círculo</strong> = lo más probable. <strong style={{ color: '#7a5a14' }}>Franja dorada</strong> = de cuántos a cuántos puede variar (mínimo a máximo, 8 de cada 10 veces).
+        {prom ? <span> <strong>Línea punteada</strong> = promedio de los últimos {base.length} meses ({prom}).</span> : null}
+      </div>
+      <div style={{ position: 'relative', paddingTop: 22 }}>
+        {prom ? (
+          <div style={{ position: 'absolute', left: 'calc(170px + (100% - 170px) * ' + (prom / max) + ')', top: 0, bottom: 0, borderLeft: '3px dashed #5a4a1e', pointerEvents: 'none' }}>
+            <div style={{ position: 'absolute', top: -2, left: 6, fontSize: 14, fontWeight: 800, color: '#5a4a1e', whiteSpace: 'nowrap' }}>Promedio {prom}</div>
+          </div>
+        ) : null}
+        {filas.map(function(f, i) {
+          return (
+            <div key={i} style={{ display: 'flex', alignItems: 'center', margin: '8px 0', minHeight: 64 }}>
+              <div style={{ width: 170, flex: 'none', paddingRight: 8 }}>
+                <div style={{ fontSize: 18, fontWeight: 800 }}>{f.nombre}</div>
+                <div style={{ fontSize: 14, color: '#6b7280' }}>{f.sub}</div>
+              </div>
+              <div style={{ position: 'relative', flex: 1, height: 64 }}>
+                {f.tipo === 'est' && (
+                  <div style={{ position: 'absolute', left: pc(f.lo), width: 'calc(' + pc(f.hi) + ' - ' + pc(f.lo) + ')', top: 14, height: 26, background: '#ecd9a4', border: '2px solid ' + D, borderRadius: 8 }} />
+                )}
+                {f.tipo === 'est' && <div style={{ position: 'absolute', left: pc(f.lo), top: 42, transform: 'translateX(-50%)', fontSize: 15, fontWeight: 700, color: '#5a4a1e', whiteSpace: 'nowrap' }}>mín {f.lo}</div>}
+                {f.tipo === 'est' && <div style={{ position: 'absolute', left: pc(f.hi), top: 42, transform: 'translateX(-50%)', fontSize: 15, fontWeight: 700, color: '#5a4a1e', whiteSpace: 'nowrap' }}>máx {f.hi}</div>}
+                <div style={{ position: 'absolute', left: pc(f.mu), top: 9, transform: 'translateX(-50%)', width: 46, height: 46, boxSizing: 'border-box', borderRadius: '50%', background: f.tipo === 'real' ? '#ffffff' : G, border: '3px solid ' + G, color: f.tipo === 'real' ? G : '#fff', fontSize: 18, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{f.mu}</div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      {metodo && (
+        <div style={{ marginTop: 12 }}>
+          <button onClick={function() { setVerMetodo(!verMetodo); }} aria-expanded={verMetodo} style={{ background: '#fff', border: '2px solid #8a4455', color: '#8a4455', borderRadius: 8, padding: '8px 16px', fontSize: 16, fontWeight: 800, cursor: 'pointer', minHeight: 44 }}>{verMetodo ? 'Ocultar: en qué se respalda ▲' : 'En qué se respalda ▼'}</button>
+        </div>
+      )}
+      {metodo && verMetodo && (
+        <div style={{ marginTop: 10, background: '#ffffffaa', border: '1px solid #b6905a66', borderRadius: 8, padding: '12px 14px', fontSize: 15, lineHeight: 1.6, color: '#374151' }}>
+          <div style={{ fontSize: 15, fontWeight: 800, letterSpacing: 0.5, textTransform: 'uppercase', color: '#8a4455', marginBottom: 4 }}>En qué se respalda</div>
+          <div><strong>Método:</strong> suavizado exponencial simple del ritmo diario (homicidios dolosos por día) de {metodo.n} meses completos. Es un modelo estadístico, no una opinión.</div>
+          <div><strong>Fórmula del nivel:</strong> nivel nuevo = α × ritmo del mes + (1 − α) × nivel anterior, con α = {metodo.alfa} (el valor que menos se equivocó con la propia historia).</div>
+          <div><strong>Estimado del mes</strong> = nivel × días del mes.</div>
+          <div><strong>Rango (mín. a máx.)</strong> = estimado ± 1.28 × σ × días del mes, con σ = {metodo.sigma.toFixed(2)} homicidios por día (error típico pasado). El 1.28 equivale al 80 %: 8 de cada 10 veces el mes cae dentro del rango.</div>
+          {metodo.respaldo && metodo.respaldo.de > 0 && <div><strong>Comprobación:</strong> aplicado a los últimos {metodo.respaldo.de} meses, el rango acertó en {metodo.respaldo.cubiertos} de {metodo.respaldo.de}; error promedio de unos {Math.max(1, Math.round(metodo.respaldo.mae))} homicidios al mes.</div>}
+          <div style={{ color: '#6b7280' }}>Es una referencia con base en los meses anteriores: no es una meta ni una certeza, y no considera hechos extraordinarios.</div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function GraficaProyeccion({ reales, parcial, futuros, uid }) {
   var idRayado = 'rayado-' + (uid || 'a');
   var cols = reales.map(function(r) { return { tipo: 'real', clave: r.clave, n: r.n }; });
@@ -1185,9 +1251,17 @@ export default function MapaCalor({ user, onIniciarProyecto, onImportar, seccion
   const ultMes = mesesHist[mesesHist.length - 1];
   const mesesProy = (ultMes && ultMes.clave < hoyClave && sumarMes(ultMes.clave, 1) === hoyClave)
     ? mesesHist.concat([{ clave: hoyClave, nombre: nombreMes(hoyClave).split(' ')[0], n: 0, dias: diaHoy, parcial: true }]) : mesesHist;
-  const cambioRitmo = mesesHist.length >= 2 ? (function() {
-    var a = mesesHist[mesesHist.length - 2], b = mesesHist[mesesHist.length - 1];
-    return { pct: Math.round(((b.n / b.dias) / (a.n / a.dias) - 1) * 100), contra: a.nombre, actual: b };
+  // El tablero sigue el periodo elegido: si se filtra hasta una fecha, el "mes en foco" es el de esa fecha (p. ej. noviembre 2025); sin fecha final, el último mes
+  const idxFoco = (function() {
+    if (!mesesHist.length) return -1;
+    if (!fechaHasta) return mesesHist.length - 1;
+    var k = String(fechaHasta).slice(0, 7), r = -1;
+    mesesHist.forEach(function(m, i) { if (m.clave <= k) r = i; });
+    return r;
+  })();
+  const cambioRitmo = idxFoco >= 1 ? (function() {
+    var a = mesesHist[idxFoco - 1], b = mesesHist[idxFoco];
+    return { pct: Math.round(((b.n / b.dias) / (a.n / a.dias) - 1) * 100), contra: a.nombre, actual: b, ultimo: idxFoco === mesesHist.length - 1, idx: idxFoco };
   })() : null;
   // La línea por semana sigue el periodo elegido; sin periodo muestra todo el historial
   const hayFechas = !!(fechaDesde || fechaHasta);
@@ -1602,9 +1676,10 @@ export default function MapaCalor({ user, onIniciarProyecto, onImportar, seccion
             <>
               {(function() {
                 var act = cambioRitmo ? cambioRitmo.actual : null;
-                var f1 = proyeccion.listo ? proyeccion.futuros[0] : null;
+                var esUltimo = !cambioRitmo || cambioRitmo.ultimo;
+                var f1 = proyeccion.listo && esUltimo ? proyeccion.futuros[0] : null;
                 // En los primeros 15 días del mes importa más cómo va a cerrar el mes en curso que el mes siguiente
-                var cierreActual = proyeccion.listo && proyeccion.parcial && diaHoy <= 15 ? proyeccion.parcial : null;
+                var cierreActual = esUltimo && proyeccion.listo && proyeccion.parcial && diaHoy <= 15 ? proyeccion.parcial : null;
                 var mejorZona = zonas && zonas.length ? zonas[0] : null;
                 var dia = act ? act.n / act.dias : null;
                 // Lo que va del año contra el mismo periodo del año anterior, por sector (solo meses completos)
@@ -1616,15 +1691,16 @@ export default function MapaCalor({ user, onIniciarProyecto, onImportar, seccion
                   var y = ytd[p.sector] || (ytd[p.sector] = { a1: 0, a0: 0 }); if (a === anioAct) y.a1++; else y.a0++;
                 });
                 // Serie de los últimos 12 meses por sector (los meses sin casos cuentan 0)
-                var claves12 = mesesHist.slice(-12).map(function(m) { return m.clave; });
+                var finFoco = act ? cambioRitmo.idx + 1 : mesesHist.length, tramo12 = mesesHist.slice(Math.max(0, finFoco - 12), finFoco);
+                var claves12 = tramo12.map(function(m) { return m.clave; });
                 var porSec = {};
                 dolososTodos.forEach(function(p) { var k = String(p.fecha).slice(0, 7), i = claves12.indexOf(k); if (i < 0 || !p.sector) return; var a = porSec[p.sector] || (porSec[p.sector] = claves12.map(function() { return 0; })); a[i]++; });
                 var seriesSec = Object.keys(porSec).map(function(s) { return [s, porSec[s]]; }).filter(function(s) { return s[1].reduce(function(a, b) { return a + b; }, 0) >= 3; }).sort(function(a, b) { return b[1].reduce(function(x, y) { return x + y; }, 0) - a[1].reduce(function(x, y) { return x + y; }, 0); }).slice(0, 8);
                 var claveAnt = act ? (Number(act.clave.slice(0, 4)) - 1) + act.clave.slice(4) : null;
                 var mesAnt = claveAnt ? mesesHist.filter(function(m) { return m.clave === claveAnt; })[0] : null;
                 var pctAnio = act && mesAnt && mesAnt.n > 0 ? Math.round(((act.n / act.dias) / (mesAnt.n / mesAnt.dias) - 1) * 100) : null;
-                var serie12 = mesesHist.slice(-12).map(function(m) { return m.n; });
-                var tasa12 = mesesHist.slice(-12).map(function(m) { return Math.round(m.n / m.dias * 100) / 100; });
+                var serie12 = tramo12.map(function(m) { return m.n; });
+                var tasa12 = tramo12.map(function(m) { return Math.round(m.n / m.dias * 100) / 100; });
                 var realesProy = mesesHist.filter(function(m) { return !m.parcial; }).slice(-6).map(function(m) { return m.n; });
                 var extraProy = proyeccion.listo ? (proyeccion.parcial ? [proyeccion.parcial.cierre] : []).concat([proyeccion.futuros[0].mu]) : [];
                 return (
@@ -1639,12 +1715,19 @@ export default function MapaCalor({ user, onIniciarProyecto, onImportar, seccion
                           <div style={{ marginTop: 6 }}><MiniLinea valores={serie12} parcial={act.parcial} /></div>
                         </PostIt>
                       )}
+                      {esUltimo ? (
                       <PostIt titulo={cierreActual ? mesLargo(cierreActual.clave).split(' ')[0] + ' · cierre estimado' : f1 ? mesLargo(f1.clave).split(' ')[0] + ' · estimado' : 'Proyección'} fondo={PIT_GUINDA}>
                         {cierreActual ? <div><div style={NUM_GRANDE}>{cierreActual.lo}–{cierreActual.hi}</div><div style={{ fontSize: 16, color: '#374151' }}>probable <strong>{cierreActual.cierre}</strong> · lleva {cierreActual.nActual} en {cierreActual.dias} días</div></div>
                           : f1 ? <div><div style={NUM_GRANDE}>{f1.lo}–{f1.hi}</div><div style={{ fontSize: 16, color: '#374151' }}>probable <strong>{f1.mu}</strong></div></div>
                           : <div><div style={NUM_GRANDE}>—</div><div style={{ fontSize: 16, color: '#374151' }}>faltan {proyeccion.faltan} meses</div></div>}
                         {f1 && <div style={{ marginTop: 6 }}><MiniLinea valores={realesProy} extra={cierreActual ? [cierreActual.cierre] : extraProy} /></div>}
                       </PostIt>
+                      ) : (
+                      <PostIt titulo={'Periodo en revisión'} fondo={PIT_GUINDA}>
+                        <div style={NUM_MEDIO}>{act ? act.nombre + ' ' + act.clave.slice(0, 4) : ''}</div>
+                        <div style={{ fontSize: 16, color: '#374151' }}>mes ya cerrado: se muestran los datos reales, sin proyección</div>
+                      </PostIt>
+                      )}
                       {pendientesFiltrados.length > 0 && (function() {
                         var pendMes = act ? pendientesFiltrados.filter(function(p) { return String(p.fecha || '').slice(0, 7) === act.clave; }).length : 0;
                         return (
@@ -1674,10 +1757,10 @@ export default function MapaCalor({ user, onIniciarProyecto, onImportar, seccion
                       {homicidios.length > 0 && <PostIt titulo="Cómo" fondo={PIT_GUINDA}><BarraApilada porMedio={porMedio} total={homicidios.length} /></PostIt>}
                       {seriesSec.length > 1 && <PostIt titulo="Por sector · 12 meses" fondo={PIT_ORO} ancho><TendenciaSectores series={seriesSec} /></PostIt>}
                       {semHist.length > 1 && <PostIt titulo={semRecortada ? 'Cuándo · últimas 26 semanas' : 'Cuándo · por semana'} fondo={PIT_ORO}><LineaSemanas items={semHist} parcial={ultimaSemanaParcial} />{ultimaSemanaParcial && <div style={{ fontSize: 14, color: '#6b5a2a', marginTop: 2 }}>* semana en curso, incompleta</div>}</PostIt>}
-                      {proyeccion.listo && (
+                      {proyeccion.listo && esUltimo && (
                         <PostIt titulo="Proyección" fondo={PIT_ARENA} ancho>
-                          <GraficaProyeccion uid="t" reales={mesesHist.filter(function(m) { return !m.parcial; }).slice(-8).map(function(m) { return { clave: m.clave, n: m.n }; })} parcial={proyeccion.parcial} futuros={proyeccion.futuros} />
-                          <div style={{ fontSize: 15, color: '#374151', marginTop: 6 }}>Barras rayadas: estimado · línea: rango probable (8 de cada 10 veces) · acertó en <strong>{proyeccion.respaldo.cubiertos} de {proyeccion.respaldo.de}</strong> de los últimos meses</div>
+                          <ProyeccionClara reales={mesesHist.filter(function(m) { return !m.parcial; }).slice(-8).map(function(m) { return { clave: m.clave, n: m.n }; })} parcial={proyeccion.parcial} futuros={proyeccion.futuros} metodo={proyeccion.listo ? { alfa: proyeccion.alfa, sigma: proyeccion.sigma, n: mesesHist.filter(function(m) { return !m.parcial; }).length, respaldo: proyeccion.respaldo } : null} />
+                          <div style={{ fontSize: 15, color: '#374151', marginTop: 6 }}>Es una estimación con base en los meses anteriores · en los últimos meses el rango acertó en <strong>{proyeccion.respaldo.cubiertos} de {proyeccion.respaldo.de}</strong> de los últimos meses</div>
                         </PostIt>
                       )}
                     </div>
@@ -1801,10 +1884,10 @@ export default function MapaCalor({ user, onIniciarProyecto, onImportar, seccion
           var porSector = {}, porMed = {};
           dolMes.forEach(function(p) { var k = p.sector || 'Sin sector'; porSector[k] = (porSector[k] || 0) + 1; var m = p.medio || clasificarDelito(p.delito).medio; porMed[m] = (porMed[m] || 0) + 1; });
           var ordena = function(o, n) { return Object.keys(o).map(function(k) { return [k, o[k]]; }).sort(function(a, b) { return b[1] - a[1] || (a[0] < b[0] ? -1 : 1); }).slice(0, n); };
-          var completos = mesesHist.filter(function(m) { return !m.parcial && m.clave !== act.clave; }).slice(-8);
+          var completos = mesesHist.filter(function(m) { return !m.parcial && m.clave < act.clave; }).slice(-8);
           var prom8 = completos.length ? completos.reduce(function(a, m) { return a + m.n; }, 0) / completos.length : null;
           var proyMes = null, sig = [];
-          if (proyeccion.listo) {
+          if (proyeccion.listo && cambioRitmo.ultimo) {
             if (proyeccion.parcial) { var pp = proyeccion.parcial; proyMes = { nombre: mesLargo(pp.clave).split(' ')[0].replace(/^./, function(c) { return c.toUpperCase(); }), tipo: 'cierre', lo: pp.lo, hi: pp.hi, mu: pp.cierre, lleva: pp.nActual, dias: pp.dias }; }
             sig = proyeccion.futuros.slice(proyeccion.parcial ? 0 : 1, proyeccion.parcial ? 3 : 3).filter(function(f) { return !proyeccion.parcial || f.clave !== proyeccion.parcial.clave; }).map(function(f) { return { nombre: mesLargo(f.clave).split(' ')[0].replace(/^./, function(c) { return c.toUpperCase(); }), lo: f.lo, hi: f.hi, mu: f.mu }; });
             if (!proyeccion.parcial && proyeccion.futuros[0]) { var f0 = proyeccion.futuros[0]; proyMes = { nombre: mesLargo(f0.clave).split(' ')[0].replace(/^./, function(c) { return c.toUpperCase(); }), tipo: 'estimado', lo: f0.lo, hi: f0.hi, mu: f0.mu }; }
@@ -1817,8 +1900,8 @@ export default function MapaCalor({ user, onIniciarProyecto, onImportar, seccion
               ritmo={dia > 0 ? 'un homicidio doloso ' + frecuenciaTexto(dia).replace(/^1 cada /, 'cada ').replace(/^1 por hora/, 'por hora') : ''}
               promedio8={prom8} meses8={completos.length}
               sectores={ordena(porSector, 6)} medios={ordena(porMed, 4)}
-              proyMes={proyMes} siguientes={sig} respaldo={proyeccion.listo ? proyeccion.respaldo : null}
-              grafica={proyeccion.listo ? <GraficaProyeccion uid="m" reales={mesesHist.filter(function(m) { return !m.parcial; }).slice(-8).map(function(m) { return { clave: m.clave, n: m.n }; })} parcial={proyeccion.parcial} futuros={proyeccion.futuros} /> : null}
+              proyMes={proyMes} siguientes={sig} respaldo={proyeccion.listo && cambioRitmo.ultimo ? proyeccion.respaldo : null}
+              grafica={proyeccion.listo && cambioRitmo.ultimo ? <ProyeccionClara reales={mesesHist.filter(function(m) { return !m.parcial; }).slice(-8).map(function(m) { return { clave: m.clave, n: m.n }; })} parcial={proyeccion.parcial} futuros={proyeccion.futuros} metodo={proyeccion.listo ? { alfa: proyeccion.alfa, sigma: proyeccion.sigma, n: mesesHist.filter(function(m) { return !m.parcial; }).length, respaldo: proyeccion.respaldo } : null} /> : null}
               onCorte={function() { setCorteMes(act.clave); }}
               version={VERSION_PANEL}
             />
