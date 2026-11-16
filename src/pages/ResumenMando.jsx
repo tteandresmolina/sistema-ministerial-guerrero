@@ -100,10 +100,11 @@ export default function ResumenMando(p) {
       </div>
 
       {/* 3. Proyección */}
+      {(p.grafica || proy || sig.length > 0) && (
       <div style={{ ...caja('#efe9d9'), marginTop: 14 }}>
         <div style={tituloBloque}>Qué se espera</div>
         <div style={explica}>
-          Barras sólidas: lo que ya ocurrió. Barras rayadas: lo estimado. La línea vertical es el rango en el que cae 8 de cada 10 veces.
+          Cuántos homicidios dolosos se esperan en los próximos meses, según el comportamiento de los meses anteriores.
         </div>
         {p.grafica}
         <div style={{ fontSize: 20, lineHeight: 1.6, marginTop: 12 }}>
@@ -122,14 +123,8 @@ export default function ResumenMando(p) {
             );
           })}
         </div>
-        {r && r.de > 0 && (
-          <div style={{ marginTop: 12, background: '#ffffffaa', borderRadius: 8, padding: '12px 14px', fontSize: 18, lineHeight: 1.55 }}>
-            <strong>Margen de error:</strong> aplicado a los últimos {r.de} meses, el rango acertó en <strong>{r.cubiertos} de {r.de}</strong> y el
-            error promedio fue de <strong>unos {Math.max(1, Math.round(r.mae))} homicidios al mes</strong>.
-            El método es estadístico (suavizado exponencial del ritmo diario, con rango del 80 %): es una referencia con base en los meses anteriores, no una meta.
-          </div>
-        )}
       </div>
+      )}
 
       <div style={{ marginTop: 14, display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ fontSize: 15, color: '#6b7280' }}>Cifras con base en lo capturado por los sectores. Los casos con carpeta pendiente se cuentan; los que no tuvieron diligencias, no.</div>
