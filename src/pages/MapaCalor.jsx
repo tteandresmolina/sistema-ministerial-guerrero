@@ -12,6 +12,7 @@ import { RefreshCw, MapPin, Filter, X, Clock, BarChart3, ChevronDown, ChevronUp,
 import { TarjetaResumen, BarraSuperior, CapasPantalla } from './PantallaMapa';
 import ImportarIncidenciaRegional from './ImportarIncidenciaRegional';
 import ZonasAtencion from './ZonasAtencion';
+import ResumenMando from './ResumenMando';
 import { descargarMes } from './PegarTarjeta';
 import ReglaMapa, { tiempoEntre, textoDistancia } from './ReglaMapa';
 import RadioMapa from './RadioMapa';
@@ -674,7 +675,7 @@ function CorteMensual({ mes, dolosos, pendientes, culposos, mesesHist, proyeccio
         <button onClick={onCerrar} style={{ background: '#fff', border: '2px solid #7b1e3a', color: '#7b1e3a', borderRadius: 8, padding: '8px 18px', fontSize: 15, fontWeight: 800, cursor: 'pointer', minHeight: 44 }}>Cerrar</button>
       </div>
       <div className="corte-pagina" style={{ width: 794, maxWidth: '100%', margin: '0 auto', background: '#fff', padding: '26px 30px', fontFamily: 'Arial, Helvetica, sans-serif', fontSize: 12, color: '#1f2430', boxSizing: 'border-box', boxShadow: '0 2px 10px rgba(0,0,0,0.18)' }}>
-        <div style={{ background: '#7b1e3a', color: '#fff', padding: '12px 16px', borderBottom: '4px solid #b6905a', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: 10 }}>
+        <div style={{ background: '#8a4455', color: '#fff', padding: '12px 16px', borderBottom: '4px solid #b6905a', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: 10 }}>
           <div>
             <div style={{ fontSize: 10.5, letterSpacing: 1, color: '#ecd9a4' }}>FISCALÍA GENERAL DEL ESTADO DE GUERRERO</div>
             <div style={{ fontSize: 21, fontWeight: 800 }}>Corte mensual de homicidios</div>
@@ -718,7 +719,7 @@ function CorteMensual({ mes, dolosos, pendientes, culposos, mesesHist, proyeccio
               {sem.map(function(x, i) { return (
                 <div key={i} style={{ flex: 1, textAlign: 'center', fontSize: 11 }}>
                   <div style={{ fontWeight: 800 }}>{x}</div>
-                  <div style={{ background: '#7b1e3a', height: Math.max(2, Math.round(x / semMax * 48)), borderRadius: '3px 3px 0 0' }} />
+                  <div style={{ background: '#8a4455', height: Math.max(2, Math.round(x / semMax * 48)), borderRadius: '3px 3px 0 0' }} />
                   <div style={{ color: '#6b7280', fontSize: 10 }}>{['1–7', '8–14', '15–21', '22–28', '29–31'][i]}</div>
                 </div>
               ); })}
@@ -729,9 +730,10 @@ function CorteMensual({ mes, dolosos, pendientes, culposos, mesesHist, proyeccio
           {titulo('Proyección')}
           <div style={{ fontSize: 12.5 }}>
             {pr.t === 'cierre'
-              ? <span><strong>{mesLargo(sig)}</strong> cerraría con entre <strong>{pr.lo}</strong> y <strong>{pr.hi}</strong> homicidios dolosos (probable <strong>{pr.mu}</strong>); lleva {pr.lleva} en {pr.dias} días.</span>
-              : <span><strong>{mesLargo(sig)}</strong>: entre <strong>{pr.lo}</strong> y <strong>{pr.hi}</strong> homicidios dolosos (probable <strong>{pr.mu}</strong>).</span>}
-            <div style={{ color: '#6b7280', fontSize: 11, marginTop: 2 }}>Referencia estadística con el ritmo de los meses anteriores, no una meta.</div>
+              ? <span><strong>{mesLargo(sig)}</strong> cerraría con entre <strong>{pr.lo}</strong> y <strong>{pr.hi}</strong> homicidios dolosos (lo más probable: <strong>{pr.mu} homicidios dolosos</strong>); lleva {pr.lleva} en {pr.dias} días.</span>
+              : <span><strong>{mesLargo(sig)}</strong>: entre <strong>{pr.lo}</strong> y <strong>{pr.hi}</strong> homicidios dolosos (lo más probable: <strong>{pr.mu} homicidios dolosos</strong>).</span>}
+            {proyeccion.respaldo && proyeccion.respaldo.de > 0 && <div style={{ fontSize: 11.5, marginTop: 3 }}><strong>Margen de error:</strong> en los últimos {proyeccion.respaldo.de} meses el rango acertó en {proyeccion.respaldo.cubiertos} de {proyeccion.respaldo.de}; error promedio de unos {Math.max(1, Math.round(proyeccion.respaldo.mae))} homicidios al mes.</div>}
+            <div style={{ color: '#6b7280', fontSize: 11, marginTop: 2 }}>Referencia estadística (suavizado exponencial del ritmo diario, rango del 80 %), no una meta.</div>
           </div>
         </div>)}
         {titulo('Para tener en cuenta')}
@@ -814,7 +816,7 @@ function BloqueProyeccion({ meses, sinCasos }) {
 // Tablero ejecutivo: "post-its" con un número grande y casi nada de texto (estilo observatorio). Lo demás queda en "Ver análisis completo".
 // ---------------------------------------------------------------------------------------------------------
 // Marca de versión (chica, al final del panel): sirve para saber de un vistazo qué versión está publicada
-var VERSION_PANEL = 'Panel 5 nov 2026 · planilla, corte y sectores';
+var VERSION_PANEL = 'Panel 16 nov 2026 · resumen para mando';
 var PIT_ORO = '#fbf3d9', PIT_GUINDA = '#f6e4e6', PIT_ARENA = '#f1ece0';
 var NUM_GRANDE = { fontSize: 46, fontWeight: 800, color: '#7b1e3a', lineHeight: 1.05 };
 var NUM_MEDIO = { fontSize: 34, fontWeight: 800, color: '#7b1e3a', lineHeight: 1.1 };
@@ -863,7 +865,7 @@ function PostIt({ titulo, fondo, children, ancho }) {
 
 function ChipCambio({ pct, contra }) {
   var sube = pct >= 0;
-  return <span style={{ display: 'inline-block', marginTop: 8, padding: '3px 10px', borderRadius: 14, fontSize: 15, fontWeight: 800, background: sube ? '#8b1e1e' : '#5a4a1e', color: '#fff' }}>{sube ? '▲' : '▼'} {Math.abs(pct)}% vs {contra.toLowerCase()}</span>;
+  return <span style={{ display: 'inline-block', marginTop: 8, padding: '3px 10px', borderRadius: 14, fontSize: 15, fontWeight: 800, background: sube ? '#8b1e1e' : '#5a4a1e', color: '#fff' }}>{sube ? '▲' : '▼'} {Math.abs(pct)}% vs {contra.toLowerCase()} · por día</span>;
 }
 
 // "Dónde": las 5 colonias o sectores con más casos, solo nombre, barra y número
@@ -1633,7 +1635,7 @@ export default function MapaCalor({ user, onIniciarProyecto, onImportar, seccion
                           <div style={NUM_GRANDE}>{act.n}</div>
                           <div style={{ fontSize: 16, color: '#374151' }}>homicidios</div>
                           {cambioRitmo && <ChipCambio pct={cambioRitmo.pct} contra={cambioRitmo.contra} />}
-                          {pctAnio !== null && <div style={{ fontSize: 14, color: '#3b2f0b', marginTop: 5 }}>{pctAnio >= 0 ? '▲' : '▼'} {Math.abs(pctAnio)} % vs {ABR_MES[Number(claveAnt.slice(5, 7)) - 1].toLowerCase()} {claveAnt.slice(0, 4)} ({mesAnt.n})</div>}
+                          {pctAnio !== null && <div style={{ fontSize: 14, color: '#3b2f0b', marginTop: 5 }}>{pctAnio >= 0 ? '▲' : '▼'} {Math.abs(pctAnio)} % vs {ABR_MES[Number(claveAnt.slice(5, 7)) - 1].toLowerCase()} {claveAnt.slice(0, 4)} ({mesAnt.n}) · por día</div>}
                           <div style={{ marginTop: 6 }}><MiniLinea valores={serie12} parcial={act.parcial} /></div>
                         </PostIt>
                       )}
@@ -1788,6 +1790,40 @@ export default function MapaCalor({ user, onIniciarProyecto, onImportar, seccion
             </>
           )}
         </div>
+      </div>
+
+      <div style={{ display: seccion === 'resumen' ? 'block' : 'none' }}>
+        {(function() {
+          var act = cambioRitmo ? cambioRitmo.actual : null;
+          if (!act) return <div style={{ fontSize: 18, color: C.gray, textAlign: 'center', padding: 20 }}>Sin datos para el resumen.</div>;
+          var delMes = function(l) { return l.filter(function(p) { return p.fuente === 'incidencia_regional' && String(p.fecha || '').slice(0, 7) === act.clave; }); };
+          var dolMes = delMes(puntos.concat(sinUbicar)), culMes = delMes(culposos), ncMes = delMes(pendientes);
+          var porSector = {}, porMed = {};
+          dolMes.forEach(function(p) { var k = p.sector || 'Sin sector'; porSector[k] = (porSector[k] || 0) + 1; var m = p.medio || clasificarDelito(p.delito).medio; porMed[m] = (porMed[m] || 0) + 1; });
+          var ordena = function(o, n) { return Object.keys(o).map(function(k) { return [k, o[k]]; }).sort(function(a, b) { return b[1] - a[1] || (a[0] < b[0] ? -1 : 1); }).slice(0, n); };
+          var completos = mesesHist.filter(function(m) { return !m.parcial && m.clave !== act.clave; }).slice(-8);
+          var prom8 = completos.length ? completos.reduce(function(a, m) { return a + m.n; }, 0) / completos.length : null;
+          var proyMes = null, sig = [];
+          if (proyeccion.listo) {
+            if (proyeccion.parcial) { var pp = proyeccion.parcial; proyMes = { nombre: mesLargo(pp.clave).split(' ')[0].replace(/^./, function(c) { return c.toUpperCase(); }), tipo: 'cierre', lo: pp.lo, hi: pp.hi, mu: pp.cierre, lleva: pp.nActual, dias: pp.dias }; }
+            sig = proyeccion.futuros.slice(proyeccion.parcial ? 0 : 1, proyeccion.parcial ? 3 : 3).filter(function(f) { return !proyeccion.parcial || f.clave !== proyeccion.parcial.clave; }).map(function(f) { return { nombre: mesLargo(f.clave).split(' ')[0].replace(/^./, function(c) { return c.toUpperCase(); }), lo: f.lo, hi: f.hi, mu: f.mu }; });
+            if (!proyeccion.parcial && proyeccion.futuros[0]) { var f0 = proyeccion.futuros[0]; proyMes = { nombre: mesLargo(f0.clave).split(' ')[0].replace(/^./, function(c) { return c.toUpperCase(); }), tipo: 'estimado', lo: f0.lo, hi: f0.hi, mu: f0.mu }; }
+          }
+          var dia = act.n / act.dias;
+          return (
+            <ResumenMando
+              nombreMes={nombreMes(act.clave)} parcial={act.parcial} dia={act.dias} diasMes={diasDelMes(act.clave)}
+              dolosos={dolMes.length} culposos={culMes.length} nc={ncMes.length}
+              ritmo={dia > 0 ? 'un homicidio doloso ' + frecuenciaTexto(dia).replace(/^1 cada /, 'cada ').replace(/^1 por hora/, 'por hora') : ''}
+              promedio8={prom8} meses8={completos.length}
+              sectores={ordena(porSector, 6)} medios={ordena(porMed, 4)}
+              proyMes={proyMes} siguientes={sig} respaldo={proyeccion.listo ? proyeccion.respaldo : null}
+              grafica={proyeccion.listo ? <GraficaProyeccion uid="m" reales={mesesHist.filter(function(m) { return !m.parcial; }).slice(-8).map(function(m) { return { clave: m.clave, n: m.n }; })} parcial={proyeccion.parcial} futuros={proyeccion.futuros} /> : null}
+              onCorte={function() { setCorteMes(act.clave); }}
+              version={VERSION_PANEL}
+            />
+          );
+        })()}
       </div>
 
       <div style={{ display: seccion === 'importar' ? 'block' : 'none' }}>
